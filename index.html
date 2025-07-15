@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Herramientas Creativas - Minimalista</title>
+    <link rel="icon" href="pikachu.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Colores Base (Modo Oscuro - Minimalista, Elegante y Frío) */
+            --bg-color: #0b0c10; /* Casi negro, muy profundo */
+            --text-color: #e0e6eb; /* Blanco muy suave para el texto */
+            --card-bg: rgba(18, 20, 26, 0.75); /* Fondo de tarjeta sutilmente oscuro y translúcido */
+            --title-color: #fcfcfc; /* Blanco puro para títulos */
+            --subtitle-color: #a0a8b2; /* Gris medio para subtítulos */
+            --border-color: rgba(60, 60, 70, 0.2); /* Borde muy sutil */
+            --shadow-color: rgba(0, 0, 0, 0.4);
+
+            /* Colores de Acento (Fríos y Modernos, inspirados en neones discretos) */
+            --minecraft-accent: #6af0c8; /* Verde menta brillante */
+            --discord-accent: #7ed0ec; /* Azul cian suave */
+            --util-accent: #f0c86a; /* Naranja dorado sutil */
+            --social-accent: #ec7ede; /* Rosa lavanda */
+
+            /* Transiciones y Sombras */
+            --transition-speed: 0.3s ease-out; /* Transiciones más rápidas */
+            --box-shadow: 0 4px 12px var(--shadow-color); /* Sombra más sutil */
+            --box-shadow-hover: 0 6px 20px var(--shadow-color); /* Sombra de hover más sutil */
+        }
+
+        .light-mode {
+            /* Colores Base (Modo Claro - Limpio, Airy) */
+            --bg-color: #f7f9fc; /* Blanco muy claro */
+            --text-color: #3f4a56; /* Gris oscuro para el texto */
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --title-color: #212529;
+            --subtitle-color: #6c757d;
+            --border-color: rgba(220, 225, 230, 0.7);
+            --shadow-color: rgba(0, 0, 0, 0.06); /* Sombra de modo claro más ligera */
+
+            /* Colores de Acento (Más suaves para modo claro) */
+            --minecraft-accent: #9ae6b4;
+            --discord-accent: #90cdf4;
+            --util-accent: #fbd38d;
+            --social-accent: #fbb6ce;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color var(--transition-speed), color var(--transition-speed);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .container {
+            max-width: 850px; /* Ancho ligeramente más compacto */
+            margin: 80px auto 60px auto; /* Reducido el espacio vertical */
+            padding: 30px 25px; /* Padding ajustado */
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .theme-switcher {
+            position: fixed;
+            top: 25px; /* Más cerca del borde */
+            right: 25px; /* Más cerca del borde */
+            background: var(--card-bg);
+            border-radius: 50%;
+            width: 50px; /* Tamaño ligeramente más pequeño */
+            height: 50px; /* Tamaño ligeramente más pequeño */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--box-shadow);
+            z-index: 100;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            transition: all var(--transition-speed);
+            font-size: 1.3rem; /* Tamaño de icono ajustado */
+            outline: none;
+            backdrop-filter: blur(5px); /* Desenfoque más sutil */
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        .theme-switcher:hover {
+            transform: scale(1.03); /* Escala más sutil */
+            box-shadow: var(--box-shadow-hover);
+            filter: brightness(1.1);
+        }
+
+        .header-content {
+            margin-bottom: 60px; /* Espacio reducido */
+            max-width: 650px; /* Ancho ligeramente más compacto para el texto */
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .title {
+            font-family: 'Lato', sans-serif;
+            font-size: 3.8rem; /* Tamaño ajustado */
+            color: var(--title-color);
+            margin-bottom: 15px; /* Margen reducido */
+            font-weight: 700;
+            letter-spacing: -0.8px; /* Letter spacing ligeramente más compacto */
+            line-height: 1.05; /* Línea más ajustada */
+            animation: fadeIn 0.9s ease-out; /* Animación ligeramente más rápida */
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); } /* Menor desplazamiento */
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .subtitle {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.2rem; /* Tamaño más conciso */
+            color: var(--subtitle-color);
+            margin-bottom: 0;
+            font-weight: 400;
+            line-height: 1.5; /* Línea más ajustada */
+            opacity: 0;
+            animation: fadeIn 0.9s ease-out 0.2s forwards; /* Retraso y velocidad ajustados */
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); /* Más compacto */
+            gap: 20px; /* Espacio moderado */
+        }
+
+        .category-section {
+            background: var(--card-bg);
+            padding: 25px; /* Padding ajustado */
+            border-radius: 10px; /* Bordes menos redondeados */
+            border: 1px solid var(--border-color);
+            transition: all var(--transition-speed);
+            box-shadow: var(--box-shadow);
+            backdrop-filter: blur(7px); /* Menos desenfoque */
+            -webkit-backdrop-filter: blur(7px);
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .category-section:hover {
+            transform: translateY(-4px); /* Movimiento vertical sutil */
+            box-shadow: var(--box-shadow-hover);
+        }
+
+        .category-title {
+            font-family: 'Lato', sans-serif;
+            color: var(--title-color);
+            font-size: 1.7rem; /* Título de categoría conciso */
+            margin-bottom: 18px; /* Margen reducido */
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px; /* Espacio más pequeño */
+            padding-bottom: 8px; /* Padding reducido */
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .category-title i {
+            font-size: 1.2em; /* Iconos ligeramente más pequeños */
+            color: var(--minecraft-accent);
+            transition: color var(--transition-speed);
+        }
+
+        /* Colores de iconos específicos por categoría */
+        .category-section.minecraft .category-title i { color: var(--minecraft-accent); }
+        .category-section.discord .category-title i { color: var(--discord-accent); }
+        .category-section.utility .category-title i { color: var(--util-accent); }
+        .category-section.social .category-title i { color: var(--social-accent); }
+
+        .buttons-list {
+            margin-top: 18px; /* Margen reducido */
+            display: flex;
+            flex-direction: column;
+            gap: 10px; /* Espacio más pequeño entre botones */
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 10px 16px; /* Padding más compacto */
+            border-radius: 7px; /* Bordes más sutiles */
+            font-weight: 500;
+            text-decoration: none;
+            transition: all var(--transition-speed);
+            box-shadow: none;
+            color: var(--text-color);
+            font-size: 0.9rem; /* Texto más pequeño */
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            background: transparent;
+            z-index: 1;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: currentColor;
+            opacity: 0.04; /* Fondo de color más sutil */
+            transition: opacity var(--transition-speed), transform var(--transition-speed);
+            z-index: -1;
+            transform: scaleX(0);
+            transform-origin: left;
+        }
+
+        .btn:hover::before {
+            transform: scaleX(1);
+            opacity: 0.08; /* Más opaco al pasar el ratón */
+        }
+
+        .btn:hover {
+            transform: translateX(3px); /* Desplazamiento horizontal mínimo */
+            box-shadow: 0 1px 6px rgba(0,0,0,0.15); /* Sombra muy sutil al hover */
+            border-color: rgba(255,255,255,0.08); /* Borde ligeramente más visible */
+        }
+
+        .btn i {
+            margin-right: 8px; /* Margen reducido */
+            font-size: 1em; /* Tamaño de icono ajustado */
+            transition: transform 0.2s ease;
+        }
+        
+        /* Efecto de partículas de fondo (ejemplo minimalista y discreto) */
+        .background-dots {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .dot {
+            position: absolute;
+            background-color: var(--text-color);
+            opacity: 0.03; /* Aún más sutil */
+            border-radius: 50%;
+            animation: moveDot 25s linear infinite; /* Animación más lenta */
+        }
+
+        @keyframes moveDot {
+            0% { transform: translate(var(--x1), var(--y1)); }
+            100% { transform: translate(var(--x2), var(--y2)); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .title {
+                font-size: 3.2rem;
+            }
+            .subtitle {
+                font-size: 1.15rem;
+            }
+            .categories-grid {
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+                gap: 18px;
+            }
+            .category-title {
+                font-size: 1.6rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px 18px;
+                margin-top: 50px;
+                margin-bottom: 40px;
+            }
+            .theme-switcher {
+                width: 45px;
+                height: 45px;
+                font-size: 1.2rem;
+                top: 18px;
+                right: 18px;
+            }
+            .title {
+                font-size: 2.5rem;
+                letter-spacing: 0;
+            }
+            .subtitle {
+                font-size: 1rem;
+            }
+            .categories-grid {
+                grid-template-columns: 1fr;
+                gap: 18px;
+            }
+            .category-section {
+                padding: 20px;
+            }
+            .category-title {
+                font-size: 1.4rem;
+            }
+            .btn {
+                padding: 9px 14px;
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .title {
+                font-size: 2rem;
+            }
+            .subtitle {
+                font-size: 0.9rem;
+            }
+            .category-title {
+                font-size: 1.25rem;
+            }
+            .btn {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-switcher" id="themeSwitcher" aria-label="Cambiar tema">
+        <i class="fas fa-sun"></i> 
+    </button>
+
+    <div class="background-dots" id="backgroundDots"></div>
+
+    <div class="container">
+        <header class="header-content">
+            <h1 class="title">Herramientas <br> Creativas</h1>
+            <p class="subtitle">Un espacio curado de utilidades y generadores para potenciar tus proyectos en Minecraft y Discord, simplificando tu proceso creativo.</p>
+        </header>
+
+        <section class="categories-grid">
+            <div class="category-section minecraft">
+                <h2 class="category-title"><i class="fas fa-cubes"></i> Minecraft</h2>
+                <div class="buttons-list">
+                    <a href="minecraft/datapacks/generador-datapack.html" class="btn">
+                        <i class="fas fa-cube"></i> Generador de Datapacks
+                    </a>
+                    <a href="minecraft/variables/generador-variables" class="btn">
+                        <i class="fas fa-spider"></i> Generador de Variantes de Mobs
+                    </a>
+                </div>
+            </div>
+
+            <div class="category-section discord">
+                <h2 class="category-title"><i class="fab fa-discord"></i> Discord</h2>
+                <div class="buttons-list">
+                    <a href="discord/generador-nombres-canales" class="btn">
+                        <i class="fas fa-hashtag"></i> Generador de Nombres de Canales
+                    </a>
+                    <a href="discord/generador-texto" class="btn">
+                        <i class="fas fa-font"></i> Generador de Texto Estilizado
+                    </a>
+                </div>
+            </div>
+
+            <div class="category-section utility">
+                <h2 class="category-title"><i class="fas fa-tools"></i> Multimedia</h2>
+                <div class="buttons-list">
+                    <a href="utilidades/previsualizador-video" class="btn">
+                        <i class="fas fa-video"></i> Previsualizador de Video
+                    </a>
+                </div>
+            </div>
+
+            <div class="category-section social">
+                <h2 class="category-title"><i class="fas fa-share-alt"></i> Redes Sociales</h2>
+                <div class="buttons-list">
+                    <a href="redes-sociales/redes-sociales.html" class="btn">
+                        <i class="fas fa-share-alt"></i> Visita Nuestras Redes
+                    </a>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeSwitcher = document.getElementById('themeSwitcher');
+            const body = document.body;
+            const icon = themeSwitcher.querySelector('i');
+            
+            function applyTheme(theme) {
+                if (theme === 'light') {
+                    body.classList.add('light-mode');
+                    icon.classList.replace('fa-sun', 'fa-moon');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.classList.remove('light-mode');
+                    icon.classList.replace('fa-moon', 'fa-sun');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+            
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            if (savedTheme) {
+                applyTheme(savedTheme);
+            } else if (prefersDark) {
+                applyTheme('dark');
+            } else {
+                applyTheme('light');
+            }
+            
+            themeSwitcher.addEventListener('click', () => {
+                const isLight = body.classList.contains('light-mode');
+                applyTheme(isLight ? 'dark' : 'light');
+            });
+            
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                if (!localStorage.getItem('theme')) {
+                    applyTheme(e.matches ? 'dark' : 'light');
+                }
+            });
+
+            // Script para las partículas de fondo
+            const backgroundDots = document.getElementById('backgroundDots');
+            const numberOfDots = 40; // Aumentado ligeramente para un efecto más denso pero sutil
+
+            for (let i = 0; i < numberOfDots; i++) {
+                const dot = document.createElement('div');
+                dot.classList.add('dot');
+                const size = Math.random() * 4 + 1; // Tamaño entre 1 y 5px
+                dot.style.width = `${size}px`;
+                dot.style.height = `${size}px`;
+
+                const startX = Math.random() * 100 + 'vw';
+                const startY = Math.random() * 100 + 'vh';
+                const endX = Math.random() * 100 + 'vw';
+                const endY = Math.random() * 100 + 'vh';
+
+                dot.style.setProperty('--x1', startX);
+                dot.style.setProperty('--y1', startY);
+                dot.style.setProperty('--x2', endX);
+                dot.style.setProperty('--y2', endY);
+
+                const duration = Math.random() * 20 + 20; // Duración entre 20 y 40 segundos
+                dot.style.animationDuration = `${duration}s`;
+                dot.style.animationDelay = `${Math.random() * -duration}s`; // Para que empiecen en diferentes puntos
+
+                backgroundDots.appendChild(dot);
+            }
+        });
+    </script>
+</body>
+</html>
