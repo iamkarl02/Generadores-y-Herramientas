@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Ruleta Casino</title>
+  <style>
+    /* Estilos Generales y Reseteo */
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 10px;
+      background: radial-gradient(circle at center, #1b1b1b, #0f0f0f);
+      color: white; font-family: 'Segoe UI', sans-serif;
+      display: grid;
+      /* Definición de la cuadrícula principal */
+      grid-template-columns: 280px 1fr 280px; /* Columnas: Izquierda (jugadores/historial), Centro (ruleta), Derecha (apuestas/audio) */
+      grid-template-rows: auto 1fr auto; /* Filas: Título, Contenido principal (jugadores/ruleta/apuestas), Volver */
+      grid-template-areas:
+        "titulo titulo titulo"
+        "jugadores ruleta apuestas"
+        "historial ruleta audio" /* Historial debajo de jugadores, audio debajo de apuestas */
+        "volver volver volver"; /* Botón Volver al final, ancho completo */
+      gap: 10px; /* Espacio entre elementos de la cuadrícula */
+      min-height: 100vh; /* Ocupar toda la altura de la ventana */
+      overflow: hidden; /* Evitar scroll general de la página */
+    }
+
+    /* Estilos para el Título Principal */
+    h1 {
+      grid-area: titulo; /* Asignar al área 'titulo' en la cuadrícula */
+      text-align: center;
+      font-size: 3rem; /* Título más grande */
+      text-shadow: 0 0 10px #00ff99;
+      margin-bottom: 5px;
+    }
+
+    /* Estilos para el Canvas de la Ruleta */
+    canvas {
+      grid-area: ruleta; /* Asignar al área 'ruleta' en la cuadrícula */
+      width: 650px; /* Tamaño de la ruleta */
+      height: 650px;
+      background: #222;
+      border-radius: 50%; /* Forma circular */
+      box-shadow: 0 0 20px #0f0, inset 0 0 50px #040; /* Sombra exterior e interior */
+      margin: auto; /* Centrar horizontal y verticalmente dentro de su celda */
+      display: block;
+    }
+
+    /* Estilos Comunes para Paneles Laterales y Controles */
+    .jugadores, .controls, #historial, #audioControls {
+      background: rgba(0, 0, 0, 0.6); /* Fondo semi-transparente */
+      box-shadow: 0 0 15px #005500; /* Sombra verde */
+      font-size: 1rem;
+      padding: 10px;
+      border-radius: 10px;
+    }
+
+    /* Estilos para el Panel de Jugadores */
+    .jugadores {
+      grid-area: jugadores; /* Asignar al área 'jugadores' */
+      overflow-y: auto; /* Permitir scroll vertical si el contenido excede */
+      /* Altura dinámica: 45% del espacio vertical disponible después de restar título, gaps y botón volver */
+      max-height: calc((100vh - 150px) * 0.45);
+    }
+
+    /* Estilos para el Panel de Apuestas */
+    .controls {
+      grid-area: apuestas; /* Asignar al área 'apuestas' */
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow-y: auto;
+      /* Altura dinámica: ajustada para el espacio disponible */
+      max-height: calc(100vh - 200px);
+    }
+
+    /* Estilos para Títulos de Sección (Jugadores, Apuestas, Historial) */
+    .jugadores h2, .controls h2, #historial h2 {
+      margin-top: 0;
+      color: #0f0;
+      text-align: center;
+      text-shadow: 0 0 5px #00ff55;
+      font-size: 1.1rem;
+    }
+
+    /* Estilos Comunes para Inputs y Botones */
+    input, button {
+      padding: 8px;
+      border-radius: 6px;
+      border: 2px solid #0f0;
+      background: #0a0;
+      color: #ddffdd;
+      font-size: 1rem;
+      font-weight: 600;
+      text-align: center;
+    }
+    input:focus {
+      outline: none;
+      border-color: #6f6;
+      background: #0f0;
+      color: #003300;
+      box-shadow: 0 0 10px #6f6;
+    }
+    button {
+      background-color: #00cc44;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #00bb33;
+      box-shadow: 0 0 15px #0f0;
+    }
+
+    /* Estilos para Listas de Apuestas y Jugadores */
+    #apuestasList, #jugadoresList {
+      background: #002200;
+      padding: 8px;
+      border-radius: 8px;
+      box-shadow: inset 0 0 10px #0a0;
+      max-height: 120px;
+      overflow-y: auto;
+    }
+
+    /* Estilos para el Historial */
+    #historial {
+      grid-area: historial; /* Asignar al área 'historial' */
+      background: rgba(0, 50, 0, 0.8); /* Fondo ligeramente diferente */
+      box-shadow: 0 0 15px #005500;
+      color: white;
+      margin-top: 10px; /* Separación del panel de jugadores */
+      padding: 10px;
+      border-radius: 10px;
+      overflow-y: auto;
+      /* Altura dinámica: 55% del espacio vertical disponible en la columna izquierda */
+      max-height: calc((100vh - 150px) * 0.55);
+    }
+    #historial h2 { color: #0f0; }
+    #historial ul { margin: 0; padding-left: 15px; }
+    #historial li {
+        color: #ddffdd;
+        margin-bottom: 3px;
+        font-size: 0.9rem;
+    }
+    #historial em { color: #aaa; }
+    #historial .historial-num {
+        font-weight: bold;
+        color: #fff;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+    }
+
+    /* Estilos para el Botón Volver a Inicio */
+    #volver {
+      grid-area: volver; /* Asignar al área 'volver' */
+      text-align: center;
+      margin-top: 10px;
+    }
+    #volver a button {
+      background: #008800;
+      padding: 8px 15px;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    /* Estilos para Controles de Audio */
+    #audioControls {
+      grid-area: audio; /* Asignar al área 'audio' */
+      padding: 5px 8px; /* Más pequeño */
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column; /* Cambiado a columna para apilar los controles */
+      gap: 8px; /* Espacio entre elementos */
+      align-items: center;
+      justify-content: center;
+      opacity: 0.8;
+      transition: opacity 0.3s;
+      margin-top: 10px; /* Separación del panel de apuestas */
+      width: fit-content; /* Ajustar ancho al contenido */
+      margin-left: auto;
+      margin-right: auto; /* Centrar horizontalmente */
+    }
+    #audioControls:hover { opacity: 1; }
+    #audioControls .audio-control-group {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        width: 100%;
+        justify-content: center;
+    }
+    #audioControls button {
+      background-color: #006600;
+      color: #ddffdd;
+      font-size: 0.7rem; /* Más pequeño */
+      padding: 4px 6px; /* Más pequeño */
+      border-radius: 5px;
+      border: 1px solid #0f0;
+    }
+    #audioControls button:hover {
+      background-color: #004400;
+      box-shadow: 0 0 8px #0f0;
+    }
+    /* Estilos para los Sliders de Volumen */
+    #volumeSlider, #rouletteVolumeSlider { /* Aplicar a ambos sliders */
+      -webkit-appearance: none; /* Eliminar estilos por defecto de navegador */
+      appearance: none;
+      width: 80px; /* Ancho más pequeño */
+      height: 5px; /* Altura más pequeña */
+      background: #004400;
+      outline: none;
+      border-radius: 3px;
+      transition: opacity .2s;
+    }
+    #volumeSlider::-webkit-slider-thumb, #rouletteVolumeSlider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px; /* Tamaño del "pulgar" */
+      height: 14px;
+      background: #00ff00;
+      border: 1px solid #0f0;
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 0 5px #0f0;
+    }
+    #volumeSlider::-moz-range-thumb, #rouletteVolumeSlider::-moz-range-thumb { /* Para Firefox */
+      width: 14px;
+      height: 14px;
+      background: #00ff00;
+      border: 1px solid #0f0;
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 0 5px #0f0;
+    }
+
+    /* Estilos para la Tabla de Pagos */
+    #paymentInfo {
+        background: #002200;
+        padding: 8px;
+        border-radius: 8px;
+        box-shadow: inset 0 0 10px #0a0;
+        margin-bottom: 8px;
+        font-size: 0.85rem;
+        color: #ddffdd;
+        text-align: left;
+    }
+    #paymentInfo h3 {
+        margin-top: 0;
+        margin-bottom: 3px;
+        color: #0f0;
+        text-align: center;
+        text-shadow: none;
+        font-size: 1rem;
+    }
+    #paymentInfo p {
+        margin: 0;
+        line-height: 1.3;
+    }
+    #paymentInfo span {
+        font-weight: bold;
+        color: #0f0;
+    }
+    #paymentInfo .red-text { color: red; }
+    #paymentInfo .black-text { color: black; }
+    #paymentInfo .green-text { color: green; }
+    #paymentInfo .white-text { color: white; }
+
+    /* Estilos para Jugadores en Ronda */
+    #jugadoresEnRonda {
+        background: #002200;
+        padding: 8px;
+        border-radius: 8px;
+        box-shadow: inset 0 0 10px #0a0;
+        margin-top: 8px;
+        max-height: 100px;
+        overflow-y: auto;
+    }
+    #jugadoresEnRonda h3 {
+        margin-top: 0;
+        margin-bottom: 3px;
+        color: #0f0;
+        text-align: center;
+        text-shadow: none;
+        font-size: 1rem;
+    }
+    #jugadoresEnRonda ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    #jugadoresEnRonda li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 3px 0;
+        border-bottom: 1px solid rgba(0, 255, 0, 0.2);
+        font-size: 0.9rem;
+    }
+    #jugadoresEnRonda li:last-child {
+        border-bottom: none;
+    }
+    #jugadoresEnRonda li button {
+        background-color: #cc0000;
+        font-size: 0.7rem;
+        padding: 2px 6px;
+        border: 1px solid #ff0000;
+        margin-left: 8px;
+    }
+    #jugadoresEnRonda li button:hover {
+        background-color: #990000;
+        box-shadow: 0 0 5px #ff0000;
+    }
+
+    /* Ajustes Específicos para la Sección de Apuestas */
+    #apuestasList {
+        max-height: 180px;
+        margin-bottom: 10px;
+    }
+    .controls input, .controls button {
+        margin-bottom: 6px;
+    }
+    .controls input:last-of-type, .controls button:last-of-type {
+        margin-bottom: 0;
+    }
+    .controls button[onclick="apostar()"] {
+        font-size: 1.1rem;
+        padding: 10px 12px;
+        margin-top: 8px;
+        margin-bottom: 10px;
+    }
+
+    /* Estilos para Modales (Configuración y Fin de Juego) */
+    #configModal, #endGameModal {
+        display: none; /* Oculto por defecto */
+        position: fixed; /* Fijo en la ventana */
+        z-index: 1000; /* Por encima de todo lo demás */
+        left: 0; top: 0;
+        width: 100%; height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.8); /* Fondo oscuro semi-transparente */
+        display: flex; /* Usar flexbox para centrar el contenido */
+        justify-content: center;
+        align-items: center;
+    }
+    /* Asegurarse de que el modal de fin de juego esté oculto al inicio */
+    #endGameModal {
+        display: none;
+    }
+
+    .modal-content {
+        background: rgba(0, 0, 0, 0.9);
+        padding: 20px;
+        border: 2px solid #0f0;
+        border-radius: 15px;
+        width: 80%;
+        max-width: 400px;
+        box-shadow: 0 0 25px #0f0;
+        text-align: center;
+        color: white;
+    }
+    .modal-content h2 {
+        color: #0f0;
+        text-shadow: 0 0 8px #00ff55;
+        margin-top: 0;
+        font-size: 1.8rem;
+    }
+    .modal-content p {
+        font-size: 1rem;
+        margin-bottom: 10px;
+    }
+    .modal-content input {
+        width: calc(100% - 16px);
+        margin-bottom: 10px;
+        padding: 10px;
+        font-size: 1rem;
+    }
+    .modal-content button {
+        width: 100%;
+        padding: 12px;
+        font-size: 1.2rem;
+        background-color: #00cc44;
+        border: 2px solid #0f0;
+        margin-top: 10px; /* Espacio entre botones en el modal */
+    }
+    .modal-content button:hover {
+        background-color: #00bb33;
+        box-shadow: 0 0 18px #0f0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Modal de Configuración Inicial -->
+  <div id="configModal">
+    <div class="modal-content">
+      <h2>Configuración de la Ruleta</h2>
+      <p>Dinero inicial por jugador: <input type="number" id="initialMoney" placeholder="Ej: 10000" value="10000" /></p>
+      <p>Apuesta mínima: <input type="number" id="minBet" placeholder="Ej: 1000" value="1000" /></p>
+      <p>Número de rondas: <input type="number" id="numRounds" placeholder="Ej: 5" value="5" /></p>
+      <button onclick="applyInitialConfig()">Configurar Ruleta</button> <!-- Texto del botón cambiado -->
+    </div>
+  </div>
+
+  <!-- Modal de Fin de Juego -->
+  <div id="endGameModal">
+    <div class="modal-content">
+      <h2>¡Fin de la Partida!</h2>
+      <p id="endGameMessage">Has completado todas las rondas.</p>
+      <button onclick="resetGame()">Empezar de Nuevo</button>
+      <button onclick="continueGame()">Seguir Jugando</button>
+      <button onclick="downloadSummary()">Descargar Resumen</button>
+    </div>
+  </div>
+
+  <!-- El resto del contenido del juego permanece directamente en el body -->
+  <h1>Ruleta Casino</h1>
+
+  <!-- 🧍 LISTA JUGADORES (Columna Izquierda Superior) -->
+  <div class="jugadores">
+    <h2>Jugadores</h2>
+    <p style="text-align: center; color: #0f0; font-weight: bold;" id="playerStartMoneyText">Cada jugador comienza con 10000 monedas.</p>
+    <div id="jugadoresList"></div>
+  </div>
+
+  <!-- 📜 HISTORIAL (Debajo de Jugadores) -->
+  <div id="historial">
+    <h2>Historial</h2>
+    <ul id="resultado"></ul>
+  </div>
+
+  <!-- 🎡 RULETA (Centro) -->
+  <canvas id="ruletaCanvas" width="650" height="650"></canvas>
+
+  <!-- 💸 APUESTAS (Columna Derecha) -->
+  <div class="controls">
+    <h2>Apuestas</h2>
+    <div id="paymentInfo">
+      <h3>Tabla de Pagos</h3>
+      <p>
+        <span class="red-text">Rojo</span> o <span class="black-text">Negro</span>: <span>2x</span><br>
+        <span class="green-text">Verde (0)</span>: <span>15x</span><br>
+        <span class="white-text">Número Exacto</span>: <span>36x</span>
+      </p>
+    </div>
+    <input type="text" id="nombre" placeholder="Tu nombre" />
+    <input type="number" id="dinero" placeholder="Cantidad a apostar" />
+    <input type="text" id="apuesta" placeholder="rojo, negro, verde o número" />
+
+    <button onclick="apostar()">Apostar</button>
+    <button onclick="girar()">Girar Ruleta</button>
+    <div id="apuestasList"></div>
+
+    <!-- JUGADORES EN ESTA RONDA -->
+    <div id="jugadoresEnRonda">
+        <h3>Jugadores en esta ronda</h3>
+        <ul id="listaJugadoresEnRonda">
+            <!-- Aquí se listarán los jugadores que han apostado -->
+        </ul>
+    </div>
+  </div>
+
+  <!-- Controles de Audio (Nueva posición: debajo de apuestas) -->
+  <div id="audioControls">
+    <div class="audio-control-group">
+        <button id="playAudio">▶️ Música</button>
+        <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.5">
+        <button id="pauseAudio">⏸️ Música</button>
+    </div>
+    <div class="audio-control-group">
+        <span>Volumen Ruleta:</span>
+        <input type="range" id="rouletteVolumeSlider" min="0" max="1" step="0.01" value="0.7">
+    </div>
+    <audio id="fondoAmbiente" src="ambiente.mp3" loop></audio>
+    <audio id="rouletteSound" src="sonido_ruleta.mp3"></audio> <!-- Audio para el sonido de la ruleta -->
+  </div>
+
+  <!-- Botón Volver a Inicio (Parte Inferior, Ancho Completo) -->
+  <div id="volver">
+    <a href="../index.html"><button>Volver a Inicio</button></a>
+    <button id="downloadGameSummary" style="margin-left: 10px;">Descargar Resumen de Partida</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("ruletaCanvas");
+    const ctx = canvas.getContext("2d");
+    const resultado = document.getElementById("resultado");
+    const apuestasList = document.getElementById("apuestasList");
+    const jugadoresList = document.getElementById("jugadoresList");
+    const inputNombre = document.getElementById("nombre");
+    const inputApuesta = document.getElementById("apuesta");
+    const inputDinero = document.getElementById("dinero");
+    const listaJugadoresEnRonda = document.getElementById("listaJugadoresEnRonda");
+
+    // Elementos del modal de configuración
+    const configModal = document.getElementById("configModal");
+    const initialMoneyInput = document.getElementById("initialMoney");
+    const minBetInput = document.getElementById("minBet");
+    const numRoundsInput = document.getElementById("numRounds");
+    const playerStartMoneyText = document.getElementById("playerStartMoneyText");
+
+    // Elementos del modal de fin de juego
+    const endGameModal = document.getElementById("endGameModal");
+    const endGameMessage = document.getElementById("endGameMessage");
+
+    // Referencias a los elementos de audio y sus controles
+    const fondoAmbiente = document.getElementById('fondoAmbiente');
+    const playAudioButton = document.getElementById('playAudio');
+    const pauseAudioButton = document.getElementById('pauseAudio');
+    const volumeSlider = document.getElementById('volumeSlider');
+
+    // Nuevos elementos de audio para el sonido de la ruleta
+    const rouletteSound = document.getElementById('rouletteSound');
+    const rouletteVolumeSlider = document.getElementById('rouletteVolumeSlider');
+
+    // Botón de descarga en la interfaz principal
+    const downloadGameSummaryButton = document.getElementById('downloadGameSummary');
+
+    // Event Listeners para los botones de audio
+    playAudioButton.addEventListener('click', () => {
+      fondoAmbiente.play().catch(error => {
+        console.error("Error al intentar reproducir el audio de fondo:", error);
+        alert("El navegador bloqueó la reproducción automática de audio. Por favor, interactúa con la página para activarlo.");
+      });
+    });
+
+    pauseAudioButton.addEventListener('click', () => {
+      fondoAmbiente.pause();
+    });
+
+    // Event Listener para el slider de volumen de la música
+    volumeSlider.addEventListener('input', () => {
+      fondoAmbiente.volume = volumeSlider.value;
+    });
+
+    // Event Listener para el slider de volumen de la ruleta
+    rouletteVolumeSlider.addEventListener('input', () => {
+      rouletteSound.volume = rouletteVolumeSlider.value;
+    });
+
+    // Event Listener para el botón de descarga en la interfaz principal
+    downloadGameSummaryButton.addEventListener('click', downloadSummary);
+
+    const ordenRuleta = [
+      0,
+      32, 15, 19, 4, 21, 2, 25, 17, 34, 6,
+      27, 13, 36, 11, 30, 8, 23, 10, 5,
+      24, 16, 33, 1, 20, 14, 31, 9, 22,
+      18, 29, 7, 28, 12, 35, 3, 26
+    ];
+
+    const numeros = ordenRuleta.map(i => {
+      const color = i === 0 ? "green" :
+        ([1, 3, 5, 7, 9, 12, 14, 16, 18, 19,
+          21, 23, 25, 27, 30, 32, 34, 36].includes(i) ? "red" : "black");
+      return { num: i, color };
+    });
+
+    let dineroJugador = {};
+    let apuestas = [], yaApostaron = new Set();
+
+    let currentAngle = 0;
+    let bolaAngle = 0;
+    let bolaRadialDistance = 0;
+    let animandoPelota = false;
+
+    // Ajustar radios de la ruleta para el nuevo tamaño (650px)
+    const outerBallTrackRadius = 325 - 10;
+    const innerBallTrackRadius = 70 + 30;
+    const finalBallSettleRadius = 325 - 55;
+
+    // Variables de control de rondas y historial
+    let initialPlayerMoney = 10000;
+    let minimumBet = 1000;
+    let totalRounds = 5; // Valor por defecto
+    let currentRound = 0;
+    let gameConfigured = false;
+    let gameHistory = []; // Almacena el historial detallado de cada ronda
+    let gameStartTime = null; // Para registrar la fecha y hora de inicio de la partida
+
+    function drawRuleta(angle = 0) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const cx = canvas.width/2, cy = canvas.height/2, radius = 325;
+      const slice = (2*Math.PI)/numeros.length;
+
+      for (let i = 0; i < numeros.length; i++) {
+        const start = angle + i * slice;
+        const end = start + slice;
+
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, radius, start, end);
+        ctx.fillStyle = numeros[i].color;
+        ctx.fill();
+        ctx.strokeStyle = "#222";
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(start + slice / 2);
+        ctx.fillStyle = "white";
+        ctx.font = "bold 16px sans-serif";
+        ctx.textAlign = "right";
+        ctx.shadowColor = "black";
+        ctx.shadowBlur = 5;
+        ctx.fillText(numeros[i].num, radius - 10, 5);
+        ctx.restore();
+      }
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, 70, 0, 2 * Math.PI);
+      const g = ctx.createRadialGradient(cx, cy, 15, cx, cy, 70);
+      g.addColorStop(0, "#003300");
+      g.addColorStop(1, "#001100");
+      ctx.fillStyle = g;
+      ctx.fill();
+      ctx.strokeStyle = "#0f0";
+      ctx.stroke();
+
+      const bx = cx + Math.cos(bolaAngle) * bolaRadialDistance;
+      const by = cy + Math.sin(bolaAngle) * bolaRadialDistance;
+      drawBall(bx, by);
+    }
+
+    function drawBall(x, y) {
+      ctx.beginPath();
+      ctx.arc(x, y, 12, 0, 2 * Math.PI);
+      const grad = ctx.createRadialGradient(x - 3, y - 3, 1, x, y, 12);
+      grad.addColorStop(0, "white");
+      grad.addColorStop(1, "#ccc");
+      ctx.fillStyle = grad;
+      ctx.shadowColor = "#fff";
+      ctx.shadowBlur = 12;
+      ctx.fill();
+      ctx.strokeStyle = "#888";
+      ctx.stroke();
+    }
+
+    function actualizarApuestas() {
+      if (apuestas.length === 0) {
+        apuestasList.innerHTML = "No hay apuestas esta ronda.";
+        return;
+      }
+      const apuestasPorTipo = {};
+      apuestas.forEach(a => {
+        if (!apuestasPorTipo[a.apuesta]) {
+          apuestasPorTipo[a.apuesta] = 0;
+        }
+        apuestasPorTipo[a.apuesta] += a.monto;
+      });
+
+      let apuestasHtml = "<h3>Apuestas activas:</h3>";
+      for (const tipo in apuestasPorTipo) {
+        apuestasHtml += `<b>${tipo.toUpperCase()}</b> = $${apuestasPorTipo[tipo]}<br>`;
+      }
+      apuestasList.innerHTML = apuestasHtml;
+    }
+
+    function actualizarJugadores() {
+      jugadoresList.innerHTML = Object.entries(dineroJugador)
+        .map(([n, d]) => `${n}: <b style="color:#0f0;">$${d}</b>`).join("<br>") || "No hay jugadores.";
+    }
+
+    function actualizarJugadoresEnRonda() {
+        listaJugadoresEnRonda.innerHTML = "";
+        if (yaApostaron.size === 0) {
+            listaJugadoresEnRonda.innerHTML = "<li>Nadie ha apostado aún.</li>";
+            return;
+        }
+        yaApostaron.forEach(nombreJugador => {
+            const li = document.createElement("li");
+            const apuestaJugador = apuestas.find(a => a.nombre === nombreJugador);
+            if (apuestaJugador) {
+                li.innerHTML = `
+                    <span>${nombreJugador} (${apuestaJugador.apuesta.toUpperCase()} $${apuestaJugador.monto})</span>
+                    <button onclick="cancelarApuesta('${nombreJugador}')">Cancelar</button>
+                `;
+                listaJugadoresEnRonda.appendChild(li);
+            }
+        });
+    }
+
+    function apostar() {
+      if (!gameConfigured) {
+          alert("Por favor, configura el juego primero.");
+          return;
+      }
+      if (animandoPelota) { // No permitir apuestas mientras la ruleta gira
+          alert("No puedes apostar mientras la ruleta está girando.");
+          return;
+      }
+
+      const nombre = inputNombre.value.trim();
+      const monto = parseInt(inputDinero.value);
+      const apuesta = inputApuesta.value.trim().toLowerCase();
+      const validos = ["rojo", "negro", "verde", ...numeros.map(n => n.num.toString())];
+
+      if (!nombre || !apuesta || isNaN(monto) || !validos.includes(apuesta)) {
+        return alert("Datos inválidos. Asegúrate de rellenar todos los campos y que la apuesta sea válida (rojo, negro, verde o un número).");
+      }
+      if (monto < minimumBet) {
+        return alert(`La apuesta mínima es de ${minimumBet} monedas.`);
+      }
+
+      if (!dineroJugador[nombre]) {
+          dineroJugador[nombre] = initialPlayerMoney;
+      }
+
+      if (yaApostaron.has(nombre)) {
+          return alert("Ya apostaste en esta ronda. Solo se permite una apuesta por jugador por ronda.");
+      }
+      if (dineroJugador[nombre] < monto) {
+          return alert("Dinero insuficiente.");
+      }
+
+      dineroJugador[nombre] -= monto;
+      apuestas.push({ nombre, apuesta, monto });
+      yaApostaron.add(nombre);
+      inputNombre.value = inputApuesta.value = inputDinero.value = "";
+      actualizarApuestas();
+      actualizarJugadores();
+      actualizarJugadoresEnRonda();
+    }
+
+    function cancelarApuesta(nombreJugador) {
+        if (animandoPelota) { // No permitir cancelar si la ruleta está girando
+            alert("No puedes cancelar apuestas mientras la ruleta está girando.");
+            return;
+        }
+        if (!yaApostaron.has(nombreJugador)) {
+            alert("Este jugador no tiene una apuesta activa para cancelar.");
+            return;
+        }
+
+        const apuestaCancelada = apuestas.find(a => a.nombre === nombreJugador);
+        if (apuestaCancelada) {
+            dineroJugador[nombreJugador] += apuestaCancelada.monto;
+            apuestas = apuestas.filter(a => a.nombre !== nombreJugador);
+            yaApostaron.delete(nombreJugador);
+
+            alert(`Apuesta de ${nombreJugador} cancelada. Se le devolvieron $${apuestaCancelada.monto}.`);
+            actualizarApuestas();
+            actualizarJugadores();
+            actualizarJugadoresEnRonda();
+        } else {
+            console.error(`No se encontró la apuesta para ${nombreJugador} a pesar de estar en yaApostaron.`);
+        }
+    }
+
+    function girar() {
+      if (!gameConfigured) {
+          alert("Por favor, configura el juego primero.");
+          return;
+      }
+      if (apuestas.length === 0) return alert("No hay apuestas.");
+      if (animandoPelota) return; // Evitar giros múltiples
+
+      // Registrar estado inicial de la ronda para el historial
+      const roundData = {
+          round: currentRound + 1,
+          initialPlayerBalances: { ...dineroJugador }, // Copia de los saldos al inicio de la ronda
+          bets: JSON.parse(JSON.stringify(apuestas)), // Copia profunda de las apuestas
+          result: null,
+          winners: [],
+          finalPlayerBalances: null
+      };
+      gameHistory.push(roundData);
+
+      // Reproducir sonido de la ruleta
+      rouletteSound.play().catch(error => {
+        console.error("Error al reproducir sonido de ruleta:", error);
+      });
+
+      currentAngle = Math.random() * 2 * Math.PI;
+
+      const minVueltasRuleta = 5;
+      const minVueltasBola = 10;
+
+      const randomAddVueltasRuleta = Math.random() * 5;
+      const randomAddVueltasBola = Math.random() * 8;
+
+      const totalVueltasRuleta = minVueltasRuleta + randomAddVueltasRuleta;
+      const totalVueltasBola = minVueltasBola + randomAddVueltasBola;
+
+      const finalRotationRuleta = currentAngle + (totalVueltasRuleta * 2 * Math.PI);
+      const finalRotationBola = bolaAngle + (totalVueltasBola * 2 * Math.PI);
+
+      const duracionAnimacion = 8000;
+
+      const initialAngleRuleta = currentAngle;
+      const initialAngleBola = bolaAngle;
+      const initialRadialDistanceBola = outerBallTrackRadius;
+
+      animandoPelota = true;
+      let start = null;
+
+      const easeOutCubic = x => 1 - Math.pow(1 - x, 3);
+      const easeInQuad = x => x * x;
+
+      function animar(ts) {
+        if (!start) start = ts;
+        const t = ts - start;
+        const prog = Math.min(t / duracionAnimacion, 1);
+
+        const easedProg = easeOutCubic(prog);
+
+        currentAngle = initialAngleRuleta + (finalRotationRuleta - initialAngleRuleta) * easedProg;
+        bolaAngle = initialAngleBola + (finalRotationBola - initialAngleBola) * easedProg;
+
+        bolaRadialDistance = initialRadialDistanceBola + (finalBallSettleRadius - initialRadialDistanceBola) * easeInQuad(prog);
+
+        const oscillationAmplitude = 10 * (1 - prog);
+        const oscillationFrequency = 20;
+        bolaRadialDistance += Math.sin(prog * Math.PI * oscillationFrequency) * oscillationAmplitude;
+
+        bolaRadialDistance = Math.max(bolaRadialDistance, innerBallTrackRadius);
+
+        drawRuleta(currentAngle);
+
+        if (prog < 1) {
+          requestAnimationFrame(animar);
+        } else {
+          animandoPelota = false;
+          rouletteSound.pause(); // Pausar el sonido de la ruleta al finalizar el giro
+          rouletteSound.currentTime = 0; // Reiniciar el sonido
+
+          currentAngle = currentAngle % (2 * Math.PI);
+          bolaAngle = bolaAngle % (2 * Math.PI);
+          bolaRadialDistance = finalBallSettleRadius;
+
+          drawRuleta(currentAngle);
+
+          const slice = (2 * Math.PI) / numeros.length;
+          let ganadorIndex = -1;
+
+          let finalRelativeAngle = (bolaAngle - currentAngle);
+          finalRelativeAngle = finalRelativeAngle % (2 * Math.PI);
+          if (finalRelativeAngle < 0) {
+              finalRelativeAngle += (2 * Math.PI);
+          }
+
+          ganadorIndex = Math.floor(finalRelativeAngle / slice);
+
+          if (ganadorIndex < 0 || ganadorIndex >= numeros.length) {
+              ganadorIndex = 0;
+          }
+
+          mostrarResultado(ganadorIndex);
+
+          apuestas = [];
+          yaApostaron.clear();
+          actualizarApuestas();
+          actualizarJugadoresEnRonda();
+
+          currentRound++;
+          if (currentRound >= totalRounds) {
+              showEndGameModal();
+          }
+        }
+      }
+
+      requestAnimationFrame(animar);
+    }
+
+    function mostrarResultado(idx) {
+      const g = numeros[idx];
+      const li = document.createElement("li");
+
+      const colorEsp = g.color === "red" ? "rojo" :
+                       g.color === "black" ? "negro" :
+                       "verde";
+
+      li.innerHTML = `🎯 <span class="historial-num">${g.num}</span> (<span style="color:${g.color}">${colorEsp}</span>) → `;
+
+      let alguien = false;
+      const currentRoundWinners = []; // Para el historial
+
+      apuestas.forEach(a => {
+        let premio = 0;
+
+        if (a.apuesta === g.num.toString()) {
+          premio = a.monto * 36;
+        }
+        else if (a.apuesta === "verde" && g.color === "green") {
+          premio = a.monto * 15;
+        }
+        else if ((a.apuesta === "rojo" && g.color === "red") ||
+                 (a.apuesta === "negro" && g.color === "black")) {
+          premio = a.monto * 2;
+        }
+
+        if (premio > 0) {
+          dineroJugador[a.nombre] += premio;
+          li.innerHTML += `<b>${a.nombre}</b> gana <b style="color:#0f0;">$${premio}</b> | `;
+          alguien = true;
+          currentRoundWinners.push({ name: a.nombre, winnings: premio });
+        }
+      });
+
+      if (!alguien) li.innerHTML += "<em>No hubo ganadores.</em>";
+      resultado.prepend(li);
+      actualizarJugadores();
+
+      // Actualizar el historial de la ronda actual
+      const lastRoundData = gameHistory[gameHistory.length - 1];
+      if (lastRoundData) {
+          lastRoundData.result = { num: g.num, color: g.color };
+          lastRoundData.winners = currentRoundWinners;
+          lastRoundData.finalPlayerBalances = { ...dineroJugador }; // Copia de los saldos al final de la ronda
+      }
+    }
+
+    // Función para mostrar el modal de configuración
+    function showConfigModal() {
+        configModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    // Función para aplicar la configuración inicial
+    function applyInitialConfig() {
+        const newInitialMoney = parseInt(initialMoneyInput.value);
+        const newMinBet = parseInt(minBetInput.value);
+        const newNumRounds = parseInt(numRoundsInput.value);
+
+        if (isNaN(newInitialMoney) || newInitialMoney <= 0) {
+            alert("Por favor, introduce una cantidad válida para el dinero inicial (mayor que 0).");
+            return;
+        }
+        if (isNaN(newMinBet) || newMinBet <= 0) {
+            alert("Por favor, introduce una cantidad válida para la apuesta mínima (mayor que 0).");
+            return;
+        }
+        if (isNaN(newNumRounds) || newNumRounds <= 0) {
+            alert("Por favor, introduce un número válido de rondas (mayor que 0).");
+            return;
+        }
+
+        initialPlayerMoney = newInitialMoney;
+        minimumBet = newMinBet;
+        totalRounds = newNumRounds;
+        currentRound = 0; // Reiniciar rondas
+        gameHistory = []; // Limpiar historial
+        dineroJugador = {}; // Limpiar dinero de jugadores
+        gameStartTime = new Date(); // Registrar hora de inicio de la partida
+
+        gameConfigured = true;
+
+        playerStartMoneyText.textContent = `Cada jugador comienza con ${initialPlayerMoney} monedas.`;
+
+        configModal.style.display = 'none';
+        document.body.style.overflow = '';
+
+        // Inicializar el volumen del audio y el slider
+        fondoAmbiente.volume = 0.5;
+        volumeSlider.value = 0.5;
+        rouletteSound.volume = 0.7; // Volumen inicial para el sonido de la ruleta
+        rouletteVolumeSlider.value = 0.7;
+
+        // Intentar reproducir el audio de fondo automáticamente
+        fondoAmbiente.play().catch(error => {
+            console.error("Error al intentar reproducir el audio de fondo automáticamente:", error);
+        });
+
+        drawRuleta();
+        actualizarJugadores();
+        actualizarApuestas();
+        actualizarJugadoresEnRonda();
+        resultado.innerHTML = ""; // Limpiar historial visual
+    }
+
+    // Funciones de Fin de Juego
+    function showEndGameModal() {
+        endGameMessage.textContent = `¡Has completado las ${totalRounds} rondas!`;
+        endGameModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function resetGame() {
+        endGameModal.style.display = 'none';
+        document.body.style.overflow = '';
+        showConfigModal(); // Volver a la configuración inicial
+    }
+
+    function continueGame() {
+        endGameModal.style.display = 'none';
+        document.body.style.overflow = '';
+        totalRounds += 5; // Añadir 5 rondas más, por ejemplo
+        alert(`¡Has decidido seguir jugando! Se han añadido 5 rondas más. Total de rondas: ${totalRounds}`);
+    }
+
+    function downloadSummary() {
+        const endTime = new Date();
+        let summaryContent = `--- Resumen de Partida de Ruleta Casino ---\n\n`;
+        summaryContent += `Fecha de Inicio: ${gameStartTime ? gameStartTime.toLocaleString() : 'N/A'}\n`;
+        summaryContent += `Fecha de Fin: ${endTime.toLocaleString()}\n`;
+        summaryContent += `Configuración Inicial:\n`;
+        summaryContent += `  Dinero Inicial por Jugador: $${initialPlayerMoney}\n`;
+        summaryContent += `  Apuesta Mínima: $${minimumBet}\n`;
+        summaryContent += `  Rondas Configuradas: ${totalRounds}\n`;
+        summaryContent += `  Rondas Jugadas: ${currentRound}\n\n`;
+
+        summaryContent += `--- Saldos Finales de Jugadores ---\n`;
+        if (Object.keys(dineroJugador).length === 0) {
+            summaryContent += "No hubo jugadores en esta partida.\n\n";
+        } else {
+            let winnerName = "N/A";
+            let maxMoney = -Infinity;
+            let allPlayersLost = true; // Bandera para verificar si todos perdieron dinero
+            for (const player in dineroJugador) {
+                summaryContent += `  ${player}: $${dineroJugador[player]}\n`;
+                if (dineroJugador[player] > maxMoney) {
+                    maxMoney = dineroJugador[player];
+                    winnerName = player;
+                }
+                if (dineroJugador[player] > initialPlayerMoney) {
+                    allPlayersLost = false;
+                }
+            }
+            if (allPlayersLost && Object.keys(dineroJugador).length > 0) {
+                summaryContent += `\nNo hubo un ganador claro. Todos los jugadores perdieron dinero o se quedaron con el inicial.\n\n`;
+            } else {
+                summaryContent += `\nGanador de la Partida: ${winnerName} con $${maxMoney}!\n\n`;
+            }
+        }
+
+        summaryContent += `--- Historial Detallado de Rondas ---\n`;
+        if (gameHistory.length === 0) {
+            summaryContent += "No se jugó ninguna ronda.\n";
+        } else {
+            gameHistory.forEach(round => {
+                summaryContent += `\n--- Ronda ${round.round} ---\n`;
+                summaryContent += `  Saldos al inicio de la ronda:\n`;
+                for (const player in round.initialPlayerBalances) {
+                    summaryContent += `    ${player}: $${round.initialPlayerBalances[player]}\n`;
+                }
+                summaryContent += `  Apuestas realizadas:\n`;
+                if (round.bets.length === 0) {
+                    summaryContent += `    Ninguna.\n`;
+                } else {
+                    round.bets.forEach(bet => {
+                        summaryContent += `    ${bet.nombre} apostó $${bet.monto} a ${bet.apuesta.toUpperCase()}\n`;
+                    });
+                }
+                summaryContent += `  Resultado: ${round.result ? `${round.result.num} (${round.result.color.toUpperCase()})` : 'N/A'}\n`;
+                summaryContent += `  Ganadores:\n`;
+                if (round.winners.length === 0) {
+                    summaryContent += `    No hubo ganadores.\n`;
+                } else {
+                    round.winners.forEach(winner => {
+                        summaryContent += `    ${winner.name} ganó $${winner.winnings}\n`;
+                    });
+                }
+                summaryContent += `  Saldos al final de la ronda:\n`;
+                for (const player in round.finalPlayerBalances) {
+                    summaryContent += `    ${player}: $${round.finalPlayerBalances[player]}\n`;
+                }
+            });
+        }
+
+        // Calcular ganancias/pérdidas netas
+        const netResults = {};
+        for (const player in dineroJugador) {
+            netResults[player] = dineroJugador[player] - initialPlayerMoney;
+        }
+
+        summaryContent += `\n--- Resumen de Ganancias/Pérdidas Netas ---\n`;
+        if (Object.keys(netResults).length === 0) {
+            summaryContent += "No hay datos de ganancias/pérdidas netas.\n";
+        } else {
+            for (const player in netResults) {
+                const status = netResults[player] >= 0 ? 'ganó' : 'perdió';
+                summaryContent += `  ${player}: ${status} $${Math.abs(netResults[player])}\n`;
+            }
+        }
+
+        const formattedDate = gameStartTime ? gameStartTime.toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '-') : 'FechaDesconocida';
+        const formattedTime = gameStartTime ? gameStartTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/:/g, '-') : 'HoraDesconocida';
+        const fileName = `Ruleta Casino - ${formattedDate} ${formattedTime}.txt`;
+
+        const blob = new Blob([summaryContent], { type: 'text/plain;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        alert("Resumen de la partida descargado.");
+    }
+
+    window.onload = showConfigModal;
+  </script>
+</body>
+</html>
