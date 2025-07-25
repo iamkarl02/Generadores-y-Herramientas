@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generadores y Herramientas</title>
+    <link rel="icon" href="pikachu.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Colores Base (Modo Oscuro - Minimalista, Elegante y Frío) */
+            --bg-color: #0b0c10; /* Casi negro, muy profundo - ESTE SIEMPRE SERÁ EL FONDO */
+            --text-color: #e0e6eb; /* Blanco muy suave para el texto */
+            --card-bg: rgba(25, 28, 36, 0.85); /* Fondo de tarjeta más opaco y frío */
+            --title-color: #fcfcfc; /* Blanco puro para títulos */
+            --subtitle-color: #b0b8c2; /* Gris más suave y legible para subtítulos */
+            --border-color: rgba(70, 75, 85, 0.3); /* Borde más definido pero sutil */
+            --shadow-color: rgba(0, 0, 0, 0.6); /* Sombra más profunda */
+        
+            /* Colores de Acento (Fríos y Modernos, inspirados en neones discretos) */
+            --minecraft-accent: #4CAF50; /* Verde más vibrante */
+            --discord-accent: #5865F2; /* Azul más distintivo */
+            --util-accent: #FFC107; /* Naranja más cálido */
+            --social-accent: #E91E63; /* Rosa más suave */
+            --new-category-accent: #00BCD4; /* Cian más brillante */
+            --casino-gradient-start: #FF5722; /* Naranja rojizo para casino */
+            --casino-gradient-end: #FF9800; /* Naranja para casino */
+            --permatue-gradient-start: #9C27B0; /* Púrpura para PermaTae */
+            --permatue-gradient-end: #673AB7; /* Violeta oscuro para PermaTae */
+
+            /* Nuevo gradiente para el botón de redes sociales */
+            --social-gradient-start: #ec7ede; /* Rosa lavanda original */
+            --social-gradient-end: #f06292; /* Rosa más fuerte */
+
+            /* Nuevo gradiente para el botón de Discord */
+            --discord-promo-gradient-start: #5865F2; /* Azul de Discord */
+            --discord-promo-gradient-end: #7289DA; /* Azul más claro de Discord */
+        
+            /* Transiciones y Sombras */
+            --transition-speed: 0.35s ease-out; /* Transiciones ligeramente más lentas */
+            --box-shadow: 0 6px 18px var(--shadow-color); /* Sombra más pronunciada */
+            --box-shadow-hover: 0 8px 25px var(--shadow-color); /* Sombra de hover más dinámica */
+        
+            /* Variables para estrellas y líneas */
+            --star-color: #fff;
+            --shooting-star-color: #ffffff;
+            --line-color: rgba(255, 255, 255, 0.3); /* Color de las líneas de conexión */
+        }
+        
+        .light-mode {
+            /* Colores Base (Modo Claro - Limpio, Airy) */
+            /* --bg-color: #f7f9fc; */ /* Eliminado para que el fondo principal sea siempre negro */
+            --text-color: #3f4a56; /* Gris oscuro para el texto */
+            --card-bg: rgba(255, 255, 255, 0.95); /* Fondo de tarjeta más opaco en light mode */
+            --title-color: #212529;
+            --subtitle-color: #6c757d;
+            --border-color: rgba(200, 205, 210, 0.8); /* Borde más definido en light mode */
+            --shadow-color: rgba(0, 0, 0, 0.12); /* Sombra de modo claro más ligera */
+        
+            /* Colores de Acento (Más suaves para modo claro) */
+            --minecraft-accent: #81C784;
+            --discord-accent: #9FA8DA;
+            --util-accent: #FFD54F;
+            --social-accent: #F06292;
+            --new-category-accent: #4DD0E1; /* Cian claro suave */
+            --casino-gradient-start: #FF8A65; /* Naranja suave para casino en light mode */
+            --casino-gradient-end: #FFB74D; /* Naranja claro para casino en light mode */
+            --permatue-gradient-start: #BA68C8; /* Púrpura suave para PermaTae en light mode */
+            --permatue-gradient-end: #9575CD; /* Violeta suave para PermaTae en light mode */
+
+            /* Nuevo gradiente para el botón de redes sociales en light mode */
+            --social-gradient-start: #fbb6ce; /* Rosa lavanda original */
+            --social-gradient-end: #f48fb1; /* Rosa más fuerte */
+
+            /* Nuevo gradiente para el botón de Discord en light mode */
+            --discord-promo-gradient-start: #7289DA;
+            --discord-promo-gradient-end: #9FA8DA;
+        
+            /* Variables para estrellas y líneas en modo claro */
+            --star-color: #333;
+            --shooting-star-color: #666;
+            --line-color: rgba(0, 0, 0, 0.25); /* Color de las líneas de conexión en modo claro */
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: var(--text-color);
+            transition: color var(--transition-speed);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden; /* Oculta el scrollbar si aparece */
+            position: relative;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 20px auto; /* Reducido el margen superior/inferior */
+            padding: 0 15px; /* Reducido el padding horizontal */
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+            position: relative;
+            z-index: 10;
+            flex-grow: 1;
+            display: flex; /* Añadido para controlar mejor el flujo interno */
+            flex-direction: column; /* Añadido */
+            justify-content: center; /* Centra verticalmente el contenido si hay espacio */
+        }
+        
+        .theme-switcher {
+            position: fixed;
+            top: 10px; /* Más cerca del borde */
+            right: 10px; /* Más cerca del borde */
+            background: var(--card-bg);
+            border-radius: 50%;
+            width: 40px; /* Más pequeño */
+            height: 40px; /* Más pequeño */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--box-shadow);
+            z-index: 100;
+            border: 2px solid var(--border-color);
+            color: var(--text-color);
+            transition: all var(--transition-speed);
+            font-size: 1.1rem; /* Más pequeño */
+            outline: none;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        
+        .theme-switcher:hover {
+            transform: scale(1.05);
+            box-shadow: var(--box-shadow-hover);
+            filter: brightness(1.1);
+        }
+        
+        .header-content {
+            margin-bottom: 20px; /* Reducido */
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            padding-top: 0; /* Eliminado padding superior */
+        }
+        
+        .title {
+            font-family: 'Lato', sans-serif;
+            font-size: 3rem; /* Reducido */
+            color: var(--title-color);
+            margin-bottom: 8px; /* Reducido */
+            font-weight: 700;
+            letter-spacing: -1px;
+            line-height: 1.1;
+            animation: fadeIn 0.9s ease-out;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.15); /* Reducido */
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .subtitle {
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem; /* Reducido */
+            color: var(--subtitle-color);
+            margin-bottom: 0;
+            font-weight: 400;
+            line-height: 1.4; /* Reducido */
+            opacity: 0;
+            animation: fadeIn 0.9s ease-out 0.2s forwards;
+        }
+        
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Min-width más pequeño */
+            gap: 15px; /* Reducido */
+            margin-bottom: 0; /* Eliminado margen inferior */
+            flex-grow: 1; /* Permite que la cuadrícula ocupe el espacio restante */
+        }
+        
+        .category-section {
+            background: var(--card-bg);
+            padding: 15px; /* Reducido */
+            border-radius: 10px; /* Reducido */
+            border: 1px solid var(--border-color);
+            transition: all var(--transition-speed);
+            box-shadow: var(--box-shadow);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .category-section:hover {
+            transform: translateY(-4px); /* Menor desplazamiento */
+            box-shadow: var(--box-shadow-hover);
+        }
+        
+        .category-title {
+            font-family: 'Lato', sans-serif;
+            color: var(--title-color);
+            font-size: 1.4rem; /* Reducido */
+            margin-bottom: 10px; /* Reducido */
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px; /* Reducido */
+            padding-bottom: 6px; /* Reducido */
+            border-bottom: 1px solid rgba(var(--border-color), 0.5);
+        }
+        
+        .category-title i {
+            font-size: 1.1em; /* Reducido */
+            color: var(--minecraft-accent);
+            transition: color var(--transition-speed);
+        }
+        
+        /* Colores de iconos específicos por categoría */
+        .category-section.minecraft .category-title i { color: var(--minecraft-accent); }
+        .category-section.discord .category-title i { color: var(--discord-accent); }
+        .category-section.utility .category-title i { color: var(--util-accent); }
+        .category-section.misc .category-title i { color: var(--new-category-accent); }
+
+        .buttons-list {
+            margin-top: 10px; /* Reducido */
+            display: flex;
+            flex-direction: column;
+            gap: 8px; /* Reducido */
+            flex-grow: 0; 
+        }
+        
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 9px 16px; /* Ligeramente aumentado */
+            border-radius: 6px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all var(--transition-speed);
+            box-shadow: none;
+            color: var(--text-color);
+            font-size: 0.9rem; /* Ligeramente aumentado */
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            background: transparent;
+            z-index: 1;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: currentColor;
+            opacity: 0.06;
+            transition: opacity var(--transition-speed), transform var(--transition-speed);
+            z-index: -1;
+            transform: scaleX(0);
+            transform-origin: left;
+        }
+        
+        .btn:hover::before {
+            transform: scaleX(1);
+            opacity: 0.12;
+        }
+        
+        .btn:hover {
+            transform: translateX(3px);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            border-color: rgba(255,255,255,0.08);
+        }
+        
+        .btn i {
+            margin-right: 8px; /* Ligeramente aumentado */
+            font-size: 1em; /* Ligeramente aumentado */
+            transition: transform 0.2s ease;
+        }
+
+        /* Estilos específicos para el botón "casino" */
+        .btn.casino {
+            background: linear-gradient(to right, var(--casino-gradient-start), var(--casino-gradient-end));
+            color: var(--text-color);
+            border: 1px solid var(--casino-gradient-start);
+        }
+        .btn.casino::before {
+            background-color: transparent;
+        }
+        .btn.casino:hover {
+            box-shadow: 0 3px 12px rgba(var(--casino-gradient-end), 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* Estilos específicos para el botón "PermaTae" */
+        .btn.permatue {
+            background: linear-gradient(to right, var(--permatue-gradient-start), var(--permatue-gradient-end));
+            color: var(--text-color);
+            border: 1px solid var(--permatue-gradient-start);
+        }
+        .btn.permatue::before {
+            background-color: transparent;
+        }
+        .btn.permatue:hover {
+            box-shadow: 0 3px 12px rgba(var(--permatue-gradient-end), 0.4);
+            transform: translateY(-2px);
+        }
+        
+        /* Efecto de fondo de espacio - Mantenido */
+        .space-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            background-color: var(--bg-color);
+        }
+        
+        .star {
+            position: absolute;
+            background-color: var(--star-color);
+            border-radius: 50%;
+            opacity: 0;
+            animation: twinkle 4s infinite ease-in-out alternate, fadeInStar 2s forwards;
+            box-shadow: 0 0 4px var(--star-color);
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 0.3; }
+        }
+        
+        @keyframes fadeInStar {
+            to { opacity: 1; }
+        }
+        
+        .shooting-star {
+            position: absolute;
+            background: linear-gradient(to right, var(--shooting-star-color) 0%, transparent 100%);
+            width: 50px;
+            height: 1.5px;
+            opacity: 0;
+            transform-origin: 0% 50%;
+            animation: fallAndFade 3s linear forwards;
+            z-index: 2;
+        }
+        
+        @keyframes fallAndFade {
+            0% {
+                transform: translate(var(--x-start), var(--y-start)) rotate(-45deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--x-end), var(--y-end)) rotate(-45deg);
+                opacity: 0;
+            }
+        }
+        
+        /* Nuevo CSS para las líneas de conexión */
+        .connection-line {
+            position: absolute;
+            height: 1px;
+            background-color: var(--line-color);
+            transform-origin: 0 0;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Estilos para el botón de Discord y Redes Sociales (ahora simétricos) */
+        .discord-promo-card,
+        .social-promo-card {
+            grid-column: span 2; /* Ocupa 2 columnas en pantallas grandes */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 18px; /* Ajustado para ser similar a las categorías */
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            box-shadow: var(--box-shadow);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            text-decoration: none;
+            border: 1px solid; /* Se definirá el color del borde por cada clase */
+        }
+
+        .discord-promo-card {
+            background: linear-gradient(to right, var(--discord-promo-gradient-start), var(--discord-promo-gradient-end));
+            color: var(--text-color);
+            border-color: var(--discord-promo-gradient-start);
+        }
+
+        .social-promo-card {
+            background: linear-gradient(to right, var(--social-gradient-start), var(--social-gradient-end));
+            color: var(--text-color);
+            border-color: var(--social-gradient-start);
+        }
+
+        .discord-promo-card:hover,
+        .social-promo-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .discord-promo-card:hover {
+            box-shadow: 0 6px 20px rgba(var(--discord-promo-gradient-end), 0.4);
+        }
+        .social-promo-card:hover {
+            box-shadow: 0 6px 20px rgba(var(--social-gradient-end), 0.4);
+        }
+
+        .discord-promo-card .discord-icon,
+        .social-promo-card .social-icon {
+            font-size: 3rem; /* Ajustado para ser similar */
+            margin-bottom: 8px; /* Ajustado */
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 0 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .discord-promo-card .discord-text,
+        .social-promo-card .social-text {
+            font-family: 'Lato', sans-serif;
+            font-size: 1.6rem; /* Ajustado para ser similar */
+            font-weight: 700;
+            color: var(--text-color);
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .container {
+                max-width: 700px;
+                margin: 15px auto;
+            }
+            .title {
+                font-size: 2.5rem;
+            }
+            .subtitle {
+                font-size: 0.95rem;
+            }
+            .categories-grid {
+                gap: 12px;
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            }
+            .category-section {
+                padding: 12px;
+            }
+            .category-title {
+                font-size: 1.3rem;
+                margin-bottom: 8px;
+            }
+            .btn {
+                font-size: 0.8rem;
+                padding: 7px 12px;
+            }
+            /* En pantallas más pequeñas, los botones de promo ocupan 1 columna */
+            .discord-promo-card,
+            .social-promo-card {
+                grid-column: span 1; 
+                padding: 12px;
+            }
+            .discord-promo-card .discord-icon,
+            .social-promo-card .social-icon {
+                font-size: 2.5rem;
+            }
+            .discord-promo-card .discord-text,
+            .social-promo-card .social-text {
+                font-size: 1.3rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 10px;
+                margin-top: 10px;
+                margin-bottom: 5px;
+            }
+            .theme-switcher {
+                width: 35px;
+                height: 35px;
+                font-size: 1rem;
+                top: 5px;
+                right: 5px;
+            }
+            .header-content {
+                margin-bottom: 15px;
+            }
+            .title {
+                font-size: 2rem;
+            }
+            .subtitle {
+                font-size: 0.85rem;
+            }
+            .categories-grid {
+                grid-template-columns: 1fr; /* Una columna en móviles */
+                gap: 10px;
+                margin-bottom: 0;
+            }
+            .category-section {
+                padding: 10px;
+            }
+            .category-title {
+                font-size: 1.2rem;
+                margin-bottom: 6px;
+            }
+            .buttons-list {
+                margin-top: 6px;
+                gap: 6px;
+            }
+            .btn {
+                padding: 6px 10px;
+                font-size: 0.75rem;
+            }
+            .discord-promo-card,
+            .social-promo-card {
+                grid-column: span 1; 
+                padding: 10px;
+            }
+            .discord-promo-card .discord-icon,
+            .social-promo-card .social-icon {
+                font-size: 2rem;
+            }
+            .discord-promo-card .discord-text,
+            .social-promo-card .social-text {
+                font-size: 1.1rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .title {
+                font-size: 1.8rem;
+            }
+            .subtitle {
+                font-size: 0.75rem;
+            }
+            .category-title {
+                font-size: 1.1rem;
+            }
+            .btn {
+                font-size: 0.7rem;
+            }
+            .discord-promo-card .discord-icon,
+            .social-promo-card .social-icon {
+                font-size: 1.8rem;
+            }
+            .discord-promo-card .discord-text,
+            .social-promo-card .social-text {
+                font-size: 0.95rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-switcher" id="themeSwitcher" aria-label="Cambiar tema">
+        <i class="fas fa-sun"></i> 
+    </button>
+
+    <div class="space-background" id="spaceBackground"></div>
+
+    <div class="container">
+        <header class="header-content">
+            <h1 class="title">Generadores & Herramientas</h1>
+            <p class="subtitle">Potencia tus ideas sin límites. Un espacio libre diseñado para que crees tus proyectos, ya sean de Minecraft, Discord o cualquier otra plataforma.</p>
+        </header>
+
+        <section class="categories-grid">
+            <div class="category-section minecraft">
+                <h2 class="category-title"><i class="fas fa-cubes"></i> Minecraft</h2>
+                <div class="buttons-list">
+                    <a href="minecraft/datapacks/generador-datapack.html" class="btn">
+                        <i class="fas fa-cube"></i> Generador de Datapacks
+                    </a>
+                    <a href="minecraft/variables/generador-variables.html" class="btn">
+                        <i class="fas fa-spider"></i> Generador de Variantes de Mobs
+                    </a>
+                    <a href="#" class="btn permatue">
+                        <i class="fas fa-heart"></i> PermaTae
+                    </a>
+                </div>
+            </div>
+
+            <div class="category-section discord">
+                <h2 class="category-title"><i class="fab fa-discord"></i> Discord</h2>
+                <div class="buttons-list">
+                    <a href="discord/generador-nombres-canales" class="btn">
+                        <i class="fas fa-hashtag"></i> Generador de Nombres de Canales
+                    </a>
+                    <a href="discord/generador-texto" class="btn">
+                        <i class="fas fa-font"></i> Generador de Texto Estilizado
+                    </a>
+                </div>
+            </div>
+
+            <div class="category-section utility">
+                <h2 class="category-title"><i class="fas fa-tools"></i> Multimedia</h2>
+                <div class="buttons-list">
+                    <a href="utilidades/previsualizador-video" class="btn">
+                        <i class="fas fa-video"></i> Previsualizador de Video
+                    </a>
+                </div>
+            </div>
+
+            <div class="category-section misc">
+                <h2 class="category-title"><i class="fas fa-dice"></i> Juegos</h2>
+                <div class="buttons-list">
+                    <a href="casino/ruleta.html" class="btn casino">🎰 Ruleta Casino</a>
+                </div>
+            </div>
+
+            <!-- Botón de Discord (ahora al mismo nivel que las categorías y con el mismo tratamiento que redes) -->
+            <a href="https://discord.gg/paEH4dkP4m" class="discord-promo-card" target="_blank">
+                <i class="fab fa-discord discord-icon"></i>
+                <span class="discord-text">Únete a mi Discord</span>
+            </a>
+
+            <!-- Botón de redes sociales (ahora al mismo nivel que Discord y ocupando el espacio inferior) -->
+            <a href="redes-sociales/redes-sociales.html" class="social-promo-card">
+                <i class="fas fa-users social-icon"></i>
+                <span class="social-text">Visita Mis Redes</span>
+            </a>
+        </section>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeSwitcher = document.getElementById('themeSwitcher');
+            const body = document.body;
+            const icon = themeSwitcher.querySelector('i');
+            const spaceBackground = document.getElementById('spaceBackground');
+            
+            function applyTheme(theme) {
+                if (theme === 'light') {
+                    body.classList.add('light-mode');
+                    icon.classList.replace('fa-sun', 'fa-moon');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.classList.remove('light-mode');
+                    icon.classList.replace('fa-moon', 'fa-sun');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+            
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            if (savedTheme) {
+                applyTheme(savedTheme);
+            } else if (prefersDark) {
+                applyTheme('dark');
+            } else {
+                applyTheme('light');
+            }
+            
+            themeSwitcher.addEventListener('click', () => {
+                const isLight = body.classList.contains('light-mode');
+                applyTheme(isLight ? 'dark' : 'light');
+            });
+            
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                if (!localStorage.getItem('theme')) {
+                    applyTheme(e.matches ? 'dark' : 'light');
+                }
+            });
+
+            // --- Script para el efecto de espacio con estrellas y estrellas fugaces ---
+
+            let starsData = []; // Almacena los elementos de las estrellas y sus posiciones
+            let lines = [];     // Almacena las líneas de conexión
+            
+            const numberOfStars = 80; // Número de estrellas estáticas (reducido para rendimiento con líneas)
+            const shootingStarInterval = 5000; // Intervalo para estrellas fugaces (en ms)
+            const shootingStarProbability = 0.7; // Probabilidad de que aparezca una estrella fugaz
+
+            // Función para convertir unidades vw/vh a píxeles
+            function vwToPx(value) {
+                return (parseFloat(value) / 100) * window.innerWidth;
+            }
+
+            function vhToPx(value) {
+                return (parseFloat(value) / 100) * window.innerHeight;
+            }
+
+            // Función para crear una estrella estática y almacenar sus datos
+            function createStar() {
+                const star = document.createElement('div');
+                star.classList.add('star');
+                const size = Math.random() * 2 + 1; // Tamaño entre 1px y 3px
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                star.style.left = `${Math.random() * 100}vw`;
+                star.style.top = `${Math.random() * 100}vh`;
+                star.style.animationDelay = `${Math.random() * -4}s`; // Para que parpadeen de forma asíncrona
+                spaceBackground.appendChild(star);
+
+                // Almacenar el elemento de la estrella y su posición inicial en píxeles
+                starsData.push({
+                    element: star,
+                    x: vwToPx(star.style.left),
+                    y: vhToPx(star.style.top)
+                });
+            }
+
+            // Función para actualizar las posiciones en píxeles de las estrellas al redimensionar la ventana
+            function updateStarPositions() {
+                starsData.forEach(star => {
+                    star.x = vwToPx(star.element.style.left);
+                    star.y = vhToPx(star.element.style.top);
+                });
+            }
+
+            // Función para crear una estrella fugaz
+            function createShootingStar() {
+                if (Math.random() > shootingStarProbability) { // Controlar la frecuencia
+                    return;
+                }
+
+                const shootingStar = document.createElement('div');
+                shootingStar.classList.add('shooting-star');
+
+                const startX = Math.random() * window.innerWidth * 1.5 - window.innerWidth * 0.25; // Puede empezar fuera de la pantalla
+                const startY = Math.random() * window.innerHeight * 0.5; // Empieza desde la parte superior
+                
+                const endX = startX + (Math.random() * 500 + 200); // Se mueve hacia la derecha
+                const endY = startY + (Math.random() * 500 + 200); // Se mueve hacia abajo
+
+                shootingStar.style.setProperty('--x-start', `${startX}px`);
+                shootingStar.style.setProperty('--y-start', `${startY}px`);
+                shootingStar.style.setProperty('--x-end', `${endX}px`);
+                shootingStar.style.setProperty('--y-end', `${endY}px`);
+
+                shootingStar.style.animationDuration = `${Math.random() * 1.5 + 1.5}s`; // Duración entre 1.5s y 3s
+                shootingStar.style.animationDelay = `${Math.random() * 0.5}s`; // Pequeño delay aleatorio
+
+                shootingStar.addEventListener('animationend', () => {
+                    shootingStar.remove(); // Eliminar la estrella fugaz después de la animación
+                });
+
+                spaceBackground.appendChild(shootingStar);
+            }
+
+            // --- Lógica para conectar estrellas al pasar el ratón ---
+            let mouseX = 0;
+            let mouseY = 0;
+            const connectionRadius = 150; // Radio alrededor del ratón para que las estrellas se activen
+            const maxLineLength = 100;   // Distancia máxima entre dos estrellas para dibujar una línea
+
+            // Función para calcular la distancia entre dos puntos
+            function getDistance(x1, y1, x2, y2) {
+                const dx = x2 - x1;
+                const dy = y2 - y1;
+                return Math.sqrt(dx * dx + dy * dy);
+            }
+
+            // Función para dibujar una línea entre dos estrellas
+            function drawLine(star1, star2, opacity) {
+                const line = document.createElement('div');
+                line.classList.add('connection-line');
+                spaceBackground.appendChild(line);
+                lines.push(line); // Añadir a la lista de líneas para poder eliminarlas
+
+                const x1 = star1.x;
+                const y1 = star1.y;
+                const x2 = star2.x;
+                const y2 = star2.y;
+
+                const distance = getDistance(x1, y1, x2, y2);
+                const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI; // Ángulo en grados
+
+                line.style.width = `${distance}px`;
+                line.style.transform = `rotate(${angle}deg)`;
+                line.style.left = `${x1}px`;
+                line.style.top = `${y1}px`;
+                line.style.opacity = opacity;
+            }
+
+            // Bucle de animación para dibujar las líneas
+            function animateLines() {
+                // Eliminar todas las líneas existentes del DOM
+                lines.forEach(line => line.remove());
+                lines = []; // Vaciar la lista de líneas
+
+                let activeStars = []; // Estrellas dentro del radio de conexión del ratón
+
+                // Primera pasada: identificar estrellas "activas" (cercanas al ratón)
+                starsData.forEach(star => {
+                    const distToMouse = getDistance(star.x, star.y, mouseX, mouseY);
+                    if (distToMouse < connectionRadius) {
+                        activeStars.push(star);
+                    }
+                });
+
+                // Segunda pasada: dibujar líneas entre las estrellas activas
+                for (let i = 0; i < activeStars.length; i++) {
+                    for (let j = i + 1; j < activeStars.length; j++) { // j = i + 1 para evitar duplicados y auto-conexión
+                        const starA = activeStars[i];
+                        const starB = activeStars[j];
+                        const distBetweenStars = getDistance(starA.x, starA.y, starB.x, starB.y);
+
+                        // Si las estrellas están lo suficientemente cerca entre sí
+                        if (distBetweenStars < maxLineLength) {
+                            // La opacidad de la línea disminuye con la distancia
+                            const opacity = 1 - (distBetweenStars / maxLineLength);
+                            drawLine(starA, starB, opacity * 0.3); // Opacidad máxima de 0.3 para sutileza
+                        }
+                    }
+                }
+
+                // Solicitar el siguiente frame de animación
+                requestAnimationFrame(animateLines);
+            }
+
+            // --- Inicialización y Event Listeners ---
+            
+            // Generar estrellas estáticas
+            for (let i = 0; i < numberOfStars; i++) {
+                createStar();
+            }
+
+            // Generar estrellas fugaces a intervalos
+            setInterval(createShootingStar, shootingStarInterval);
+            // También generar una al inicio para que no haya que esperar
+            createShootingStar(); 
+
+            // Iniciar la animación de las líneas de conexión
+            animateLines();
+
+            // Actualizar las posiciones de las estrellas en píxeles al redimensionar la ventana
+            window.addEventListener('resize', updateStarPositions);
+            // Actualización inicial después de que las estrellas son creadas
+            updateStarPositions();
+
+            // Rastrear el movimiento del ratón
+            spaceBackground.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+            });
+        });
+    </script>
+</body>
+</html>
