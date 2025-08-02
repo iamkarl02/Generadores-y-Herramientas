@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generadores & Herramientas</title>
+    <link rel="icon" href="pikachu.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --accent: #f72585;
+            --dark: #14213d;
+            --light: #f8f9fa;
+            --success: #4cc9f0;
+            --discord: #5865F2;
+            --minecraft: #5cb85c;
+            --games: #f8961e;
+            --text: #2b2d42;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+            overflow-x: hidden;
+            background: #ffe6f2;
+        }
+
+        /* Fondo de cartas de baraja */
+        .card-container {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            z-index: -1;
+        }
+        
+        .card {
+            position: absolute;
+            width: 180px;
+            height: 270px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 15px;
+            transform-style: preserve-3d;
+            opacity: 0.95;
+            border: 2px solid rgba(255,182,193,0.5);
+        }
+        
+        .card::before, .card::after {
+            content: attr(data-value);
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .card::before {
+            align-self: flex-start;
+        }
+        
+        .card::after {
+            align-self: flex-end;
+            transform: rotate(180deg);
+        }
+        
+        .card {
+            color: #333;
+        }
+        
+        .card-symbol {
+            font-size: 50px;
+            align-self: center;
+            margin: 15px 0;
+        }
+        
+        .card::before, .card::after {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff6699;
+        }
+
+        /* Header simplificado */
+        .header-content {
+            max-width: 800px;
+            margin: 4rem auto 0;
+            padding: 0 2rem;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            font-weight: 300;
+            margin-bottom: 2rem;
+            color: var(--text);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            position: relative;
+        }
+
+        /* Tarjetas de categorías */
+        .categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2.5rem;
+            margin: 3rem 0;
+        }
+
+        .category {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            transform: translateY(0);
+            position: relative;
+            backdrop-filter: blur(5px);
+        }
+
+        .category:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+        }
+
+        .category-header {
+            padding: 1.8rem;
+            color: white;
+            text-align: center;
+            font-size: 1.6rem;
+            font-weight: 600;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .category-header i {
+            margin-right: 10px;
+            font-size: 1.4em;
+        }
+
+        .minecraft-header {
+            background: linear-gradient(135deg, var(--minecraft), #2e8b57);
+        }
+
+        .discord-header {
+            background: linear-gradient(135deg, var(--discord), #404EED);
+        }
+
+        .games-header {
+            background: linear-gradient(135deg, var(--games), #f3722c);
+        }
+
+        .category-content {
+            padding: 2rem;
+        }
+
+        /* Botones modernos */
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.2rem;
+            border: none;
+            border-radius: 12px;
+            background-color: var(--light);
+            color: var(--text);
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn i {
+            font-size: 1.2rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .minecraft-btn:hover {
+            background-color: var(--minecraft);
+            color: white;
+        }
+
+        .discord-btn:hover {
+            background-color: var(--discord);
+            color: white;
+        }
+
+        .games-btn:hover {
+            background-color: var(--games);
+            color: white;
+        }
+
+        /* Botón HUB */
+        .hub-button-container {
+            text-align: center;
+            margin-top: 3rem; /* Ajusta el margen superior según sea necesario */
+            margin-bottom: 4rem; /* Margen inferior para separar del final de la página */
+        }
+
+        .hub-btn {
+            width: auto; /* Ajusta el ancho del botón */
+            display: inline-flex; /* Para que el botón no ocupe todo el ancho */
+            padding: 1.2rem 2.5rem; /* Aumenta el padding para un botón más grande */
+            font-size: 1.1rem; /* Aumenta el tamaño de la fuente */
+            background-color: var(--primary); /* Color principal */
+            color: white; /* Texto blanco */
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Sombra más pronunciada */
+        }
+
+        .hub-btn:hover {
+            background-color: var(--secondary); /* Color secundario al hacer hover */
+            color: white;
+            transform: translateY(-5px); /* Efecto de elevación mayor */
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Efectos especiales */
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .categories {
+                grid-template-columns: 1fr;
+            }
+            
+            .category-header {
+                padding: 1.5rem;
+                font-size: 1.4rem;
+            }
+
+            .hub-btn {
+                width: 80%; /* Ajusta el ancho del botón en móviles */
+                padding: 1rem 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Fondo de cartas -->
+    <div class="card-container" id="cardContainer"></div>
+
+    <div class="header-content">
+        <h1>Generadores & Herramientas</h1>
+        <p class="subtitle">Potencia tus ideas sin límites. Un espacio libre diseñado para que crees tus proyectos, ya sean de Minecraft, Discord o cualquier otra plataforma.</p>
+    </div>
+
+    <div class="container">
+        <div class="categories">
+            <!-- Categoría Minecraft -->
+            <div class="category floating" style="animation-delay: 0.1s;">
+                <div class="category-header minecraft-header">
+                    <i class="fas fa-cubes"></i> Minecraft
+                </div>
+                <div class="category-content">
+                    <a href="minecraft/datapacks/generador-datapack.html" class="btn minecraft-btn">
+                        <span>Generador de Datapacks</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                    <a href="minecraft/variables/generador-variables.html" class="btn minecraft-btn">
+                        <span>Generador de Variantes</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Categoría Discord -->
+            <div class="category floating" style="animation-delay: 0.3s;">
+                <div class="category-header discord-header">
+                    <i class="fab fa-discord"></i> Discord
+                </div>
+                <div class="category-content">
+                    <a href="discord/generador-nombres-canales.html" class="btn discord-btn">
+                        <span>Generador de Nombres</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                    <a href="discord/generador-texto.html" class="btn discord-btn">
+                        <span>Generador de Texto</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Categoría Juegos -->
+            <div class="category floating" style="animation-delay: 0.5s;">
+                <div class="category-header games-header">
+                    <i class="fas fa-gamepad"></i> Juegos
+                </div>
+                <div class="category-content">
+                    <a href="casino/ruleta.html" class="btn games-btn">
+                        <span>Ruleta de Casino</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                    <div style="margin-top: 2rem; text-align: center;">
+                        <small style="opacity: 0.7;">Más herramientas próximamente...</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nuevo Botón HUB -->
+        <div class="hub-button-container">
+            <a href="https://iamkarl02.github.io/hub/index.html" class="btn hub-btn floating" style="animation-delay: 0.7s;">
+                <span>Volver al HUB</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Script para el fondo de cartas
+        const suits = ['heart', 'diamond', 'club', 'spade'];
+        const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+        const symbols = {
+            heart: '♥',
+            diamond: '♦',
+            club: '♣',
+            spade: '♠'
+        };
+        
+        const cardContainer = document.getElementById('cardContainer');
+        const cardWidth = 180;
+        const cardHeight = 270;
+        const spacingX = 300;
+        const spacingY = 350;
+        const diagonalOffset = 100;
+        
+        function createCard(col, row) {
+            const suit = suits[Math.floor(Math.random() * suits.length)];
+            const value = values[Math.floor(Math.random() * values.length)];
+            
+            const card = document.createElement('div');
+            card.className = `card card-${suit}`;
+            card.setAttribute('data-value', value);
+            
+            card.innerHTML = `
+                <div class="card-symbol">${symbols[suit]}</div>
+            `;
+            
+            const x = col * spacingX + (row % 2 ? diagonalOffset : 0);
+            const y = row * spacingY;
+            
+            card.style.left = `${x - (cardWidth/2)}px`;
+            card.style.top = `${y - (cardHeight/2)}px`;
+            
+            const baseRotation = (row + col) % 2 ? 12 : -12;
+            card.style.transform = `rotate(${baseRotation + ((row+col)%5)}deg)`;
+            card.style.opacity = '0.9';
+            
+            return card;
+        }
+        
+        function generateCards() {
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            
+            const startCol = Math.floor((-cardWidth/2) / spacingX) - 1;
+            const endCol = Math.ceil((viewportWidth + cardWidth/2) / spacingX) + 1;
+            const startRow = Math.floor((-cardHeight/2) / spacingY) - 1;
+            const endRow = Math.ceil((viewportHeight + cardHeight/2) / spacingY) + 1;
+            
+            for (let row = startRow; row <= endRow; row++) {
+                for (let col = startCol; col <= endCol; col++) {
+                    const card = createCard(col, row);
+                    cardContainer.appendChild(card);
+                }
+            }
+        }
+        
+        let lastWidth = 0;
+        let lastHeight = 0;
+        let resizeTimer;
+        
+        function handleResize() {
+            const currentWidth = window.innerWidth;
+            const currentHeight = window.innerHeight;
+            
+            if (Math.abs(currentWidth - lastWidth) > 100 || 
+                Math.abs(currentHeight - lastHeight) > 100) {
+                cardContainer.innerHTML = '';
+                generateCards();
+                lastWidth = currentWidth;
+                lastHeight = currentHeight;
+            }
+        }
+        
+        window.addEventListener('load', () => {
+            generateCards();
+            lastWidth = window.innerWidth;
+            lastHeight = window.innerHeight;
+            
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(handleResize, 100);
+            });
+        });
+
+        // Efecto hover para las tarjetas
+        const cards = document.querySelectorAll('.category');
+        cards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-10px)';
+                this.style.boxShadow = '0 15px 35px rgba(0, 0, 0, 0.12)';
+            });
+
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.08)';
+            });
+        });
+
+        // Efecto para los botones
+        const buttons = document.querySelectorAll('.btn');
+        buttons.forEach(button => {
+            button.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-3px)';
+                this.style.boxShadow = '0 8px 15px rgba(0, 0, 0, 0.1)';
+            });
+
+            button.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.05)';
+            });
+        });
+    </script>
+</body>
+</html>
