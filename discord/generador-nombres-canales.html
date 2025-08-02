@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador Discord Premium</title>
+    <link rel="icon" href="../pikachu.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-main: #FFF0F0; /* Color principal ajustado a 255 240 240 */
+            --bg-section: #F8E8E8; /* Ligeramente más oscuro que el blanco suave */
+            --bg-output: #E6DCDC; /* Un gris claro para el output */
+            --text-primary: #333333; /* Texto oscuro para contraste */
+            --text-secondary: #555555; /* Gris medio oscuro para texto secundario */
+            --accent-color: #7289da; /* Color de acento de Discord */
+            --accent-hover: #677bc4; /* Hover del color de acento */
+            --border-color: #D9CACA; /* Bordes más visibles */
+            --shadow: rgba(0, 0, 0, 0.15); /* Sombra un poco más pronunciada */
+            --card-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); /* Sombra de tarjeta más pronunciada */
+            --input-bg: #F2EBEB; /* Gris claro para inputs */
+            --gradient-start: #7289da; /* Degradado de Discord */
+            --gradient-end: #43a047; /* Degradado verde */
+
+            /* Variables para el fondo de cartas (se mantienen para el fondo de cartas) */
+            --card-bg: #ffffff;
+            --card-text: #333;
+            --card-border: rgba(255,182,193,0.5);
+            --card-symbol-color: #ff6699;
+        }
+
+        /* El light-theme ahora será muy similar al default, pero lo mantenemos por si se quiere diferenciar */
+        .light-theme {
+            --bg-main: #f0f2f5;
+            --bg-section: #ffffff;
+            --bg-output: #f8f9fa;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --accent-color: #7289da;
+            --accent-hover: #677bc4;
+            --border-color: #dddddd;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --input-bg: #f8f9fa;
+            --gradient-start: #677bc4;
+            --gradient-end: #43a047;
+
+            /* Variables para el fondo de cartas en tema claro */
+            --card-bg: #ffffff;
+            --card-text: #333;
+            --card-border: rgba(255,182,193,0.5);
+            --card-symbol-color: #ff6699;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body {
+            background: #ffe6f2; /* Fondo exacto de fondo mejorado.html */
+            color: var(--text-primary); /* Ahora el texto principal será oscuro */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px; /* Mantener padding para espacio alrededor del contenido */
+            min-height: auto; /* Permitir que la altura se ajuste al contenido */
+            line-height: 1.6;
+            position: relative;
+            /* overflow: hidden; ELIMINADO para permitir el scroll */
+        }
+
+        /* Estilos del fondo de cartas (copiados de fondo mejorado.html) */
+        .card-container {
+            position: fixed; /* Mantiene el fondo fijo al hacer scroll */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            z-index: -1; /* Detrás de todo el contenido */
+            overflow: hidden; /* Las cartas dentro del contenedor no deben generar scroll */
+        }
+        
+        .card {
+            position: absolute;
+            width: 180px;
+            height: 270px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 15px;
+            transform-style: preserve-3d;
+            opacity: 0.95;
+            border: 2px solid var(--card-border);
+            color: var(--card-text);
+        }
+        
+        .card::before, .card::after {
+            content: attr(data-value);
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--card-symbol-color);
+        }
+        
+        .card::before {
+            align-self: flex-start;
+        }
+        
+        .card::after {
+            align-self: flex-end;
+            transform: rotate(180deg);
+        }
+        
+        .card-symbol {
+            font-size: 50px;
+            align-self: center;
+            margin: 15px 0;
+            color: var(--card-symbol-color);
+        }
+
+        /* Floating Dock - Top */
+        .floating-dock {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            z-index: 100;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            display: flex;
+            flex-direction: column;
+            min-width: 200px;
+        }
+        
+        .dock-header {
+            font-size: 16px;
+            font-weight: bold;
+            color: #7289da;
+            padding: 10px 15px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .dock-items {
+            display: flex;
+            padding: 10px;
+            gap: 10px;
+        }
+        
+        /* Mobile Dock */
+        @media (max-width: 768px) {
+            .floating-dock {
+                width: 90%;
+                top: 10px;
+            }
+            
+            .dock-items {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+        
+        .dock-item {
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #4f5b66;
+            text-decoration: none;
+            white-space: nowrap;
+            text-align: center;
+        }
+        
+        .dock-item:hover {
+            background: #f0f2f5;
+            color: #7289da;
+        }
+        
+        .dock-item.active {
+            background: #7289da;
+            color: white;
+        }
+
+        /* Contenedor principal para que el contenido sea legible sobre el fondo */
+        .container {
+            max-width: 1200px; /* Se mantiene grande */
+            width: 100%;
+            margin: 180px auto 20px auto; /* Aumentado el margin-top para dejar espacio al dock */
+            position: relative;
+            z-index: 1;
+            background: var(--bg-main); /* Usar el nuevo color de fondo principal */
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .light-theme .container {
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        /* HEADER ha sido eliminado, por lo que estas reglas CSS ya no se aplican a ningún elemento */
+        /*
+        header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding: 15px;
+            background: var(--bg-section);
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+        }
+        */
+
+        .theme-toggle {
+            background: linear-gradient(145deg, var(--accent-color), var(--accent-hover));
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 1rem;
+            gap: 8px;
+            box-shadow: 0 4px 8px var(--shadow);
+            color: white;
+            font-weight: 600;
+        }
+
+        .home-btn {
+            background: linear-gradient(145deg, var(--accent-color), var(--accent-hover));
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 1rem;
+            gap: 8px;
+            box-shadow: 0 4px 8px var(--shadow);
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Eliminado h1 y subtitle */
+        /*
+        h1 {
+            font-size: 2.5rem;
+            margin: 10px 0;
+            text-align: center;
+            background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            letter-spacing: 1px;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        */
+
+        .section {
+            background: var(--bg-section);
+            border-radius: 16px;
+            padding: 30px;
+            width: 100%;
+            position: relative;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-color);
+            margin-bottom: 25px;
+            padding-bottom: 20px; /* Restaurado a un valor normal, ya que .example no estará aquí */
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 25px; /* Mantener el margen inferior */
+        }
+
+        .mode-btn {
+            flex: 1;
+            min-width: 120px;
+            background: var(--bg-main);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .mode-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px var(--shadow);
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(145deg, #66BB6A, #388E3C); /* Nuevo verde para el botón activo */
+            border-color: #388E3C;
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px var(--shadow);
+        }
+
+        .mode-btn i {
+            display: block;
+            font-size: 1.8rem;
+            margin-bottom: 12px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+        }
+
+        select, input {
+            padding: 14px 18px;
+            margin: 8px 0;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 1.1rem;
+            width: 100%;
+            background: var(--input-bg);
+            color: var(--text-primary);
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        select:focus, input:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 4px rgba(114, 137, 218, 0.3);
+        }
+
+        .output {
+            background: var(--bg-output);
+            margin: 30px 0 20px;
+            padding: 25px;
+            font-size: 1.4rem;
+            border-radius: 14px;
+            word-break: break-word;
+            cursor: pointer;
+            user-select: all;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.15);
+            border: 2px solid var(--border-color);
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            transition: transform 0.2s;
+            font-weight: 600;
+        }
+
+        .output:hover {
+            transform: translateY(-3px);
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2), 0 5px 15px var(--shadow);
+        }
+
+        .output::after {
+            content: "Haz clic para copiar";
+            position: absolute;
+            bottom: 8px;
+            right: 15px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            opacity: 0.8;
+        }
+
+        button {
+            margin-top: 8px;
+            padding: 16px;
+            border: none;
+            border-radius: 14px;
+            background: linear-gradient(145deg, #4CAF50, #388E3C); /* Verde más oscuro y con sentido */
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 5px 15px var(--shadow);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px var(--shadow);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* Eliminado .example y sus sub-estilos */
+        /*
+        .example {
+            position: fixed;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            width: 300px;
+            padding: 25px;
+            background: linear-gradient(135deg, var(--bg-section), var(--bg-main));
+            border-radius: 20px;
+            border: 2px solid var(--accent-color);
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.5), 0 0 40px rgba(76, 175, 80, 0.4);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .example:hover {
+            transform: translateY(-50%) scale(1.02);
+            box-shadow: 0 0 30px rgba(76, 175, 80, 0.7), 0 0 60px rgba(76, 175, 80, 0.4);
+        }
+
+        .example h3 {
+            margin-bottom: 15px;
+            color: var(--accent-color);
+            font-size: 1.8rem;
+            text-align: center;
+            text-shadow: 0 0 10px var(--accent-color);
+        }
+
+        .example-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 15px;
+            background: var(--bg-output);
+            border-radius: 15px;
+            border: 1px solid var(--border-color);
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .example-item:hover {
+            background: var(--bg-section);
+            transform: translateX(5px);
+        }
+
+        .example-icon {
+            font-size: 2.2rem;
+            min-width: 50px;
+            text-align: center;
+            color: var(--accent-color);
+            text-shadow: 0 0 5px var(--accent-color);
+        }
+
+        .example-text {
+            font-size: 1.3rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        */
+
+        /* Reglas para el logo de Discord, ahora ocultas */
+        .discord-logo {
+            display: none; /* Oculta completamente el elemento */
+        }
+
+        .discord-logo i {
+            /* No es necesario definir estilos si el elemento padre está oculto */
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .copied {
+            animation: pulse 0.5s ease;
+            background: linear-gradient(145deg, #7289da, #4caf50);
+            color: white;
+        }
+
+        /* Estilo para centrar el footer */
+        footer {
+            text-align: center;
+            margin-top: 20px; /* Añadir un poco de espacio superior */
+            color: var(--text-secondary); /* Usar el color de texto secundario */
+            font-size: 0.9rem;
+        }
+
+        /* Estilos para el slider de color */
+        .color-picker-container {
+            display: none; /* Ocultar el contenedor del slider de color */
+        }
+
+        .color-picker-container label {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0; /* Eliminar margen extra */
+        }
+
+        .color-picker-container input[type="color"] {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            width: 80px; /* Ancho del selector de color */
+            height: 40px; /* Alto del selector de color */
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            border-radius: 8px;
+            overflow: hidden; /* Para que el color no se salga del borde */
+        }
+
+        .color-picker-container input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+
+        .color-picker-container input[type="color"]::-webkit-color-swatch {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .color-picker-container input[type="color"]::-moz-color-swatch-wrapper {
+            padding: 0;
+        }
+
+        .color-picker-container input[type="color"]::-moz-color-swatch {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Floating Dock -->
+    <div class="floating-dock">
+        <div class="dock-header">Generadores & Herramientas</div>
+        <div class="dock-items">
+            <a href="../index.html" class="dock-item">Index</a>
+            <a href="generador-texto.html" class="dock-item">Generador Texto</a>
+            <!-- Asumiendo que esta página es el "Generador Nombres" -->
+            <a href="code (5).html" class="dock-item active">Generador Nombres</a> 
+        </div>
+    </div>
+
+    <!-- Fondo de cartas de baraja (copiado de fondo mejorado.html) -->
+    <div class="card-container" id="cardContainer"></div>
+
+    <div class="container">
+        <!-- La sección <header> ha sido eliminada -->
+
+        <!-- El logo de Discord ha sido eliminado de aquí -->
+
+        <!-- Título y subtítulo eliminados -->
+        <!-- <h1>Generador de Discord</h1> -->
+        <!-- <p class="subtitle">Crea nombres elegantes para canales, categorías y salas de voz con estilos únicos</p> -->
+
+        <!-- Slider de color -->
+        <div class="color-picker-container">
+            <label for="mainColorPicker"><i class="fas fa-palette"></i> Ajustar Color Principal:</label>
+            <input type="color" id="mainColorPicker" value="#d0d0d0">
+        </div>
+
+        <div class="section">
+            <div class="mode-selector">
+                <div class="mode-btn active" data-mode="categoria">
+                    <i class="fas fa-bookmark"></i>
+                    Categoría
+                </div>
+                <div class="mode-btn" data-mode="canal">
+                    <i class="fas fa-hashtag"></i>
+                    Canal
+                </div>
+                <div class="mode-btn" data-mode="voz">
+                    <i class="fas fa-microphone-alt"></i>
+                    Voz
+                </div>
+            </div>
+
+            <div id="formContainer"></div>
+
+            <!-- La sección .example ha sido eliminada -->
+        </div>
+
+        <footer>
+            © 2025 Carlos — Todos los derechos reservados.
+        </footer>
+    </div>
+
+    <!-- La sección .example ha sido eliminada de aquí -->
+
+    <script>
+        // Elementos DOM
+        const formContainer = document.getElementById("formContainer");
+        // const themeToggle = document.getElementById("themeToggle"); // Este elemento ya no existe en el HTML, se comenta o elimina si no se usa.
+        const modeBtns = document.querySelectorAll(".mode-btn");
+        // const mainColorPicker = document.getElementById("mainColorPicker"); // Eliminado ya que el elemento está oculto
+
+        // Mapa de minúsculas pequeñas
+        const smallCapsMap = {
+            A: 'ᴀ', B: 'ʙ', C: 'ᴄ', D: 'ᴅ', E: 'ᴇ', F: 'ꜰ', G: 'ɢ',
+            H: 'ʜ', I: 'ɪ', J: 'ᴊ', K: 'ᴋ', L: 'ʟ', M: 'ᴍ', N: 'ɴ',
+            O: 'ᴏ', P: 'ᴘ', Q: 'ǫ', R: 'ʀ', S: 'ꜱ', T: 'ᴛ', U: 'ᴜ',
+            V: 'ᴠ', W: 'ᴡ', X: 'x', Y: 'ʏ', Z: 'ᴢ',
+            a: 'ᴀ', b: 'ʙ', c: 'ᴄ', d: 'ᴅ', e: 'ᴇ', f: 'ꜰ', g: 'ɢ',
+            h: 'ʜ', i: 'ɪ', j: 'ᴊ', k: 'ᴋ', l: 'ʟ', m: 'ᴍ', n: 'ɴ',
+            o: 'ᴏ', p: 'ᴘ', q: 'ǫ', r: 'ʀ', s: 'ꜱ', t: 'ᴛ', u: 'ᴜ',
+            v: 'ᴠ', w: 'ᴡ', x: 'x', y: 'ʏ', z: 'ᴢ', ' ': ' '
+        };
+
+        // Convertir a minúsculas pequeñas
+        const toSmallCaps = text => [...text].map(ch => smallCapsMap[ch] || ch).join('');
+
+        // Convertir a superíndice
+        const toSup = n => n.replace(/[0-9]/g, d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[+d]);
+
+        // Inicializar modo actual
+        let currentMode = "categoria";
+
+        // Renderizar formulario según el modo
+        const renderForm = (mode) => {
+            formContainer.innerHTML = '';
+            const form = document.createElement('div');
+            form.className = 'form-container';
+            form.innerHTML = `
+                <div class="form-group">
+                    <label><i class="fas fa-smile"></i> Emoji:</label>
+                    <input id="emoji" type="text" placeholder="Ej: 🧾" maxlength="2" value="🧾">
+                    <small>Elige un emoji que represente tu categoría/canal</small>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-font"></i> Texto:</label>
+                    <input id="texto" type="text" placeholder="Ej: Información" value="Información">
+                    <small>Texto que aparecerá en tu canal/categoría</small>
+                </div>
+            `;
+
+            if (mode === 'canal') {
+                form.innerHTML += `
+                    <div class="form-group">
+                        <label><i class="fas fa-paint-brush"></i> Estilo:</label>
+                        <select id="estilo">
+                            <option value="╚・">╚・</option>
+                            <option value="╠・">╠・</option>
+                            <option value="╔・">╔・</option>
+                            <option value="『』">『』</option>
+                            <option value="｜">｜</option>
+                            <option value="・">・</option>
+                        </select>
+                    </div>
+                `;
+            }
+
+            if (mode === 'voz') {
+                form.innerHTML += `
+                    <div class="form-group">
+                        <label><i class="fas fa-sort-numeric-up"></i> Número:</label>
+                        <input id="numero" type="number" min="0" max="99" value="2">
+                        <small>Número de sala de voz (aparecerá como superíndice)</small>
+                    </div>
+                `;
+            }
+
+            form.innerHTML += `
+                <div class="output" id="resultado">Tu resultado aparecerá aquí...</div>
+                <button onclick="copyResult()">
+                    <i class="fas fa-copy"></i>
+                    Copiar resultado
+                </button>
+            `;
+
+            formContainer.appendChild(form);
+
+            ['emoji', 'texto', 'estilo', 'numero'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('input', updateResult);
+            });
+
+            updateResult();
+        };
+
+        // Actualizar resultado
+        const updateResult = () => {
+            const emoji = document.getElementById('emoji')?.value || '🧾';
+            const texto = toSmallCaps(document.getElementById('texto')?.value || 'información');
+            const estilo = document.getElementById('estilo')?.value || '╚・';
+            const numero = document.getElementById('numero')?.value || '2';
+            const supNum = toSup(numero);
+
+            let result = '';
+
+            if (currentMode === 'categoria') {
+                result = `${emoji}｜${texto}｜${emoji}`;
+            } else if (currentMode === 'canal') {
+                if (estilo === '『』') {
+                    result = `『${emoji}』${texto}`;
+                } else if (estilo === '｜') {
+                    result = `${emoji}｜${texto}`;
+                } else if (estilo === '・') {
+                    result = `${emoji}・${texto}`;
+                } else {
+                    result = `${estilo}${emoji}｜${texto}`;
+                }
+            } else if (currentMode === 'voz') {
+                result = `${emoji} | ${texto}${supNum}`;
+            }
+
+            document.getElementById('resultado').textContent = result;
+        };
+
+        // Copiar resultado
+        window.copyResult = () => {
+            const content = document.getElementById('resultado').textContent;
+            navigator.clipboard.writeText(content);
+
+            // Efecto visual de copiado
+            const output = document.getElementById('resultado');
+            output.classList.add('copied');
+            setTimeout(() => output.classList.remove('copied'), 500);
+        };
+
+        // Cambiar modo (categoría, canal, voz)
+        modeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                modeBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentMode = btn.dataset.mode;
+                renderForm(currentMode);
+            });
+        });
+
+        // Lógica para el slider de color (eliminada la funcionalidad ya que el elemento está oculto)
+        // mainColorPicker.addEventListener('input', (event) => { ... });
+
+
+        // El código para cambiar tema (themeToggle) ha sido eliminado ya que el botón no existe.
+        // Si se desea reintroducir la funcionalidad de cambio de tema sin un botón visible,
+        // se necesitaría un mecanismo diferente para activarla (ej. un atajo de teclado, un menú oculto, etc.).
+
+        // Lógica del fondo de cartas (copiada de fondo mejorado.html)
+        const suits = ['heart', 'diamond', 'club', 'spade'];
+        const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+        const symbols = {
+            heart: '♥',
+            diamond: '♦',
+            club: '♣',
+            spade: '♠'
+        };
+        
+        const cardContainer = document.getElementById('cardContainer');
+        const cardWidth = 180;
+        const cardHeight = 270;
+        const spacingX = 300;
+        const spacingY = 350;
+        const diagonalOffset = 100;
+        
+        function createCard(col, row) {
+            const suit = suits[Math.floor(Math.random() * suits.length)];
+            const value = values[Math.floor(Math.random() * values.length)];
+            
+            const card = document.createElement('div');
+            card.className = `card card-${suit}`;
+            card.setAttribute('data-value', value);
+            
+            card.innerHTML = `
+                <div class="card-symbol">${symbols[suit]}</div>
+            `;
+            
+            const x = col * spacingX + (row % 2 ? diagonalOffset : 0);
+            const y = row * spacingY;
+            
+            card.style.left = `${x - (cardWidth/2)}px`;
+            card.style.top = `${y - (cardHeight/2)}px`;
+            
+            const baseRotation = (row + col) % 2 ? 12 : -12;
+            card.style.transform = `rotate(${baseRotation + ((row+col)%5)}deg)`;
+            card.style.opacity = '0.9';
+            
+            return card;
+        }
+        
+        function generateCards() {
+            cardContainer.innerHTML = ''; // Limpiar cartas existentes
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            
+            const startCol = Math.floor((-cardWidth/2) / spacingX) - 1;
+            const endCol = Math.ceil((viewportWidth + cardWidth/2) / spacingX) + 1;
+            const startRow = Math.floor((-cardHeight/2) / spacingY) - 1;
+            const endRow = Math.ceil((viewportHeight + cardHeight/2) / spacingY) + 1;
+            
+            for (let row = startRow; row <= endRow; row++) {
+                for (let col = startCol; col <= endCol; col++) {
+                    const card = createCard(col, row);
+                    cardContainer.appendChild(card);
+                }
+            }
+        }
+        
+        let lastWidth = 0;
+        let lastHeight = 0;
+        let resizeTimer;
+        
+        function handleResize() {
+            const currentWidth = window.innerWidth;
+            const currentHeight = window.innerHeight;
+            
+            if (Math.abs(currentWidth - lastWidth) > 100 || 
+                Math.abs(currentHeight - lastHeight) > 100) {
+                generateCards();
+                lastWidth = currentWidth;
+                lastHeight = currentHeight;
+            }
+        }
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', () => {
+            renderForm(currentMode);
+            generateCards(); // Inicializa el fondo de cartas
+            lastWidth = window.innerWidth;
+            lastHeight = window.innerHeight;
+            
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(handleResize, 100);
+            });
+        });
+    </script>
+</body>
+</html>

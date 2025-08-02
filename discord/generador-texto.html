@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generador Discord</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      overflow-x: hidden;
+      min-height: 100vh;
+      background: #ffe6f2;
+      color: #2c2f33;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      position: relative;
+    }
+    
+    .card-container {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      z-index: -1;
+      top: 0;
+      left: 0;
+    }
+    
+    .card {
+      position: absolute;
+      width: 180px;
+      height: 270px;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 15px;
+      transform-style: preserve-3d;
+      opacity: 0.95;
+      border: 2px solid rgba(255,182,193,0.5);
+    }
+
+    .card::before, .card::after {
+      content: attr(data-value);
+      font-size: 24px;
+      font-weight: bold;
+      color: #ff6699;
+    }
+    
+    .card::before {
+      align-self: flex-start;
+    }
+    
+    .card::after {
+      align-self: flex-end;
+      transform: rotate(180deg);
+    }
+    
+    .card-symbol {
+      font-size: 50px;
+      align-self: center;
+      margin: 15px 0;
+    }
+
+    /* Floating Dock - Top */
+    .floating-dock {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+      z-index: 100;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(5px);
+      display: flex;
+      flex-direction: column;
+      min-width: 200px;
+    }
+    
+    .dock-header {
+      font-size: 16px;
+      font-weight: bold;
+      color: #7289da;
+      padding: 10px 15px;
+      text-align: center;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .dock-items {
+      display: flex;
+      padding: 10px;
+      gap: 10px;
+    }
+    
+    /* Mobile Dock */
+    @media (max-width: 768px) {
+      .floating-dock {
+        width: 90%;
+        top: 10px;
+      }
+      
+      .dock-items {
+        flex-direction: column;
+        gap: 5px;
+      }
+    }
+    
+    .dock-item {
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #4f5b66;
+      text-decoration: none;
+      white-space: nowrap;
+      text-align: center;
+    }
+    
+    .dock-item:hover {
+      background: #f0f2f5;
+      color: #7289da;
+    }
+    
+    .dock-item.active {
+      background: #7289da;
+      color: white;
+    }
+
+    /* Main Content */
+    .main-content {
+      width: 100%;
+      max-width: 1000px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 100px auto 20px;
+      padding: 20px;
+    }
+    
+    .buttons {
+      margin: 20px 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      width: 100%;
+    }
+    
+    button {
+      padding: 10px 16px;
+      background-color: #7289da;
+      border: none;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: all 0.2s;
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+    
+    button:hover {
+      background-color: #677bc4;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .container {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 25px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.85);
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    
+    @media (min-width: 992px) {
+      .container {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    
+    .text-section {
+      width: 100%;
+      min-width: 0;
+    }
+    
+    textarea {
+      width: 100%;
+      height: 400px;
+      padding: 15px;
+      font-size: 16px;
+      background: white;
+      color: #2c2f33;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      resize: none;
+      font-family: inherit;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+      overflow-y: auto;
+      max-width: 100%;
+    }
+    
+    .preview {
+  width: 100%;
+  height: 400px;
+  padding: 15px;
+  background: white;
+  color: #2c2f33;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  overflow-y: auto;
+  white-space: pre-line; /* Cambiado de pre-wrap a pre-line */
+  font-family: inherit;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+  overflow-x: hidden;
+  word-break: break-word;
+}
+    
+    .spoiler {
+      background: #e0e0e0;
+      color: #e0e0e0;
+      border-radius: 4px;
+      padding: 0 5px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .spoiler:hover {
+      background: #d0d0d0;
+    }
+    
+    .spoiler.revealed {
+      color: #2c2f33;
+      background: #f0f0f0;
+    }
+    
+    .blockquote {
+      border-left: 4px solid #7289da;
+      padding-left: 15px;
+      color: #555;
+      margin: 8px 0;
+      line-height: 1.4em;
+      background: #f8f9fa;
+      padding: 10px;
+      border-radius: 0 8px 8px 0;
+    }
+    
+    .code {
+      background: #f0f2f5;
+      font-family: monospace;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #d6336c;
+      font-size: 0.9em;
+    }
+    
+    .codeblock {
+      background: #f0f2f5;
+      padding: 12px;
+      font-family: monospace;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      margin: 10px 0;
+      overflow-x: auto;
+      color: #333;
+      border-left: 3px solid #7289da;
+    }
+    
+    .copy-btn {
+      background: #57b560;
+      padding: 10px 20px;
+      font-size: 1rem;
+      margin-top: 10px;
+      width: 100%;
+      max-width: 250px;
+    }
+    
+    .copy-btn:hover {
+      background: #4ca055;
+    }
+
+    /* Nuevos estilos para títulos */
+    .h1 {
+      font-size: 1.8em;
+      font-weight: bold;
+      margin: 15px 0 10px 0;
+      color: #2c2f33;
+    }
+    
+    .h2 {
+      font-size: 1.5em;
+      font-weight: bold;
+      margin: 12px 0 8px 0;
+      color: #2c2f33;
+    }
+    
+    .h3 {
+      font-size: 1.2em;
+      font-weight: bold;
+      margin: 10px 0 6px 0;
+      color: #2c2f33;
+    }
+
+    .warning {
+      color: #ff3333;
+      background-color: #ffeeee;
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 20px;
+      text-align: center;
+      border: 1px solid #ff9999;
+      max-width: 1000px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card-container" id="cardContainer"></div>
+
+  <!-- Floating Dock -->
+  <div class="floating-dock">
+    <div class="dock-header">Generadores & Herramientas</div>
+    <div class="dock-items">
+      <a href="../index.html" class="dock-item">Index</a>
+      <a href="generador-texto.html" class="dock-item active">Generador Texto</a>
+      <a href="generador-nombres-canales.html" class="dock-item">Generador Nombres</a>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="buttons">
+      <button onclick="wrapText('**', '**')">**Negrita**</button>
+      <button onclick="wrapText('*', '*')">*Cursiva*</button>
+      <button onclick="wrapText('~~', '~~')">~~Tachado~~</button>
+      <button onclick="wrapText('||', '||')">||Spoiler||</button>
+      <button onclick="wrapText('`', '`')">Código</button>
+      <button onclick="wrapText('```\n', '\n```')">Bloque</button>
+      <button onclick="activateQuoteMode()">>>> Cita larga</button>
+      <!-- Nuevos botones para títulos -->
+      <button onclick="wrapText('# ', '')"># Título 1</button>
+      <button onclick="wrapText('## ', '')">## Título 2</button>
+      <button onclick="wrapText('### ', '')">### Título 3</button>
+    </div>
+
+    <div class="container">
+      <div class="text-section">
+        <textarea id="input" placeholder="Escribe tu texto con formato de Discord..."></textarea>
+      </div>
+      <div class="text-section">
+        <div id="preview" class="preview"></div>
+      </div>
+    </div>
+
+    <button class="copy-btn" onclick="copyToClipboard()">📋 Copiar al portapapeles</button>
+
+    <!-- Aviso de precaución -->
+    <div class="warning">
+      ⚠️ Advertencia: Algunos formatos mostrados en la previsualización pueden no renderizarse igual en Discord. 
+      Esta es solo una aproximación visual. Verifica el resultado final en Discord.
+    </div>
+  </div>
+
+  <script>
+    // Código para las cartas de fondo mejorado
+    const suits = ['heart', 'diamond', 'club', 'spade'];
+    const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+    const symbols = {
+        heart: '♥',
+        diamond: '♦',
+        club: '♣',
+        spade: '♠'
+    };
+    
+    const cardContainer = document.getElementById('cardContainer');
+    const cardWidth = 180;
+    const cardHeight = 270;
+    const spacingX = 300;
+    const spacingY = 350;
+    const diagonalOffset = 100;
+    
+    function createCard(col, row) {
+        const suit = suits[Math.floor(Math.random() * suits.length)];
+        const value = values[Math.floor(Math.random() * values.length)];
+        
+        const card = document.createElement('div');
+        card.className = `card card-${suit}`;
+        card.setAttribute('data-value', value);
+        
+        card.innerHTML = `
+            <div class="card-symbol">${symbols[suit]}</div>
+        `;
+        
+        const x = col * spacingX + (row % 2 ? diagonalOffset : 0);
+        const y = row * spacingY;
+        
+        card.style.left = `${x - (cardWidth/2)}px`;
+        card.style.top = `${y - (cardHeight/2)}px`;
+        
+        const baseRotation = (row + col) % 2 ? 12 : -12;
+        card.style.transform = `rotate(${baseRotation + ((row+col)%5)}deg)`;
+        card.style.opacity = '0.9';
+        
+        return card;
+    }
+    
+    function generateCards() {
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        
+        const startCol = Math.floor((-cardWidth/2) / spacingX) - 1;
+        const endCol = Math.ceil((viewportWidth + cardWidth/2) / spacingX) + 1;
+        const startRow = Math.floor((-cardHeight/2) / spacingY) - 1;
+        const endRow = Math.ceil((viewportHeight + cardHeight/2) / spacingY) + 1;
+        
+        for (let row = startRow; row <= endRow; row++) {
+            for (let col = startCol; col <= endCol; col++) {
+                const card = createCard(col, row);
+                cardContainer.appendChild(card);
+            }
+        }
+    }
+    
+    let lastWidth = 0;
+    let lastHeight = 0;
+    let resizeTimer;
+    
+    function handleResize() {
+        const currentWidth = window.innerWidth;
+        const currentHeight = window.innerHeight;
+        
+        if (Math.abs(currentWidth - lastWidth) > 100 || 
+            Math.abs(currentHeight - lastHeight) > 100) {
+            cardContainer.innerHTML = '';
+            generateCards();
+            lastWidth = currentWidth;
+            lastHeight = currentHeight;
+        }
+    }
+    
+    window.addEventListener('load', () => {
+        generateCards();
+        lastWidth = window.innerWidth;
+        lastHeight = window.innerHeight;
+        
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(handleResize, 100);
+        });
+    });
+
+    // Código del generador de texto mejorado
+    const input = document.getElementById('input');
+    const preview = document.getElementById('preview');
+    let quoteMode = false;
+
+    // Manejo mejorado del Enter para citas
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        const cursorPos = input.selectionStart;
+        const textBeforeCursor = input.value.substring(0, cursorPos);
+        const currentLineStart = textBeforeCursor.lastIndexOf('\n') + 1;
+        const currentLine = input.value.substring(currentLineStart, cursorPos);
+        
+        // Modo cita: auto-insertar "> " al presionar Enter
+        if (currentLine.startsWith('> ')) {
+          e.preventDefault();
+          const newText = input.value.substring(0, cursorPos) + '\n> ' + input.value.substring(cursorPos);
+          input.value = newText;
+          input.selectionStart = input.selectionEnd = cursorPos + 3;
+          updatePreview();
+        }
+      }
+    });
+
+    input.addEventListener('input', function() {
+      // Desactivar modo cita si se borra el "> " manualmente
+      const cursorPos = input.selectionStart;
+      const textBeforeCursor = input.value.substring(0, cursorPos);
+      const currentLineStart = textBeforeCursor.lastIndexOf('\n') + 1;
+      const currentLine = input.value.substring(currentLineStart, cursorPos);
+      
+      if (currentLine === '') {
+        quoteMode = false;
+      }
+      
+      updatePreview();
+    });
+
+    function wrapText(startTag, endTag) {
+      const start = input.selectionStart;
+      const end = input.selectionEnd;
+      const selected = input.value.substring(start, end);
+      const newText = startTag + selected + endTag;
+      input.setRangeText(newText, start, end, 'end');
+      input.focus();
+      updatePreview();
+    }
+
+    function activateQuoteMode() {
+      quoteMode = true;
+      const start = input.selectionStart;
+      const end = input.selectionEnd;
+      const selected = input.value.substring(start, end);
+      const replacement = '> ' + selected.replace(/\n/g, '\n> ');
+      input.setRangeText(replacement, start, end, 'end');
+      input.focus();
+      updatePreview();
+    }
+
+    function escapeHTML(text) {
+      return text.replace(/[&<>"']/g, tag => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;',
+        '"': '&quot;', "'": '&#039;'
+      })[tag]);
+    }
+
+    function formatLine(line) {
+      // Procesar títulos primero
+      if (line.startsWith('# ')) {
+        return `<div class="h1">${escapeHTML(line.substring(2))}</div>`;
+      } else if (line.startsWith('## ')) {
+        return `<div class="h2">${escapeHTML(line.substring(3))}</div>`;
+      } else if (line.startsWith('### ')) {
+        return `<div class="h3">${escapeHTML(line.substring(4))}</div>`;
+      }
+      
+      // Procesar otros formatos
+      line = escapeHTML(line);
+      line = line.replace(/\|\|(.+?)\|\|/g, '<span class="spoiler">$1</span>');
+      line = line.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      line = line.replace(/\*(.+?)\*/g, '<em>$1</em>');
+      line = line.replace(/~~(.+?)~~/g, '<del>$1</del>');
+      line = line.replace(/`([^`]+)`/g, '<span class="code">$1</span>');
+      return line;
+    }
+
+    function updatePreview() {
+  const text = input.value;
+  const lines = text.split('\n');
+  let parsed = [];
+  let quoteBlockLines = [];
+  let inCodeBlock = false;
+  let codeBlockContent = [];
+
+  function flushQuoteBlock() {
+    if (quoteBlockLines.length > 0) {
+      parsed.push('<div class="blockquote">' +
+        quoteBlockLines.map(line => line === '' ? '<br>' : formatLine(line)).join('<br>') + // Cambiado de join('') a join('<br>')
+      '</div>');
+      quoteBlockLines = [];
+    }
+  }
+
+  function flushCodeBlock() {
+    if (codeBlockContent.length > 0) {
+      parsed.push('<pre class="codeblock">' +
+        escapeHTML(codeBlockContent.join('\n')) +
+      '</pre>');
+      codeBlockContent = [];
+    }
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    
+    if (line.startsWith('```')) {
+      if (inCodeBlock) {
+        flushCodeBlock();
+        inCodeBlock = false;
+      } else {
+        flushQuoteBlock();
+        inCodeBlock = true;
+      }
+      continue;
+    }
+
+    if (inCodeBlock) {
+      codeBlockContent.push(line);
+      continue;
+    }
+
+    if (line.startsWith('> ')) {
+      quoteBlockLines.push(line.slice(2));
+    } else {
+      flushQuoteBlock();
+      if (line !== '' || (i < lines.length - 1 && lines[i + 1] !== '')) {
+        parsed.push(formatLine(line));
+        if (i < lines.length - 1) {
+          parsed.push('\n');
+        }
+      }
+    }
+  }
+
+  flushQuoteBlock();
+  flushCodeBlock();
+
+  preview.innerHTML = parsed.join('');
+  
+  preview.querySelectorAll('.spoiler').forEach(el => {
+    el.addEventListener('click', () => el.classList.toggle('revealed'));
+  });
+}
+
+    function copyToClipboard() {
+      navigator.clipboard.writeText(input.value).then(() => {
+      });
+    }
+
+    // Initial setup
+    updatePreview();
+  </script>
+</body>
+</html>
