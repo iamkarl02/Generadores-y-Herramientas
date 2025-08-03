@@ -1,0 +1,2555 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Variantes de Mobs - Funcional</title>
+    <link rel="icon" href="../../pikachu.png" type="image/png">
+    <!-- CSS para estilo Minecraft y barra de navegación -->
+    <style>
+        /* Estilos Generales */
+        body {
+            font-family: 'Minecraftia', 'Press Start 2P', cursive, sans-serif; /* Fuente estilo Minecraft */
+            background-color: #36393f; /* Fondo oscuro */
+            color: #e0e0e0; /* Texto claro */
+            margin: 0;
+            overflow-x: hidden; /* Evitar scroll horizontal en el body */
+            /* Fondo Retro */
+            background-image: url('https://www.transparenttextures.com/patterns/stardust.png'); /* Textura de fondo retro */
+            background-repeat: repeat;
+            background-size: 50px; /* Tamaño de la textura más pequeño para más repetición */
+            background-attachment: fixed; /* Para que el fondo no se mueva con el scroll */
+
+            /* Centrar el contenido principal */
+            display: flex;
+            flex-direction: column; /* Apilar elementos verticalmente */
+            justify-content: flex-start; /* Alinear arriba */
+            align-items: center; /* Centrar horizontalmente */
+            min-height: 100vh; /* Asegura que el body ocupe al menos toda la altura de la ventana */
+            padding-top: 50px; /* Espacio para la barra de navegación fija */
+            box-sizing: border-box; /* Incluir padding en el cálculo de la altura */
+        }
+
+        /* Fuente Minecraftia (si está disponible o se puede importar) */
+        @font-face {
+            font-family: 'Minecraftia';
+            src: url('path/to/Minecraftia.ttf') format('truetype'); /* Reemplaza con la ruta real de tu fuente */
+            /* Considera añadir fallbacks o Google Fonts como 'Press Start 2P' */
+        }
+
+        /* Barra de Navegación */
+        .navbar {
+            background-color: #2c2f33; /* Color de fondo de la barra */
+            padding: 8px 15px; /* Reducir padding */
+            position: fixed; /* Fija la barra en la parte superior */
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000; /* Asegura que esté por encima de otros elementos */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); /* Sombra sutil */
+            display: flex;
+            justify-content: center; /* Centrar los elementos de navegación */
+            align-items: center;
+            border-bottom: 2px solid #4a4d52; /* Borde inferior */
+        }
+
+        .navbar a {
+            color: #7289da; /* Color de los enlaces */
+            text-decoration: none;
+            padding: 6px 12px; /* Reducir padding de enlaces */
+            margin: 0 8px; /* Reducir margen entre enlaces */
+            border: 2px solid transparent;
+            border-radius: 3px; /* Ligeramente más cuadrado */
+            transition: all 0.3s ease;
+            font-size: 1em; /* Ligeramente más pequeño */
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5); /* Sombra de texto */
+        }
+
+        .navbar a:hover {
+            background-color: #4a4d52; /* Fondo al pasar el ratón */
+            border-color: #7289da;
+            color: #ffffff;
+            transform: translateY(-2px); /* Pequeño efecto de elevación */
+        }
+
+        .navbar a.active {
+            background-color: #7289da;
+            color: #ffffff;
+            border-color: #ffffff;
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(114, 137, 218, 0.7); /* Resplandor para el activo */
+        }
+
+        /* Contenedor Principal */
+        .container {
+            max-width: 100%; /* Permitir que el contenedor ocupe todo el ancho disponible */
+            height: auto; /* Permitir que la altura se ajuste al contenido */
+            min-height: calc(100vh - 80px); /* Asegurar una altura mínima */
+            width: 95%; /* Aumentar el ancho en pantallas grandes */
+            margin: 10px auto; /* Reducir margen superior/inferior */
+            padding: 15px; /* Reducir padding */
+            background-color: #2c2f33;
+            border: 3px solid #4a4d52;
+            border-radius: 5px;
+            box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.7);
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Encabezado */
+        header {
+            text-align: center;
+            margin-bottom: 20px; /* Reducir margen inferior */
+            padding-bottom: 15px; /* Reducir padding inferior */
+            border-bottom: 2px dashed #4a4d52;
+            flex-shrink: 0;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 10px; /* Reducir margen inferior */
+        }
+
+        .title {
+            color: #ffcc00;
+            text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.7), 
+                         -1px -1px 0px rgba(0, 0, 0, 0.7), 
+                         1px -1px 0px rgba(0, 0, 0, 0.7), 
+                         -1px 1px 0px rgba(0, 0, 0, 0.7), 
+                         1px 1px 0px rgba(0, 0, 0, 0.7);
+            font-size: 2em; /* Ligeramente más pequeño */
+            margin: 0;
+        }
+
+        header p {
+            color: #b0b0b0;
+            font-size: 0.85em; /* Ligeramente más pequeño */
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+        }
+
+        /* Botones */
+        button {
+            background-color: #7289da;
+            color: white;
+            border: 2px solid #5b6eaf;
+            padding: 8px 15px; /* Reducir padding */
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.95em; /* Ligeramente más pequeño */
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.5);
+        }
+
+        button:hover {
+            background-color: #5b6eaf;
+            border-color: #7289da;
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.5);
+        }
+
+        .download-button {
+            background-color: #4CAF50;
+            border-color: #388E3C;
+        }
+
+        .download-button:hover {
+            background-color: #388E3C;
+            border-color: #4CAF50;
+        }
+
+        .config-button {
+            background-color: #f44336;
+            border-color: #d32f2f;
+            margin-left: 10px;
+        }
+
+        .config-button:hover {
+            background-color: #d32f2f;
+            border-color: #f44336;
+        }
+
+        .import-button {
+            background-color: #008CBA;
+            border-color: #005f7f;
+            margin-right: 10px;
+        }
+
+        .import-button:hover {
+            background-color: #005f7f;
+            border-color: #008CBA;
+        }
+
+        /* Paneles y Layout */
+        .main-content {
+            display: flex;
+            flex-direction: column; /* Por defecto, apilar en columnas para mejor responsividad */
+            gap: 15px; /* Reducir el espacio entre paneles */
+            flex-grow: 1;
+            overflow-x: hidden; /* Evitar scroll horizontal innecesario */
+            padding-bottom: 15px; /* Reducir padding inferior */
+        }
+
+        .left-panel, .right-panel {
+            background-color: #36393f;
+            border: 2px solid #4a4d52;
+            border-radius: 5px;
+            padding: 15px; /* Reducir padding */
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.3);
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            width: 100%; /* Ocupar todo el ancho disponible */
+            min-width: unset; /* Eliminar ancho mínimo fijo */
+            height: auto; /* Permitir que la altura se ajuste al contenido */
+            overflow-y: visible; /* Permitir scroll vertical si es necesario */
+        }
+
+        /* Pestañas de Variantes */
+        #variantTabsContainer {
+            display: flex;
+            flex-direction: column;
+            gap: 8px; /* Reducir espacio entre pestañas */
+            margin-top: 10px; /* Reducir margen superior */
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-right: 0; /* Eliminar padding derecho */
+        }
+
+        .variant-tab {
+            background-color: #4a4d52;
+            padding: 8px 12px; /* Reducir padding */
+            border: 1px solid #5b6eaf;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .variant-tab:hover {
+            background-color: #5b6eaf;
+            border-color: #7289da;
+        }
+
+        .variant-tab.active {
+            background-color: #7289da;
+            border-color: #ffffff;
+            font-weight: bold;
+            box-shadow: 0 0 8px rgba(114, 137, 218, 0.5);
+        }
+
+        .variant-tab span {
+            color: #e0e0e0;
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+        }
+
+        .variant-tab span span {
+            color: #b0b0b0;
+            font-style: italic;
+        }
+
+        /* Entradas de Formulario */
+        label {
+            display: block;
+            margin-bottom: 5px; /* Reducir margen inferior */
+            color: #c0c0c0;
+            font-size: 0.9em; /* Ligeramente más pequeño */
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="color"] {
+            background-color: #2c2f33;
+            border: 1px solid #4a4d52;
+            color: #e0e0e0;
+            padding: 6px; /* Reducir padding */
+            border-radius: 3px;
+            width: calc(100% - 12px); /* Ajustar ancho */
+            margin-top: 3px; /* Reducir margen superior */
+            box-sizing: border-box;
+        }
+
+        input[type="checkbox"] {
+            margin-right: 8px;
+            transform: scale(1.1); /* Ligeramente más pequeño */
+        }
+
+        /* Pestañas de Contenido (General/Variante) */
+        .tab-buttons {
+            display: flex;
+            margin-bottom: 15px; /* Reducir margen inferior */
+            border-bottom: 2px solid #4a4d52;
+            flex-shrink: 0;
+        }
+
+        .tab-button {
+            flex: 1;
+            background-color: #4a4d52;
+            border: none;
+            padding: 10px 0; /* Reducir padding */
+            font-size: 1em; /* Ligeramente más pequeño */
+            color: #e0e0e0;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            border-radius: 3px 3px 0 0;
+            margin-right: 5px;
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+        }
+
+        .tab-button:last-child {
+            margin-right: 0;
+        }
+
+        .tab-button.active {
+            background-color: #7289da;
+            color: white;
+            font-weight: bold;
+            box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .tab-content {
+            display: none;
+            flex-grow: 1;
+            padding-right: 0; /* Eliminar padding derecho */
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Acordeones */
+        .accordion-header {
+            background-color: #4a4d52;
+            padding: 10px 12px; /* Reducir padding */
+            border: 1px solid #5b6eaf;
+            border-radius: 3px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px; /* Reducir margen superior */
+            transition: background-color 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .accordion-header:hover {
+            background-color: #5b6eaf;
+        }
+
+        .accordion-header h3, .accordion-header h4 {
+            margin: 0;
+            color: #ffcc00;
+            font-size: 1em; /* Ligeramente más pequeño */
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+        }
+
+        .accordion-header span {
+            font-size: 1.1em; /* Ligeramente más pequeño */
+            color: #e0e0e0;
+        }
+
+        .accordion-content {
+            padding: 12px; /* Reducir padding */
+            border: 1px solid #4a4d52;
+            border-top: none;
+            border-radius: 0 0 3px 3px;
+            background-color: #36393f;
+            display: none;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            max-height: 0;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        .accordion-content.open {
+            display: block;
+            max-height: 1000px; /* Mantener un valor alto para que se expanda */
+            transition: max-height 0.5s ease-in;
+        }
+
+        /* Estilos para elementos dentro de acordeones */
+        .accordion-content > div {
+            margin-bottom: 10px; /* Reducir margen inferior */
+            padding-bottom: 8px; /* Reducir padding inferior */
+            border-bottom: 1px dashed #4a4d52;
+        }
+        .accordion-content > div:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .color-input-container {
+            display: flex;
+            align-items: center;
+            gap: 8px; /* Reducir espacio entre elementos */
+            margin-bottom: 8px; /* Reducir margen inferior */
+        }
+
+        .color-input-container input[type="text"] {
+            width: 35px; /* Reducir ancho */
+            text-align: center;
+            background-color: #2c2f33;
+            border: 1px solid #4a4d52;
+        }
+
+        .color-input-container input[type="color"] {
+            width: 40px; /* Reducir ancho */
+            height: 25px; /* Reducir altura */
+            padding: 0;
+            border: none;
+            background: none;
+            cursor: pointer;
+        }
+
+        .color-input-container label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0;
+            color: #e0e0e0;
+        }
+
+        .color-input-container label input[type="checkbox"] {
+            margin-right: 4px; /* Reducir margen */
+        }
+
+        /* Advertencias */
+        .warning {
+            background-color: #ffeb3b;
+            color: #333;
+            padding: 8px; /* Reducir padding */
+            border-radius: 3px;
+            margin-bottom: 10px; /* Reducir margen inferior */
+            border: 2px solid #fbc02d;
+            font-weight: bold;
+            text-shadow: 1px 1px 1px rgba(255,255,255,0.3);
+            font-size: 0.9em; /* Ligeramente más pequeño */
+        }
+
+        /* Utilidades */
+        .space-y-3 > div {
+            margin-bottom: 10px; /* Reducir margen inferior */
+        }
+
+        .flex-center {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            margin-bottom: 8px; /* Reducir margen inferior */
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .mt-3 {
+            margin-top: 10px; /* Reducir margen superior */
+        }
+
+        .mt-6 {
+            margin-top: 20px; /* Reducir margen superior */
+            flex-shrink: 0;
+        }
+
+        /* Instrucciones Móviles */
+        .mobile-instructions {
+            background-color: #7289da;
+            color: white;
+            padding: 8px; /* Reducir padding */
+            text-align: center;
+            border-radius: 3px;
+            margin-bottom: 15px; /* Reducir margen inferior */
+            display: none;
+            font-weight: bold;
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+            font-size: 0.9em; /* Ligeramente más pequeño */
+        }
+
+        /* Scrollbar estilo Minecraft */
+        ::-webkit-scrollbar {
+            width: 10px; /* Ligeramente más delgado */
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #2c2f33;
+            border-radius: 8px; /* Ligeramente más pequeño */
+            border: 1px solid #4a4d52;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #7289da;
+            border-radius: 8px; /* Ligeramente más pequeño */
+            border: 2px solid #5b6eaf;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #5b6eaf;
+        }
+
+        /* Media Queries para Responsividad */
+        @media (max-width: 768px) {
+            body {
+                padding-top: 10px;
+                align-items: flex-start;
+            }
+
+            .container {
+                max-height: unset;
+                height: auto;
+                margin-top: 10px;
+                margin-bottom: 10px;
+                width: 98%; /* Ocupar casi todo el ancho en móviles */
+            }
+
+            .main-content {
+                flex-direction: column;
+                overflow-x: hidden;
+            }
+
+            .left-panel, .right-panel {
+                min-width: unset;
+                width: 100%;
+                max-height: unset;
+                overflow-y: visible;
+            }
+
+            .navbar {
+                flex-direction: column;
+                padding: 8px;
+                position: static;
+                height: auto;
+            }
+
+            .navbar a {
+                margin: 4px 0;
+                width: 95%;
+                text-align: center;
+            }
+
+            .title {
+                font-size: 1.6em; /* Más pequeño en móviles */
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .tab-content, .accordion-content {
+                max-height: unset;
+                overflow-y: visible;
+            }
+        }
+
+        @media (min-width: 769px) { /* Aplicar diseño de dos columnas en pantallas más grandes */
+            .main-content {
+                flex-direction: row; /* Volver a la disposición en fila */
+                flex-wrap: nowrap; /* Evitar que los paneles se envuelvan */
+                overflow-x: auto; /* Permitir scroll horizontal si es necesario */
+            }
+
+            .left-panel {
+                flex: 0 0 220px; /* Ajustar ancho del panel izquierdo */
+                min-width: 220px;
+            }
+
+            .right-panel {
+                flex: 1; /* El panel derecho ocupa el espacio restante */
+                min-width: 500px; /* Reducir ancho mínimo */
+                overflow-y: auto; /* Permitir scroll vertical */
+            }
+        }
+
+        /* Overlay de Carga */
+        #loadingOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8); /* Fondo oscuro semitransparente */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999; /* Asegura que esté por encima de todo */
+            color: #e0e0e0;
+            font-size: 1.4em; /* Ligeramente más pequeño */
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+            display: none; /* Oculto por defecto */
+        }
+
+        .spinner {
+            border: 8px solid #4a4d52; /* Gris oscuro */
+            border-top: 8px solid #7289da; /* Azul Minecraft */
+            border-radius: 50%;
+            width: 50px; /* Ligeramente más pequeño */
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px; /* Reducir margen */
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="../../index.html">Index</a>
+        <a href="generador-variables.html" class="active">Variantes</a>
+        <a href="../datapacks/generador-datapack.html">Datapack</a>
+        <a href="#">Galería</a>
+        <a href="#">Tutoriales</a>
+    </nav>
+
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1 class="title">Generador de Variantes de Mobs</h1>
+            </div>
+            <p>Creado por Carlos - Compatible con Minecraft 1.16.5</p>
+        </header>
+
+        <div class="mobile-instructions">
+            <p>📱 Desliza para ver más variantes y toca para editar</p>
+        </div>
+
+        <div class="main-content">
+            <div class="left-panel">
+                <h2>Variantes</h2>
+                <div class="mt-3">
+                    <label>
+                        Número de Variantes:
+                        <input type="number" id="variantCountInput" min="1" max="100" value="1">
+                    </label>
+                </div>
+                <div id="variantTabsContainer">
+                    <!-- Variant tabs will be injected here by JavaScript -->
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="tab-buttons">
+                    <button class="tab-button active" data-tab="general">General</button>
+                    <button class="tab-button" data-tab="variants">Variante <span id="activeVariantNumber">1</span></button>
+                </div>
+
+                <div id="tabContentContainer">
+                    <div id="generalTab" class="tab-content active">
+                        <div>
+                            <h2>Configuración General</h2>
+                            <div class="space-y-3">
+                                <div>
+                                    <label>
+                                        Tipo de Mob:
+                                        <input type="text" id="mobTypeInput" placeholder="Ej: zombie, skeleton, creeper..." list="mobTypes">
+                                        <datalist id="mobTypes"></datalist>
+                                    </label>
+                                </div>
+                                <div>
+                                    <label>
+                                        Nombre del archivo:
+                                        <input type="text" id="fileNameInput" placeholder="Ej: zombie_variants">
+                                    </label>
+                                </div>
+                                <div class="flex-center">
+                                    <input type="checkbox" id="useCustomNameCheckbox">
+                                    <span>Usar nombre personalizado para los mobs</span>
+                                </div>
+                                <div class="flex-center">
+                                    <input type="checkbox" id="unlockTagsCheckbox">
+                                    <span>Desbloquear edición de Tags</span>
+                                </div>
+                                <div class="flex-center">
+                                    <input type="checkbox" id="unlockEffectsCheckbox">
+                                    <span>Desbloquear edición manual de efectos</span>
+                                </div>
+                                <div class="flex-center">
+                                    <input type="checkbox" id="showWarningsCheckbox" checked>
+                                    <span>Mostrar advertencias</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="variantsTab" class="tab-content">
+                        <div id="activeVariantPanel">
+                            <!-- Variant specific content will be injected here by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-6">
+            <button id="importConfigButton" class="import-button">
+                Importar Configuración
+            </button>
+            <button id="exportConfigButton" class="config-button">
+                Exportar Configuración
+            </button>
+            <button id="generateDatapackButton" class="download-button">
+                Descargar Archivo
+            </button>
+        </div>
+        <input type="file" id="importFileInput" accept=".txt" style="display: none;">
+    </div>
+
+    <!-- Overlay de Carga -->
+    <div id="loadingOverlay">
+        <div class="spinner"></div>
+        <p>Importando configuración...</p>
+        <p>Por favor, espera.</p>
+    </div>
+
+    <script>
+        // # 2 =======================================
+        const mobAbbreviations = {
+            'bat': 'bt', 'bee': 'be', 'blaze': 'bz', 'cat': 'ct', 'cave_spider': 'csp', 'chicken': 'ck', 'cod': 'cd',
+            'cow': 'cw', 'creeper': 'cr', 'dolphin': 'dp', 'donkey': 'dk', 'drowned': 'dr', 'elder_guardian': 'eg',
+            'ender_dragon': 'ed', 'enderman': 'em', 'endermite': 'et', 'evoker': 'ev', 'fox': 'fx', 'ghast': 'gh',
+            'giant': 'gt', 'guardian': 'gd', 'hoglin': 'hg', 'horse': 'hs', 'husk': 'hk', 'illusioner': 'il',
+            'iron_golem': 'ig', 'llama': 'll', 'magma_cube': 'mc', 'mooshroom': 'mr', 'mule': 'ml', 'ocelot': 'oc',
+            'panda': 'pd', 'parrot': 'pr', 'phantom': 'ph', 'pig': 'pg', 'piglin': 'pn', 'piglin_brute': 'pb',
+            'pillager': 'pl', 'polar_bear': 'pb', 'pufferfish': 'pf', 'rabbit': 'rb', 'ravager': 'rv', 'salmon': 'sl',
+            'sheep': 'sh', 'shulker': 'sk', 'silverfish': 'sf', 'skeleton': 'sk', 'skeleton_horse': 'sh', 'slime': 'sm',
+            'snow_golem': 'sg', 'spider': 'sp', 'squid': 'sq', 'stray': 'st', 'strider': 'sd', 'trader_llama': 'tl',
+            'tropical_fish': 'tf', 'turtle': 'tt', 'vex': 'vx', 'villager': 'vr', 'vindicator': 'vd',
+            'wandering_trader': 'wt', 'witch': 'wc', 'wither': 'wr', 'wither_skeleton': 'ws', 'wolf': 'wf',
+            'zoglin': 'zg', 'zombie': 'zb', 'zombie_horse': 'zh', 'zombie_villager': 'zv', 'zombified_piglin': 'zp'
+        };
+
+        const validMobs = Object.keys(mobAbbreviations);
+        const validEffects = ['speed', 'slowness', 'strength', 'weakness', 'resistance', 'regeneration', 'invisibility', 'jump_boost', 'fire_resistance', 'water_breathing', 'poison', 'wither', 'hunger', 'nausea', 'blindness', 'mining_fatigue', 'levitation', 'unluck'];
+        const validItems = ['diamond_sword', 'iron_sword', 'stone_sword', 'wooden_sword', 'golden_sword', 'netherite_sword', 'bow', 'crossbow', 'trident', 'stick', 'tnt', 'totem_of_undying', 'shield', 'diamond_pickaxe', 'iron_pickaxe', 'stone_pickaxe', 'wooden_pickaxe', 'golden_pickaxe', 'netherite_pickaxe', 'diamond_shovel', 'iron_shovel', 'stone_shovel', 'wooden_shovel', 'golden_shovel', 'netherite_shovel', 'diamond_axe', 'iron_axe', 'stone_axe', 'wooden_axe', 'golden_axe', 'netherite_axe', 'carrot_on_a_stick', 'fishing_rod', 'flint_and_steel', 'shears', 'compass', 'clock', 'map', 'book', 'writable_book', 'written_book', 'ender_pearl', 'experience_bottle', 'splash_potion', 'lingering_potion', 'arrow', 'spectral_arrow', 'tipped_arrow', 'egg', 'snowball', 'fire_charge', 'ghast_tear', 'blaze_rod', 'magma_cream', 'ender_eye', 'nether_star', 'beacon', 'conduit', 'heart_of_the_sea', 'nautilus_shell', 'scute', 'phantom_membrane', 'elytra', 'shulker_shell', 'dragon_breath', 'turtle_egg', 'sweet_berries', 'glowstone_dust', 'redstone', 'quartz', 'lapis_lazuli', 'coal', 'charcoal', 'iron_ingot', 'gold_ingot', 'diamond', 'emerald', 'netherite_ingot', 'raw_iron', 'raw_gold', 'raw_copper', 'amethyst_shard', 'copper_ingot', 'brick', 'nether_brick', 'paper', 'book_and_quill', 'leather', 'feather', 'gunpowder', 'string', 'bone', 'rotten_flesh', 'spider_eye', 'slime_ball', 'wheat', 'sugar_cane', 'pumpkin', 'melon_slice', 'potato', 'carrot', 'beetroot', 'apple', 'golden_apple', 'enchanted_golden_apple', 'bread', 'cooked_porkchop', 'cooked_beef', 'cooked_chicken', 'cooked_cod', 'cooked_salmon', 'cooked_rabbit', 'cooked_mutton', 'cooked_potato', 'baked_potato', 'cookie', 'cake', 'pumpkin_pie', 'dried_kelp', 'honey_bottle', 'pufferfish', 'tropical_fish', 'poisonous_potato', 'chorus_fruit', 'popped_chorus_fruit', 'beetroot_soup', 'mushroom_stew', 'rabbit_stew', 'suspicious_stew', 'milk_bucket', 'water_bucket', 'lava_bucket', 'powder_snow_bucket', 'axolotl_bucket', 'cod_bucket', 'salmon_bucket', 'pufferfish_bucket', 'tropical_fish_bucket', 'bucket', 'flower_pot', 'item_frame', 'painting', 'sign', 'oak_sign', 'spruce_sign', 'birch_sign', 'jungle_sign', 'acacia_sign', 'dark_oak_sign', 'crimson_sign', 'warped_sign', 'bed', 'white_bed', 'orange_bed', 'magenta_bed', 'light_blue_bed', 'yellow_bed', 'lime_bed', 'pink_bed', 'gray_bed', 'light_gray_bed', 'cyan_bed', 'purple_bed', 'blue_bed', 'brown_bed', 'green_bed', 'red_bed', 'black_bed', 'banner', 'white_banner', 'orange_banner', 'magenta_banner', 'light_blue_banner', 'yellow_banner', 'lime_banner', 'pink_banner', 'gray_banner', 'light_gray_banner', 'cyan_banner', 'purple_banner', 'blue_banner', 'brown_banner', 'green_banner', 'red_banner', 'black_banner', 'end_crystal', 'firework_rocket', 'firework_star', 'enchanted_book', 'name_tag', 'lead', 'debug_stick', 'knowledge_book', 'music_disc_13', 'music_disc_cat', 'music_disc_blocks', 'music_disc_chirp', 'music_disc_far', 'music_disc_mall', 'music_disc_mellohi', 'music_disc_stal', 'music_disc_strad', 'music_disc_ward', 'music_disc_11', 'music_disc_wait', 'disc_fragment_5', 'goat_horn', 'recovery_compass', 'echo_shard', 'allay_spawn_egg', 'froglight', 'tadpole_bucket', 'mangrove_propagule', 'mud', 'packed_mud', 'mud_bricks', 'reinforced_deepslate', 'sculk_catalyst', 'sculk_shrieker', 'sculk_sensor', 'sculk', 'deepslate_tiles', 'deepslate_bricks', 'polished_deepslate', 'cobbled_deepslate', 'deepslate', 'tuff', 'calcite', 'smooth_basalt', 'basalt', 'blackstone', 'polished_blackstone', 'polished_blackstone_bricks', 'cracked_polished_blackstone_bricks', 'chiseled_polished_blackstone', 'gilded_blackstone', 'crying_obsidian', 'respawn_anchor', 'lodestone', 'target', 'soul_soil', 'soul_sand', 'warped_nylium', 'crimson_nylium', 'warped_wart_block', 'crimson_roots', 'warped_roots', 'nether_sprouts', 'weeping_vines', 'twisting_vines', 'shroomlight', 'basalt_deltas', 'warped_fungus', 'crimson_fungus', 'nether_gold_ore', 'ancient_debris', 'netherite_block', 'glowing_obsidian', 'chain', 'lantern', 'soul_lantern', 'campfire', 'soul_campfire', 'grindstone', 'smithing_table', 'fletching_table', 'cartography_table', 'loom', 'barrel', 'smoker', 'blast_furnace', 'lectern', 'stonecutter', 'bell', 'composter', 'daylight_detector', 'hopper', 'dropper', 'dispenser', 'observer', 'piston', 'sticky_piston', 'redstone_block', 'redstone_torch', 'redstone_lamp', 'lever', 'stone_button', 'wooden_button', 'polished_blackstone_button', 'oak_pressure_plate', 'spruce_pressure_plate', 'birch_pressure_plate', 'jungle_pressure_plate', 'acacia_pressure_plate', 'dark_oak_pressure_plate', 'crimson_pressure_plate', 'warped_pressure_plate', 'stone_pressure_plate', 'polished_blackstone_pressure_plate', 'tripwire_hook', 'iron_door', 'oak_door', 'spruce_door', 'birch_door', 'jungle_door', 'acacia_door', 'dark_oak_door', 'crimson_door', 'warped_door', 'iron_trapdoor', 'oak_trapdoor', 'spruce_trapdoor', 'birch_trapdoor', 'jungle_trapdoor', 'acacia_trapdoor', 'dark_oak_trapdoor', 'crimson_trapdoor', 'warped_trapdoor', 'ladder', 'iron_bars', 'glass_pane', 'white_stained_glass_pane', 'orange_stained_glass_pane', 'magenta_stained_glass_pane', 'light_blue_stained_glass_pane', 'yellow_stained_glass_pane', 'lime_stained_glass_pane', 'pink_stained_glass_pane', 'gray_stained_glass_pane', 'light_gray_stained_glass_pane', 'cyan_stained_glass_pane', 'purple_stained_glass_pane', 'blue_stained_glass_pane', 'brown_stained_glass_pane', 'green_stained_glass_pane', 'red_stained_glass_pane', 'black_stained_glass_pane', 'nether_brick_fence', 'oak_fence', 'spruce_fence', 'birch_fence', 'jungle_fence', 'acacia_fence', 'dark_oak_fence', 'crimson_fence', 'warped_fence', 'nether_brick_wall', 'cobblestone_wall', 'mossy_cobblestone_wall', 'stone_brick_wall', 'mossy_stone_brick_wall', 'granite_wall', 'diorite_wall', 'andesite_wall', 'sandstone_wall', 'red_sandstone_wall', 'brick_wall', 'prismarine_wall', 'dark_prismarine_wall', 'prismarine_brick_wall', 'end_stone_brick_wall', 'purpur_block', 'purpur_pillar', 'purpur_slab', 'purpur_stairs', 'end_stone', 'end_portal_frame', 'end_rod', 'chorus_flower', 'chorus_plant', 'dragon_egg', 'barrier', 'structure_block', 'jigsaw_block', 'command_block', 'repeating_command_block', 'chain_command_block', 'structure_void', 'light', 'debug_stick', 'air', 'cave_air', 'void_air', 'stone', 'granite', 'polished_granite', 'diorite', 'polished_diorite', 'andesite', 'polished_andesite', 'grass_block', 'dirt', 'coarse_dirt', 'podzol', 'cobblestone', 'oak_planks', 'spruce_planks', 'birch_planks', 'jungle_planks', 'acacia_planks', 'dark_oak_planks', 'oak_sapling', 'spruce_sapling', 'birch_sapling', 'jungle_sapling', 'acacia_sapling', 'dark_oak_sapling', 'bedrock', 'sand', 'red_sand', 'gravel', 'gold_ore', 'iron_ore', 'coal_ore', 'nether_gold_ore', 'oak_log', 'spruce_log', 'birch_log', 'jungle_log', 'acacia_log', 'dark_oak_log', 'stripped_oak_log', 'stripped_spruce_log', 'stripped_birch_log', 'stripped_jungle_log', 'stripped_acacia_log', 'stripped_dark_oak_log', 'oak_wood', 'spruce_wood', 'birch_wood', 'jungle_wood', 'acacia_wood', 'dark_oak_wood', 'stripped_oak_wood', 'stripped_spruce_wood', 'stripped_birch_wood', 'stripped_jungle_wood', 'stripped_acacia_wood', 'stripped_dark_oak_wood', 'oak_leaves', 'spruce_leaves', 'birch_leaves', 'jungle_leaves', 'acacia_leaves', 'dark_oak_leaves', 'sponge', 'wet_sponge', 'glass', 'lapis_ore', 'lapis_block', 'dispenser', 'sandstone', 'chiseled_sandstone', 'cut_sandstone', 'note_block', 'powered_rail', 'detector_rail', 'sticky_piston', 'piston', 'white_wool', 'orange_wool', 'magenta_wool', 'light_blue_wool', 'yellow_wool', 'lime_wool', 'pink_wool', 'gray_wool', 'light_gray_wool', 'cyan_wool', 'purple_wool', 'blue_wool', 'brown_wool', 'green_wool', 'red_wool', 'black_wool', 'gold_block', 'iron_block', 'brick_slab', 'stone_brick_slab', 'oak_slab', 'stone_slab', 'cobblestone_slab', 'nether_brick_slab', 'quartz_slab', 'red_sandstone_slab', 'purpur_slab', 'prismarine_slab', 'dark_prismarine_slab', 'prismarine_brick_slab', 'polished_granite_slab', 'smooth_red_sandstone_slab', 'smooth_sandstone_slab', 'mossy_stone_brick_slab', 'mossy_cobblestone_slab', 'end_stone_brick_slab', 'polished_diorite_slab', 'polished_andesite_slab', 'smooth_stone_slab', 'cut_sandstone_slab', 'cut_red_sandstone_slab', 'light_gray_concrete_powder', 'cyan_concrete_powder', 'purple_concrete_powder', 'blue_concrete_powder', 'brown_concrete_powder', 'green_concrete_powder', 'red_concrete_powder', 'black_concrete_powder', 'white_concrete_powder', 'orange_concrete_powder', 'magenta_concrete_powder', 'light_blue_concrete_powder', 'yellow_concrete_powder', 'lime_concrete_powder', 'pink_concrete_powder', 'gray_concrete_powder', 'light_gray_concrete', 'cyan_concrete', 'purple_concrete', 'blue_concrete', 'brown_concrete', 'green_concrete', 'red_concrete', 'black_concrete', 'white_concrete', 'orange_concrete', 'magenta_concrete', 'light_blue_concrete', 'yellow_concrete', 'lime_concrete', 'pink_concrete', 'gray_concrete', 'dragon_head', 'wither_skeleton_skull', 'skeleton_skull', 'zombie_head', 'creeper_head', 'player_head', 'carved_pumpkin', 'jack_o_lantern', 'nether_portal', 'end_portal', 'end_gateway', 'command_block_minecart', 'furnace_minecart', 'chest_minecart', 'tnt_minecart', 'hopper_minecart', 'minecart', 'saddle', 'horse_armor_leather', 'horse_armor_iron', 'horse_armor_gold', 'horse_armor_diamond', 'debug_stick', 'jigsaw_block', 'structure_block', 'structure_void', 'light', 'barrier', 'knowledge_book', 'writable_book', 'written_book', 'book_and_quill', 'book', 'paper', 'map', 'compass', 'clock', 'recovery_compass', 'lodestone_compass', 'spyglass', 'brush', 'pottery_sherds', 'decorated_pot', 'sniffer_egg', 'torchflower_seeds', 'pitcher_plant', 'pitcher_pod', 'cherry_sapling', 'cherry_log', 'stripped_cherry_log', 'cherry_wood', 'stripped_cherry_wood', 'cherry_leaves', 'cherry_planks', 'cherry_slab', 'cherry_stairs', 'cherry_fence', 'cherry_fence_gate', 'cherry_door', 'cherry_trapdoor', 'cherry_pressure_plate', 'cherry_button', 'cherry_sign', 'cherry_hanging_sign', 'pink_petals', 'cherry_boat', 'cherry_chest_boat', 'suspicious_gravel', 'suspicious_sand', 'calibrated_sculk_sensor', 'chiseled_bookshelf', 'bamboo_block', 'stripped_bamboo_block', 'bamboo_planks', 'bamboo_slab', 'bamboo_stairs', 'bamboo_fence', 'bamboo_fence_gate', 'bamboo_door', 'bamboo_trapdoor', 'bamboo_pressure_plate', 'bamboo_button', 'bamboo_sign', 'bamboo_hanging_sign', 'bamboo_raft', 'bamboo_chest_raft', 'bamboo_mosaic', 'bamboo_mosaic_slab', 'bamboo_mosaic_stairs', 'decorated_pot', 'sniffer_egg', 'torchflower_seeds', 'pitcher_plant', 'pitcher_pod', 'cherry_sapling', 'cherry_log', 'stripped_cherry_log', 'cherry_wood', 'stripped_cherry_wood', 'cherry_leaves', 'cherry_planks', 'cherry_slab', 'cherry_stairs', 'cherry_fence', 'cherry_fence_gate', 'cherry_door', 'cherry_trapdoor', 'cherry_pressure_plate', 'cherry_button', 'cherry_sign', 'cherry_hanging_sign', 'pink_petals', 'cherry_boat', 'cherry_chest_boat', 'suspicious_gravel', 'suspicious_sand', 'calibrated_sculk_sensor', 'chiseled_bookshelf', 'bamboo_block', 'stripped_bamboo_block', 'bamboo_planks', 'bamboo_slab', 'bamboo_stairs', 'bamboo_fence', 'bamboo_fence_gate', 'bamboo_door', 'bamboo_trapdoor', 'bamboo_pressure_plate', 'bamboo_button', 'bamboo_sign', 'bamboo_hanging_sign', 'bamboo_raft', 'bamboo_chest_raft', 'bamboo_mosaic', 'bamboo_mosaic_slab', 'bamboo_mosaic_stairs'];
+        const validArmor = ['leather_helmet', 'leather_chestplate', 'leather_leggings', 'leather_boots', 'iron_helmet', 'iron_chestplate', 'iron_leggings', 'iron_boots', 'diamond_helmet', 'diamond_chestplate', 'diamond_leggings', 'diamond_boots', 'netherite_helmet', 'netherite_chestplate', 'netherite_leggings', 'netherite_boots', 'turtle_helmet', 'chainmail_helmet', 'chainmail_chestplate', 'chainmail_leggings', 'chainmail_boots', 'golden_helmet', 'golden_chestplate', 'golden_leggings', 'golden_boots'];
+        const validEnchantments = ['protection', 'fire_protection', 'blast_protection', 'projectile_protection', 'thorns', 'sharpness', 'knockback', 'fire_aspect', 'looting', 'unbreaking', 'aqua_affinity', 'respiration', 'depth_strider', 'frost_walker', 'soul_speed', 'feather_falling', 'bane_of_arthropods', 'smite', 'sweeping_edge', 'efficiency', 'silk_touch', 'fortune', 'lure', 'luck_of_the_sea', 'loyalty', 'impaling', 'riptide', 'channeling', 'multishot', 'piercing', 'quick_charge', 'mending', 'infinity', 'punch', 'power', 'flame', 'curse_of_binding', 'curse_of_vanishing'];
+
+        // # 3 =======================================
+        let mobType = 'zombie';
+        let variantCount = 1;
+        let variants = [];
+        let isMobile = false;
+        let unlockTags = false;
+        let unlockEffects = false;
+        let advancedCommand = '';
+        let showWarnings = true;
+        let activeTab = 'general';
+        let activeVariant = 0;
+        let openAccordion = {
+            name: false,
+            armor: false,
+            items: false,
+            effects: false,
+            tags: false,
+            replaceMob: false,
+            creeperSettings: false,
+            replacedMobConfig: false, // Nuevo acordeón para el mob reemplazado
+            passengerMobConfig: false // Nuevo acordeón para el mob pasajero
+        };
+        let fileName = 'tick';
+        let useCustomName = false;
+
+        // # 4 =======================================
+        function createNewVariant(id) {
+            const mobPrefix = mobAbbreviations[mobType] || mobType.substring(0, 2);
+            return {
+                id,
+                name: '',
+                nameColors: [],
+                armor: { head: '', chest: '', legs: '', feet: '' },
+                armorColors: { head: '#ffffff', chest: '#ffffff', legs: '#ffffff', feet: '#ffffff' },
+                items: { mainHand: '', offHand: '' },
+                enchantments: { head: [], chest: [], legs: [], feet: [], mainHand: [], offHand: [] },
+                effects: [],
+                customModelData: '100',
+                nameVisibleDistance: '60',
+                tag: `${mobPrefix}${id}`,
+                readyTag: `${mobPrefix}l${id}`,
+                replaceMob: false,
+                replacedMobType: '',
+                passengerMobType: '',
+                passengerMobTag: '',
+                replacedMobTag: '',
+                replacedMobName: '',
+                replacedMobNameColors: [],
+                replacedMobCustomModelData: '100',
+                replacedMobNameVisibleDistance: '60',
+                passengerMobName: '',
+                passengerMobNameColors: [],
+                passengerMobCustomModelData: '100',
+                passengerMobNameVisibleDistance: '60',
+                replacedMobArmor: { head: '', chest: '', legs: '', feet: '' },
+                replacedMobArmorColors: { head: '#ffffff', chest: '#ffffff', legs: '#ffffff', feet: '#ffffff' },
+                replacedMobItems: { mainHand: '', offHand: '' },
+                replacedMobEnchantments: { head: [], chest: [], legs: [], feet: [], mainHand: [], offHand: [] },
+                replacedMobEffects: [],
+                passengerMobArmor: { head: '', chest: '', legs: '', feet: '' },
+                passengerMobArmorColors: { head: '#ffffff', chest: '#ffffff', legs: '#ffffff', feet: '#ffffff' },
+                passengerMobItems: { mainHand: '', offHand: '' },
+                passengerMobEnchantments: { head: [], chest: [], legs: [], feet: [], mainHand: [], offHand: [] },
+                passengerMobEffects: [],
+                isCreeper: mobType === 'creeper',
+                creeperPowered: false,
+                creeperExplosionRadius: '',
+                creeperFuse: ''
+            };
+        }
+
+        // # 5 =======================================
+        function initializeVariants() {
+            variants = [];
+            for (let i = 0; i < variantCount; i++) {
+                variants.push(createNewVariant(i + 1));
+            }
+            renderVariantsPanel();
+            renderActiveVariantPanel();
+        }
+
+        // # 6 =======================================
+        function updateVariantCount(count) {
+            count = Math.max(1, Math.min(100, parseInt(count) || 1));
+            variantCount = count;
+            const newVariants = variants.slice(0, count);
+            for (let i = variants.length; i < count; i++) {
+                newVariants.push(createNewVariant(i + 1));
+            }
+            variants = newVariants;
+            renderVariantsPanel();
+            if (activeVariant >= variants.length) {
+                activeVariant = variants.length - 1;
+            }
+            renderActiveVariantPanel();
+        }
+
+        // # 7 =======================================
+        function updateVariant(index, field, value, target = null) {
+            if (target) {
+                variants[index][target][field] = value;
+                if (field === 'name') {
+                    variants[index][target].nameColors = value.split('').map(letter => ({
+                        letter,
+                        color: '#ffffff',
+                        bold: false,
+                        italic: false
+                    }));
+                }
+            } else {
+                variants[index][field] = value;
+                if (field === 'name') {
+                    variants[index].nameColors = value.split('').map(letter => ({
+                        letter,
+                        color: '#ffffff',
+                        bold: false,
+                        italic: false
+                    }));
+                }
+            }
+            renderVariantsPanel();
+        }
+
+        // # 8 =======================================
+        function updateNestedVariant(index, parentField, childField, value, target = null) {
+            if (target) {
+                variants[index][target][parentField][childField] = value;
+            } else {
+                variants[index][parentField][childField] = value;
+            }
+        }
+
+        // # 9 =======================================
+        function addEffect(index, target = 'effects') {
+            variants[index][target].push({ name: '', duration: '', amplifier: '' });
+            renderActiveVariantPanel();
+        }
+
+        function updateEffect(variantIndex, effectIndex, field, value, target = 'effects') {
+            variants[variantIndex][target][effectIndex][field] = value;
+        }
+
+        function removeEffect(variantIndex, effectIndex, target = 'effects') {
+            variants[variantIndex][target].splice(effectIndex, 1);
+            renderActiveVariantPanel();
+        }
+
+        // # 10 ======================================
+        function addEnchantment(variantIndex, slot, target = 'enchantments') {
+            variants[variantIndex][target][slot].push({ id: '', level: '' });
+            renderActiveVariantPanel();
+        }
+
+        function updateEnchantment(variantIndex, slot, enchantIndex, field, value, target = 'enchantments') {
+            if (field === 'level' && value !== '' && !/^\d*$/.test(value)) {
+                return;
+            }
+            variants[variantIndex][target][slot][enchantIndex][field] = value;
+        }
+
+        function removeEnchantment(variantIndex, slot, enchantIndex, target = 'enchantments') {
+            variants[variantIndex][target][slot].splice(enchantIndex, 1);
+            renderActiveVariantPanel();
+        }
+
+        // # 11 ======================================
+        function toggleAccordion(section) {
+            openAccordion[section] = !openAccordion[section];
+            renderActiveVariantPanel();
+        }
+
+        // # 12 ======================================
+        function switchTab(tabName) {
+            activeTab = tabName;
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.tab === tabName) {
+                    btn.classList.add('active');
+                }
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+                if (content.id === `${tabName}Tab`) {
+                    content.classList.add('active');
+                }
+            });
+            if (tabName === 'variants') {
+                renderActiveVariantPanel();
+            }
+        }
+
+        // # 14 ======================================
+        function renderVariantsPanel() {
+            const container = document.getElementById('variantTabsContainer');
+            container.innerHTML = '';
+            variants.forEach((variant, index) => {
+                const div = document.createElement('div');
+                div.className = `variant-tab ${activeVariant === index ? 'active' : ''}`;
+                div.dataset.index = index;
+                div.innerHTML = `
+                    <div>
+                        <span>
+                            ${index + 1}. ${variant.name || '<span>Sin nombre</span>'}
+                        </span>
+                    </div>
+                `;
+                div.addEventListener('click', () => {
+                    activeVariant = index;
+                    renderVariantsPanel();
+                    switchTab('variants');
+                });
+                container.appendChild(div);
+            });
+        }
+
+        // # 15 ======================================
+        function renderActiveVariantPanel() {
+            const panel = document.getElementById('activeVariantPanel');
+            const variant = variants[activeVariant];
+            if (!variant) {
+                panel.innerHTML = '<p>Selecciona una variante para editar.</p>';
+                return;
+            }
+
+            document.getElementById('activeVariantNumber').textContent = activeVariant + 1;
+
+            let html = `
+                <h2>Variante ${activeVariant + 1}</h2>
+            `;
+
+            const generateNameSection = (prefix, name, nameColors, customModelData, nameVisibleDistance, accordionSection) => `
+                <div>
+                    <div class="accordion-header" data-section="${accordionSection}">
+                        <h3>Nombre y Apariencia</h3>
+                        <span>${openAccordion[accordionSection] ? '▼' : '▶'}</span>
+                    </div>
+                    <div class="accordion-content ${openAccordion[accordionSection] ? 'open' : ''}">
+                        <label>
+                            Nombre:
+                            <input type="text" id="${prefix}Name" value="${name}" placeholder="Ej: Zombie Infernal">
+                        </label>
+
+                        <label>
+                            CustomModelData:
+                            <input type="text" id="${prefix}CustomModelData" value="${customModelData}" placeholder="100" pattern="\\d*">
+                        </label>
+
+                        <label>
+                            Distancia de visibilidad:
+                            <input type="text" id="${prefix}NameVisibleDistance" value="${nameVisibleDistance}" placeholder="60" pattern="\\d*">
+                        </label>
+
+                        <div>
+                            <h4>Colores del nombre:</h4>
+                            <div id="${prefix}NameColorsContainer">
+                                ${nameColors.map((color, i) => `
+                                    <div class="color-input-container">
+                                        <input type="text" value="${color.letter}" disabled>
+                                        <input type="color" value="${color.color}" id="${prefix}Name-color-${i}">
+                                        <label>
+                                            <input type="checkbox" id="${prefix}Name-bold-${i}" ${color.bold ? 'checked' : ''}>B
+                                        </label>
+                                        <label>
+                                            <input type="checkbox" id="${prefix}Name-italic-${i}" ${color.italic ? 'checked' : ''}>I
+                                        </label>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            if (useCustomName) {
+                html += generateNameSection(
+                    'variant',
+                    variant.name,
+                    variant.nameColors,
+                    variant.customModelData,
+                    variant.nameVisibleDistance,
+                    'name'
+                );
+            }
+
+            html += `
+                <div>
+                    <div class="accordion-header" data-section="armor">
+                        <h3>Armadura</h3>
+                        <span>${openAccordion.armor ? '▼' : '▶'}</span>
+                    </div>
+                    <div class="accordion-content ${openAccordion.armor ? 'open' : ''}">
+                        <div>
+                            ${['head', 'chest', 'legs', 'feet'].map(slot => `
+                                <div>
+                                    <label>
+                                        ${slot.charAt(0).toUpperCase() + slot.slice(1)}:
+                                        <input type="text" id="armor-${slot}" value="${variant.armor[slot]}" placeholder="Ej: ${validArmor[0]}" list="armorList">
+                                        <datalist id="armorList">
+                                            ${validArmor.map(item => `<option value="${item}"></option>`).join('')}
+                                        </datalist>
+                                    </label>
+                                    <div id="armor-color-container-${slot}">
+                                        ${variant.armor[slot].includes('leather') ? `
+                                            <div>
+                                                <span>Color:</span>
+                                                <input type="color" id="armor-color-${slot}" value="${variant.armorColors[slot]}">
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                    <div>
+                                        <h4>Encantamientos:</h4>
+                                        <div id="enchantments-armor-${slot}">
+                                            ${variant.enchantments[slot].length === 0 ? `<p>No hay encantamientos</p>` : ''}
+                                            ${variant.enchantments[slot].map((enchant, i) => `
+                                                <div>
+                                                    <input type="text" value="${enchant.id}" id="enchant-armor-${slot}-${i}-id" placeholder="protection" list="enchantmentList">
+                                                    <input type="text" value="${enchant.level}" id="enchant-armor-${slot}-${i}-level" placeholder="1" pattern="\\d*">
+                                                    <button data-action="remove-enchantment" data-slot="${slot}" data-index="${i}" data-target="enchantments">X</button>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                        <button data-action="add-enchantment" data-slot="${slot}" data-target="enchantments">+ Añadir</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            html += `
+                <div>
+                    <div class="accordion-header" data-section="items">
+                        <h3>Items</h3>
+                        <span>${openAccordion.items ? '▼' : '▶'}</span>
+                    </div>
+                    <div class="accordion-content ${openAccordion.items ? 'open' : ''}">
+                        <div>
+                            ${['mainHand', 'offHand'].map(slot => `
+                                <div>
+                                    <label>
+                                        ${slot === 'mainHand' ? 'Mano Principal' : 'Mano Secundaria'}:
+                                        <input type="text" id="item-${slot}" value="${variant.items[slot]}" placeholder="Ej: ${validItems[0]}" list="itemList">
+                                        <datalist id="itemList">
+                                            ${validItems.map(item => `<option value="${item}"></option>`).join('')}
+                                        </datalist>
+                                    </label>
+                                    <div>
+                                        <h4>Encantamientos:</h4>
+                                        <div id="enchantments-item-${slot}">
+                                            ${variant.enchantments[slot].length === 0 ? `<p>No hay encantamientos</p>` : ''}
+                                            ${variant.enchantments[slot].map((enchant, i) => `
+                                                <div>
+                                                    <input type="text" value="${enchant.id}" id="enchant-item-${slot}-${i}-id" placeholder="sharpness" list="enchantmentList">
+                                                    <input type="text" value="${enchant.level}" id="enchant-item-${slot}-${i}-level" placeholder="1" pattern="\\d*">
+                                                    <button data-action="remove-enchantment" data-slot="${slot}" data-index="${i}" data-target="enchantments">X</button>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                        <button data-action="add-enchantment" data-slot="${slot}" data-target="enchantments">+ Añadir</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            html += `
+                <div>
+                    <div class="accordion-header" data-section="effects">
+                        <h3>Efectos</h3>
+                        <span>${openAccordion.effects ? '▼' : '▶'}</span>
+                    </div>
+                    <div class="accordion-content ${openAccordion.effects ? 'open' : ''}">
+                        ${showWarnings ? `
+                            <div class="warning">
+                                <p>⚠️ ${mobType === 'creeper' ? 'Para creepers, los efectos se aplicarán continuamente cada tick' : 'Duración recomendada: 999999'}. Amplificador máximo: 255 (en el juego, nivel = amplificador + 1).</p>
+                            </div>
+                        ` : ''}
+                        <div id="effectsContainer">
+                            ${variant.effects.length === 0 ? `<p>No hay efectos</p>` : ''}
+                            ${variant.effects.map((effect, i) => `
+                                <div>
+                                    <div>
+                                        <label>Efecto</label>
+                                        <input type="text" value="${effect.name}" id="effect-${i}-name" placeholder="speed" list="effectList" ${!unlockEffects ? 'disabled' : ''}>
+                                    </div>
+                                    <div>
+                                        <label>Duración</label>
+                                        <input type="text" value="${effect.duration}" id="effect-${i}-duration" placeholder="${mobType === 'creeper' ? '1' : '999999'}" pattern="\\d*">
+                                    </div>
+                                    <div>
+                                        <label>Amplificador</label>
+                                        <input type="text" value="${effect.amplifier}" id="effect-${i}-amplifier" placeholder="0" pattern="\\d*">
+                                    </div>
+                                    <div>
+                                        <button data-action="remove-effect" data-index="${i}" data-target="effects">X</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <datalist id="effectList">
+                            ${validEffects.map(effect => `<option value="${effect}"></option>`).join('')}
+                        </datalist>
+                        <button data-action="add-effect" data-target="effects">+ Añadir Efecto</button>
+                    </div>
+                </div>
+            `;
+
+            html += `
+                <div>
+                    <div class="accordion-header" data-section="tags">
+                        <h3>Tags</h3>
+                        <span>${openAccordion.tags ? '▼' : '▶'}</span>
+                    </div>
+                    <div class="accordion-content ${openAccordion.tags ? 'open' : ''}">
+                        <div>
+                            <label>
+                                Tag de la Variante:
+                                <input type="text" id="variantTag" value="${variant.tag}" ${!unlockTags ? 'disabled' : ''}>
+                            </label>
+                            <label>
+                                Tag de Listo:
+                                <input type="text" id="variantReadyTag" value="${variant.readyTag}" ${!unlockTags ? 'disabled' : ''}>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            if (mobType === 'creeper') {
+                html += `
+                    <div>
+                        <div class="accordion-header" data-section="creeperSettings">
+                            <h4>Configuración de Creeper</h4>
+                            <span>${openAccordion.creeperSettings ? '▼' : '▶'}</span>
+                        </div>
+                        <div class="accordion-content ${openAccordion.creeperSettings ? 'open' : ''}">
+                            <div>
+                                <input type="checkbox" id="creeperPowered" ${variant.creeperPowered ? 'checked' : ''}>
+                                <label for="creeperPowered">Creeper Cargado (Powered)</label>
+                            </div>
+                            <div>
+                                <div>
+                                    <label>Radio de Explosión:</label>
+                                    <input type="text" id="creeperExplosionRadius" value="${variant.creeperExplosionRadius}" placeholder="3">
+                                </div>
+                                <div>
+                                    <label>Tiempo de Fusible (ticks):</label>
+                                    <input type="text" id="creeperFuse" value="${variant.creeperFuse}" placeholder="30">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            html += `
+                <div>
+                    <div class="accordion-header" data-section="replaceMob">
+                        <h4>Reemplazar Mob</h4>
+                        <span>${openAccordion.replaceMob ? '▼' : '▶'}</span>
+                    </div>
+                    <div class="accordion-content ${openAccordion.replaceMob ? 'open' : ''}">
+                        <div>
+                            <input type="checkbox" id="replaceMobCheckbox" ${variant.replaceMob ? 'checked' : ''}>
+                            <label for="replaceMobCheckbox">Activar reemplazo de mob</label>
+                        </div>
+                        ${variant.replaceMob ? `
+                            <div class="replace-mob-subsections">
+                                <!-- Mob Reemplazado (Debajo) -->
+                                <div class="accordion-header" data-section="replacedMobConfig">
+                                    <h5>Mob Reemplazado (Debajo)</h5>
+                                    <span>${openAccordion.replacedMobConfig ? '▼' : '▶'}</span>
+                                </div>
+                                <div class="accordion-content ${openAccordion.replacedMobConfig ? 'open' : ''}">
+                                    <label>Tipo de Mob:</label>
+                                    <input type="text" id="replacedMobType" value="${variant.replacedMobType}" placeholder="Ej: zombie" list="mobTypes">
+                                    <label>Tag (automática):</label>
+                                    <input type="text" value="${variant.replacedMobTag}" disabled>
+
+                                    ${generateNameSection(
+                                        'replacedMob',
+                                        variant.replacedMobName,
+                                        variant.replacedMobNameColors,
+                                        variant.replacedMobCustomModelData,
+                                        variant.replacedMobNameVisibleDistance,
+                                        'replacedMobName'
+                                    )}
+
+                                    <h6>Armadura:</h6>
+                                    <div>
+                                        ${['head', 'chest', 'legs', 'feet'].map(slot => `
+                                            <div>
+                                                <label>${slot.charAt(0).toUpperCase() + slot.slice(1)}:
+                                                    <input type="text" id="replaced-armor-${slot}" value="${variant.replacedMobArmor[slot]}" list="armorList">
+                                                </label>
+                                                <div id="replaced-armor-color-container-${slot}">
+                                                    ${variant.replacedMobArmor[slot].includes('leather') ? `
+                                                        <div>
+                                                            <span>Color:</span>
+                                                            <input type="color" id="replaced-armor-color-${slot}" value="${variant.replacedMobArmorColors[slot]}">
+                                                        </div>
+                                                    ` : ''}
+                                                </div>
+                                                <div>
+                                                    <h6>Encantamientos:</h6>
+                                                    <div id="enchantments-replaced-armor-${slot}">
+                                                        ${variant.replacedMobEnchantments[slot].length === 0 ? `<p>No hay encantamientos</p>` : ''}
+                                                        ${variant.replacedMobEnchantments[slot].map((enchant, i) => `
+                                                            <div>
+                                                                <input type="text" value="${enchant.id}" id="enchant-replaced-armor-${slot}-${i}-id" placeholder="protection" list="enchantmentList">
+                                                                <input type="text" value="${enchant.level}" id="enchant-replaced-armor-${slot}-${i}-level" placeholder="1" pattern="\\d*">
+                                                                <button data-action="remove-enchantment" data-slot="${slot}" data-index="${i}" data-target="replacedMobEnchantments">X</button>
+                                                            </div>
+                                                        `).join('')}
+                                                    </div>
+                                                    <button data-action="add-enchantment" data-slot="${slot}" data-target="replacedMobEnchantments">+ Añadir</button>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                    <h6>Items:</h6>
+                                    <div>
+                                        ${['mainHand', 'offHand'].map(slot => `
+                                            <div>
+                                                <label>${slot === 'mainHand' ? 'Mano Principal' : 'Mano Secundaria'}:
+                                                    <input type="text" id="replaced-item-${slot}" value="${variant.replacedMobItems[slot]}" list="itemList">
+                                                </label>
+                                                <div>
+                                                    <h6>Encantamientos:</h6>
+                                                    <div id="enchantments-replaced-item-${slot}">
+                                                        ${variant.replacedMobEnchantments[slot].length === 0 ? `<p>No hay encantamientos</p>` : ''}
+                                                        ${variant.replacedMobEnchantments[slot].map((enchant, i) => `
+                                                            <div>
+                                                                <input type="text" value="${enchant.id}" id="enchant-replaced-item-${slot}-${i}-id" placeholder="sharpness" list="enchantmentList">
+                                                                <input type="text" value="${enchant.level}" id="enchant-replaced-item-${slot}-${i}-level" placeholder="1" pattern="\\d*">
+                                                                <button data-action="remove-enchantment" data-slot="${slot}" data-index="${i}" data-target="replacedMobEnchantments">X</button>
+                                                            </div>
+                                                        `).join('')}
+                                                    </div>
+                                                    <button data-action="add-enchantment" data-slot="${slot}" data-target="replacedMobEnchantments">+ Añadir</button>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                    <h6>Efectos:</h6>
+                                    <div id="replacedEffectsContainer">
+                                        ${variant.replacedMobEffects.length === 0 ? `<p>No hay efectos</p>` : ''}
+                                        ${variant.replacedMobEffects.map((effect, i) => `
+                                            <div>
+                                                <input type="text" value="${effect.name}" id="replaced-effect-${i}-name" placeholder="speed" list="effectList">
+                                                <input type="text" value="${effect.duration}" id="replaced-effect-${i}-duration" placeholder="999999" pattern="\\d*">
+                                                <input type="text" value="${effect.amplifier}" id="replaced-effect-${i}-amplifier" placeholder="0" pattern="\\d*">
+                                                <button data-action="remove-effect" data-index="${i}" data-target="replacedMobEffects">X</button>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                    <button data-action="add-effect" data-target="replacedMobEffects">+ Añadir</button>
+                                </div>
+
+                                <!-- Mob Pasajero (Encima) -->
+                                <div class="accordion-header" data-section="passengerMobConfig">
+                                    <h5>Mob Pasajero (Encima)</h5>
+                                    <span>${openAccordion.passengerMobConfig ? '▼' : '▶'}</span>
+                                </div>
+                                <div class="accordion-content ${openAccordion.passengerMobConfig ? 'open' : ''}">
+                                    <label>Tipo de Mob:</label>
+                                    <input type="text" id="passengerMobType" value="${variant.passengerMobType}" placeholder="Ej: skeleton" list="mobTypes">
+                                    <label>Tag (automática):</label>
+                                    <input type="text" value="${variant.passengerMobTag}" disabled>
+
+                                    ${generateNameSection(
+                                        'passengerMob',
+                                        variant.passengerMobName,
+                                        variant.passengerMobNameColors,
+                                        variant.passengerMobCustomModelData,
+                                        variant.passengerMobNameVisibleDistance,
+                                        'passengerMobName'
+                                    )}
+
+                                    <h6>Armadura:</h6>
+                                    <div>
+                                        ${['head', 'chest', 'legs', 'feet'].map(slot => `
+                                            <div>
+                                                <label>${slot.charAt(0).toUpperCase() + slot.slice(1)}:
+                                                    <input type="text" id="passenger-armor-${slot}" value="${variant.passengerMobArmor[slot]}" list="armorList">
+                                                </label>
+                                                <div id="passenger-armor-color-container-${slot}">
+                                                    ${variant.passengerMobArmor[slot].includes('leather') ? `
+                                                        <div>
+                                                            <span>Color:</span>
+                                                            <input type="color" id="passenger-armor-color-${slot}" value="${variant.passengerMobArmorColors[slot]}">
+                                                        </div>
+                                                    ` : ''}
+                                                </div>
+                                                <div>
+                                                    <h6>Encantamientos:</h6>
+                                                    <div id="enchantments-passenger-armor-${slot}">
+                                                        ${variant.passengerMobEnchantments[slot].length === 0 ? `<p>No hay encantamientos</p>` : ''}
+                                                        ${variant.passengerMobEnchantments[slot].map((enchant, i) => `
+                                                            <div>
+                                                                <input type="text" value="${enchant.id}" id="enchant-passenger-armor-${slot}-${i}-id" placeholder="protection" list="enchantmentList">
+                                                                <input type="text" value="${enchant.level}" id="enchant-passenger-armor-${slot}-${i}-level" placeholder="1" pattern="\\d*">
+                                                                <button data-action="remove-enchantment" data-slot="${slot}" data-index="${i}" data-target="passengerMobEnchantments">X</button>
+                                                            </div>
+                                                        `).join('')}
+                                                    </div>
+                                                    <button data-action="add-enchantment" data-slot="${slot}" data-target="passengerMobEnchantments">+ Añadir</button>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                    <h6>Items:</h6>
+                                    <div>
+                                        ${['mainHand', 'offHand'].map(slot => `
+                                            <div>
+                                                <label>${slot === 'mainHand' ? 'Mano Principal' : 'Mano Secundaria'}:
+                                                    <input type="text" id="passenger-item-${slot}" value="${variant.passengerMobItems[slot]}" list="itemList">
+                                                </label>
+                                                <div>
+                                                    <h6>Encantamientos:</h6>
+                                                    <div id="enchantments-passenger-item-${slot}">
+                                                        ${variant.passengerMobEnchantments[slot].length === 0 ? `<p>No hay encantamientos</p>` : ''}
+                                                        ${variant.passengerMobEnchantments[slot].map((enchant, i) => `
+                                                            <div>
+                                                                <input type="text" value="${enchant.id}" id="enchant-passenger-item-${slot}-${i}-id" placeholder="sharpness" list="enchantmentList">
+                                                                <input type="text" value="${enchant.level}" id="enchant-passenger-item-${slot}-${i}-level" placeholder="1" pattern="\\d*">
+                                                                <button data-action="remove-enchantment" data-slot="${slot}" data-index="${i}" data-target="passengerMobEnchantments">X</button>
+                                                            </div>
+                                                        `).join('')}
+                                                    </div>
+                                                    <button data-action="add-enchantment" data-slot="${slot}" data-target="passengerMobEnchantments">+ Añadir</button>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                    <h6>Efectos:</h6>
+                                    <div id="passengerEffectsContainer">
+                                        ${variant.passengerMobEffects.length === 0 ? `<p>No hay efectos</p>` : ''}
+                                        ${variant.passengerMobEffects.map((effect, i) => `
+                                            <div>
+                                                <input type="text" value="${effect.name}" id="passenger-effect-${i}-name" placeholder="speed" list="effectList">
+                                                <input type="text" value="${effect.duration}" id="passenger-effect-${i}-duration" placeholder="999999" pattern="\\d*">
+                                                <input type="text" value="${effect.amplifier}" id="passenger-effect-${i}-amplifier" placeholder="0" pattern="\\d*">
+                                                <button data-action="remove-effect" data-index="${i}" data-target="passengerMobEffects">X</button>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                    <button data-action="add-effect" data-target="passengerMobEffects">+ Añadir</button>
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+
+            panel.innerHTML = html;
+            addEventListenersToVariantPanel();
+        }
+
+        // # 23 ======================================
+        function addEventListenersToVariantPanel() {
+            const variant = variants[activeVariant];
+
+            document.querySelectorAll('.accordion-header').forEach(header => {
+                header.removeEventListener('click', handleAccordionClick);
+                header.addEventListener('click', handleAccordionClick);
+            });
+
+            function handleAccordionClick(event) {
+                const section = event.currentTarget.dataset.section;
+                toggleAccordion(section);
+            }
+
+            const attachNameSectionListeners = (prefix, targetField, targetColorsField, targetCustomModelDataField, targetNameVisibleDistanceField) => {
+                const nameInput = document.getElementById(`${prefix}Name`);
+                if (nameInput) {
+                    nameInput.addEventListener('input', (e) => {
+                        updateVariant(activeVariant, 'name', e.target.value, targetField);
+                        const nameColorsContainer = document.getElementById(`${prefix}NameColorsContainer`);
+                        if (nameColorsContainer) {
+                            nameColorsContainer.innerHTML = variants[activeVariant][targetColorsField].map((color, i) => `
+                                <div class="color-input-container">
+                                    <input type="text" value="${color.letter}" disabled>
+                                    <input type="color" value="${color.color}" id="${prefix}Name-color-${i}">
+                                    <label>
+                                        <input type="checkbox" id="${prefix}Name-bold-${i}" ${color.bold ? 'checked' : ''}>B
+                                    </label>
+                                    <label>
+                                        <input type="checkbox" id="${prefix}Name-italic-${i}" ${color.italic ? 'checked' : ''}>I
+                                    </label>
+                                </div>
+                            `).join('');
+                            attachNameColorListeners(prefix, targetColorsField);
+                        }
+                    });
+                }
+
+                const customModelDataInput = document.getElementById(`${prefix}CustomModelData`);
+                if (customModelDataInput) {
+                    customModelDataInput.addEventListener('input', (e) => {
+                        if (e.target.value === '' || /^\d*$/.test(e.target.value)) {
+                            updateVariant(activeVariant, 'customModelData', e.target.value, targetCustomModelDataField);
+                        }
+                    });
+                }
+
+                const nameVisibleDistanceInput = document.getElementById(`${prefix}NameVisibleDistance`);
+                if (nameVisibleDistanceInput) {
+                    nameVisibleDistanceInput.addEventListener('input', (e) => {
+                        if (e.target.value === '' || /^\d*$/.test(e.target.value)) {
+                            updateVariant(activeVariant, 'nameVisibleDistance', e.target.value, targetNameVisibleDistanceField);
+                        }
+                    });
+                }
+
+                attachNameColorListeners(prefix, targetColorsField);
+            };
+
+            const attachNameColorListeners = (prefix, targetColorsField) => {
+                variants[activeVariant][targetColorsField].forEach((_, i) => {
+                    const colorInput = document.getElementById(`${prefix}Name-color-${i}`);
+                    if (colorInput) {
+                        colorInput.addEventListener('input', (e) => {
+                            variants[activeVariant][targetColorsField][i].color = e.target.value;
+                        });
+                    }
+                    const boldCheckbox = document.getElementById(`${prefix}Name-bold-${i}`);
+                    if (boldCheckbox) {
+                        boldCheckbox.addEventListener('change', (e) => {
+                            variants[activeVariant][targetColorsField][i].bold = e.target.checked;
+                        });
+                    }
+                    const italicCheckbox = document.getElementById(`${prefix}Name-italic-${i}`);
+                    if (italicCheckbox) {
+                        italicCheckbox.addEventListener('change', (e) => {
+                            variants[activeVariant][targetColorsField][i].italic = e.target.checked;
+                        });
+                    }
+                });
+            };
+
+            if (useCustomName) {
+                attachNameSectionListeners('variant', null, 'nameColors', 'customModelData', 'nameVisibleDistance');
+            }
+
+            ['head', 'chest', 'legs', 'feet'].forEach(slot => {
+                const armorInput = document.getElementById(`armor-${slot}`);
+                if (armorInput) {
+                    armorInput.addEventListener('input', (e) => {
+                        updateNestedVariant(activeVariant, 'armor', slot, e.target.value);
+                        const colorContainer = document.getElementById(`armor-color-container-${slot}`);
+                        if (colorContainer) {
+                            if (e.target.value.includes('leather')) {
+                                colorContainer.innerHTML = `
+                                    <div>
+                                        <span>Color:</span>
+                                        <input type="color" id="armor-color-${slot}" value="${variant.armorColors[slot]}">
+                                    </div>
+                                `;
+                                document.getElementById(`armor-color-${slot}`).addEventListener('input', (colorEvent) => {
+                                    updateNestedVariant(activeVariant, 'armorColors', slot, colorEvent.target.value);
+                                });
+                            } else {
+                                colorContainer.innerHTML = '';
+                            }
+                        }
+                    });
+                }
+                const colorInput = document.getElementById(`armor-color-${slot}`);
+                if (colorInput) {
+                    colorInput.addEventListener('input', (e) => {
+                        updateNestedVariant(activeVariant, 'armorColors', slot, e.target.value);
+                    });
+                }
+            });
+
+            ['mainHand', 'offHand'].forEach(slot => {
+                document.getElementById(`item-${slot}`).addEventListener('input', (e) => {
+                    updateNestedVariant(activeVariant, 'items', slot, e.target.value);
+                });
+            });
+
+            document.getElementById('effectsContainer').querySelectorAll('input[type="text"]').forEach(input => {
+                const parts = input.id.split('-');
+                const effectIndex = parseInt(parts[1]);
+                const field = parts[2];
+                input.addEventListener('input', (e) => {
+                    updateEffect(activeVariant, effectIndex, field, e.target.value);
+                });
+            });
+            document.querySelectorAll('[data-action="remove-effect"][data-target="effects"]').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    removeEffect(activeVariant, index);
+                });
+            });
+            document.querySelector('[data-action="add-effect"][data-target="effects"]').addEventListener('click', () => {
+                addEffect(activeVariant);
+            });
+
+            document.querySelectorAll('[data-action="add-enchantment"]').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const slot = e.target.dataset.slot;
+                    const target = e.target.dataset.target;
+                    addEnchantment(activeVariant, slot, target);
+                });
+            });
+            document.querySelectorAll('[data-action="remove-enchantment"]').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const slot = e.target.dataset.slot;
+                    const index = parseInt(e.target.dataset.index);
+                    const target = e.target.dataset.target;
+                    removeEnchantment(activeVariant, slot, index, target);
+                });
+            });
+            document.querySelectorAll('input[id^="enchant-"]').forEach(input => {
+                const parts = input.id.split('-');
+                const target = parts[1];
+                const slot = parts[2];
+                const enchantIndex = parseInt(parts[3]);
+                const field = parts[4];
+                input.addEventListener('input', (e) => {
+                    if (target.startsWith('replaced')) {
+                        updateEnchantment(activeVariant, slot, enchantIndex, field, e.target.value, 'replacedMobEnchantments');
+                    } else if (target.startsWith('passenger')) {
+                        updateEnchantment(activeVariant, slot, enchantIndex, field, e.target.value, 'passengerMobEnchantments');
+                    } else {
+                        updateEnchantment(activeVariant, slot, enchantIndex, field, e.target.value);
+                    }
+                });
+            });
+
+            document.getElementById('variantTag').addEventListener('input', (e) => {
+                updateVariant(activeVariant, 'tag', e.target.value);
+            });
+            document.getElementById('variantReadyTag').addEventListener('input', (e) => {
+                updateVariant(activeVariant, 'readyTag', e.target.value);
+            });
+
+            if (mobType === 'creeper') {
+                document.getElementById('creeperPowered').addEventListener('change', (e) => {
+                    updateVariant(activeVariant, 'creeperPowered', e.target.checked);
+                });
+                document.getElementById('creeperExplosionRadius').addEventListener('input', (e) => {
+                    updateVariant(activeVariant, 'creeperExplosionRadius', e.target.value);
+                });
+                document.getElementById('creeperFuse').addEventListener('input', (e) => {
+                    updateVariant(activeVariant, 'creeperFuse', e.target.value);
+                });
+            }
+
+            document.getElementById('replaceMobCheckbox').addEventListener('change', (e) => {
+                updateVariant(activeVariant, 'replaceMob', e.target.checked);
+                if (e.target.checked) {
+                    const mobPrefix = mobAbbreviations[mobType] || mobType.substring(0, 2);
+                    const variantId = activeVariant + 1;
+                    variants[activeVariant].replacedMobTag = `${mobPrefix}r${variantId}`;
+                    variants[activeVariant].passengerMobTag = `${mobPrefix}p${variantId}`;
+                }
+                renderActiveVariantPanel();
+            });
+
+            if (variant.replaceMob) {
+                // Listeners for Replaced Mob Config
+                document.getElementById('replacedMobType').addEventListener('input', (e) => {
+                    updateVariant(activeVariant, 'replacedMobType', e.target.value);
+                });
+                attachNameSectionListeners(
+                    'replacedMob',
+                    'replacedMob',
+                    'replacedMobNameColors',
+                    'replacedMobCustomModelData',
+                    'replacedMobNameVisibleDistance'
+                );
+                ['head', 'chest', 'legs', 'feet'].forEach(slot => {
+                    const replacedArmorInput = document.getElementById(`replaced-armor-${slot}`);
+                    if (replacedArmorInput) {
+                        replacedArmorInput.addEventListener('input', (e) => {
+                            updateNestedVariant(activeVariant, 'replacedMobArmor', slot, e.target.value);
+                            const colorContainer = document.getElementById(`replaced-armor-color-container-${slot}`);
+                            if (colorContainer) {
+                                if (e.target.value.includes('leather')) {
+                                    colorContainer.innerHTML = `
+                                        <div>
+                                            <span>Color:</span>
+                                            <input type="color" id="replaced-armor-color-${slot}" value="${variant.replacedMobArmorColors[slot]}">
+                                        </div>
+                                    `;
+                                    document.getElementById(`replaced-armor-color-${slot}`).addEventListener('input', (colorEvent) => {
+                                        updateNestedVariant(activeVariant, 'replacedMobArmorColors', slot, colorEvent.target.value);
+                                    });
+                                } else {
+                                    colorContainer.innerHTML = '';
+                                }
+                            }
+                        });
+                    }
+                    const replacedColorInput = document.getElementById(`replaced-armor-color-${slot}`);
+                    if (replacedColorInput) {
+                        replacedColorInput.addEventListener('input', (e) => {
+                            updateNestedVariant(activeVariant, 'replacedMobArmorColors', slot, e.target.value);
+                        });
+                    }
+                });
+                ['mainHand', 'offHand'].forEach(slot => {
+                    document.getElementById(`replaced-item-${slot}`).addEventListener('input', (e) => {
+                        updateNestedVariant(activeVariant, 'replacedMobItems', slot, e.target.value);
+                    });
+                });
+                document.getElementById('replacedEffectsContainer').querySelectorAll('input[type="text"]').forEach(input => {
+                    const parts = input.id.split('-');
+                    const effectIndex = parseInt(parts[2]);
+                    const field = parts[3];
+                    input.addEventListener('input', (e) => {
+                        updateEffect(activeVariant, effectIndex, field, e.target.value, 'replacedMobEffects');
+                    });
+                });
+                document.querySelectorAll('[data-action="remove-effect"][data-target="replacedMobEffects"]').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const index = parseInt(e.target.dataset.index);
+                        removeEffect(activeVariant, index, 'replacedMobEffects');
+                    });
+                });
+                document.querySelector('[data-action="add-effect"][data-target="replacedMobEffects"]').addEventListener('click', () => {
+                    addEffect(activeVariant, 'replacedMobEffects');
+                });
+
+                // Listeners for Passenger Mob Config
+                document.getElementById('passengerMobType').addEventListener('input', (e) => {
+                    updateVariant(activeVariant, 'passengerMobType', e.target.value);
+                });
+                attachNameSectionListeners(
+                    'passengerMob',
+                    'passengerMob',
+                    'passengerMobNameColors',
+                    'passengerMobCustomModelData',
+                    'passengerMobNameVisibleDistance'
+                );
+                ['head', 'chest', 'legs', 'feet'].forEach(slot => {
+                    const passengerArmorInput = document.getElementById(`passenger-armor-${slot}`);
+                    if (passengerArmorInput) {
+                        passengerArmorInput.addEventListener('input', (e) => {
+                            updateNestedVariant(activeVariant, 'passengerMobArmor', slot, e.target.value);
+                            const colorContainer = document.getElementById(`passenger-armor-color-container-${slot}`);
+                            if (colorContainer) {
+                                if (e.target.value.includes('leather')) {
+                                    colorContainer.innerHTML = `
+                                        <div>
+                                            <span>Color:</span>
+                                            <input type="color" id="passenger-armor-color-${slot}" value="${variant.passengerMobArmorColors[slot]}">
+                                        </div>
+                                    `;
+                                    document.getElementById(`passenger-armor-color-${slot}`).addEventListener('input', (colorEvent) => {
+                                        updateNestedVariant(activeVariant, 'passengerMobArmorColors', slot, colorEvent.target.value);
+                                    });
+                                } else {
+                                    colorContainer.innerHTML = '';
+                                }
+                            }
+                        });
+                    }
+                    const passengerColorInput = document.getElementById(`passenger-armor-color-${slot}`);
+                    if (passengerColorInput) {
+                        passengerColorInput.addEventListener('input', (e) => {
+                            updateNestedVariant(activeVariant, 'passengerMobArmorColors', slot, e.target.value);
+                        });
+                    }
+                });
+                ['mainHand', 'offHand'].forEach(slot => {
+                    document.getElementById(`passenger-item-${slot}`).addEventListener('input', (e) => {
+                        updateNestedVariant(activeVariant, 'passengerMobItems', slot, e.target.value);
+                    });
+                });
+                document.getElementById('passengerEffectsContainer').querySelectorAll('input[type="text"]').forEach(input => {
+                    const parts = input.id.split('-');
+                    const effectIndex = parseInt(parts[2]);
+                    const field = parts[3];
+                    input.addEventListener('input', (e) => {
+                        updateEffect(activeVariant, effectIndex, field, e.target.value, 'passengerMobEffects');
+                    });
+                });
+                document.querySelectorAll('[data-action="remove-effect"][data-target="passengerMobEffects"]').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const index = parseInt(e.target.dataset.index);
+                        removeEffect(activeVariant, index, 'passengerMobEffects');
+                    });
+                });
+                document.querySelector('[data-action="add-effect"][data-target="passengerMobEffects"]').addEventListener('click', () => {
+                    addEffect(activeVariant, 'passengerMobEffects');
+                });
+            }
+        }
+
+        // # 24 ======================================
+        function generateDatapack() {
+            if (!mobType) {
+                alert('Por favor, selecciona el tipo de mob.');
+                return;
+            }
+
+            const mobPrefix = mobAbbreviations[mobType] || mobType.substring(0, 2);
+            let commands = [
+                `# Generador de Variantes de Mobs`,
+                `# Compatible con Minecraft 1.16.5`,
+                `# Este archivo (${fileName}.mcfunction) se ejecuta cada tick`,
+                '',
+                `# 25 =======================================`,
+                `# Limpiar items con CustomModelData:100`,
+                `kill @e[type=item,nbt={Item:{tag:{CustomModelData:100}}}]`,
+                '',
+                `# 26 =======================================`,
+                `# Configurar scoreboard`,
+                `scoreboard objectives add ${mobPrefix}c dummy`,
+                '',
+                `# 27 =======================================`,
+                `# Asignar tag base a los mobs`,
+                `execute as @e[type=${mobType}] run tag @s add ${mobPrefix}`,
+                '',
+                `# 28 =======================================`,
+                `# Contador para asignar variantes`,
+                `execute as @e[tag=${mobPrefix},tag=!${mobPrefix}c] run scoreboard players add ${mobPrefix}c ${mobPrefix}c 1`,
+                `execute as @e[tag=${mobPrefix},tag=!${mobPrefix}c] run tag @s add ${mobPrefix}c`,
+                '',
+                `# 29 =======================================`,
+                `# Asignar tags a las variantes`
+            ];
+
+            const excludeTags = variants.map(v => {
+                let tags = [`tag=!${v.tag}`];
+                if (v.replaceMob) {
+                    tags.push(`tag=!${v.replacedMobTag}`);
+                    if (v.passengerMobType) {
+                        tags.push(`tag=!${v.passengerMobTag}`);
+                    }
+                }
+                return tags.join(',');
+            }).join(',');
+
+            if (variantCount === 1) {
+                commands.push(`execute if score ${mobPrefix}c ${mobPrefix}c matches 1 run execute as @e[tag=${mobPrefix},${excludeTags},limit=1,sort=random] run tag @s add ${variants[0].tag}`);
+            } else {
+                variants.forEach((variant, index) => {
+                    if (index === variants.length - 1) {
+                        commands.push(`execute if score ${mobPrefix}c ${mobPrefix}c matches ${index + 1}.. run execute as @e[tag=${mobPrefix},${excludeTags},limit=1,sort=random] run tag @s add ${variant.tag}`);
+                    } else {
+                        commands.push(`execute if score ${mobPrefix}c ${mobPrefix}c matches ${index + 1} run execute as @e[tag=${mobPrefix},${excludeTags},limit=1,sort=random] run tag @s add ${variant.tag}`);
+                    }
+                });
+            }
+
+            commands.push('');
+
+            // # 30 =======================================
+            variants.forEach((variant, index) => {
+                commands.push(`# Variante ${index + 1}: ${variant.name || 'Sin nombre'}`);
+                commands.push('');
+
+                // # 31 ======================================= Mob Replacement Logic
+                if (variant.replaceMob) {
+                    commands.push(`execute as @e[tag=${variant.tag},tag=!${variant.readyTag}] run data merge entity @s {DeathLootTable:""}`);
+                    let summonCommand = `execute as @e[tag=${variant.tag},tag=!${variant.readyTag}] at @s run summon minecraft:${variant.replacedMobType} ~ ~ ~ {Tags:["${variant.replacedMobTag}"]`;
+
+                    if (variant.passengerMobType) {
+                        summonCommand += `,Passengers:[{id:"minecraft:${variant.passengerMobType}",Tags:["${variant.passengerMobTag}"]}]`;
+                    }
+                    summonCommand += `}`;
+                    commands.push(summonCommand);
+                    commands.push(`execute as @e[tag=${variant.tag},tag=!${variant.readyTag}] run kill @s`);
+                    commands.push('');
+
+                    // Apply properties to replaced mob
+                    commands.push(`# 32 ======================================= Replaced Mob Properties`);
+                    if (variant.replacedMobType) {
+                        if (variant.replacedMobName) {
+                            const nameJson = variant.replacedMobNameColors.map(c => `{"text":"${c.letter}","color":"${c.color}","bold":${c.bold},"italic":${c.italic}}`).join(',');
+                            commands.push(`execute as @e[tag=${variant.replacedMobTag},tag=!${variant.readyTag}] run data merge entity @s {CustomName:'{"text":"","extra":[${nameJson}]}',CustomNameVisible:1b}`);
+                            commands.push(`execute as @e[tag=${variant.replacedMobTag}] at @s unless entity @a[distance=..${variant.replacedMobNameVisibleDistance || 60}] run data merge entity @s {CustomNameVisible:0b}`);
+                            commands.push(`execute as @e[tag=${variant.replacedMobTag}] at @s if entity @a[distance=..${variant.replacedMobNameVisibleDistance || 60}] run data merge entity @s {CustomNameVisible:1b}`);
+                        }
+
+                        ['head', 'chest', 'legs', 'feet'].forEach(slot => {
+                            if (variant.replacedMobArmor[slot]) {
+                                const color = variant.replacedMobArmor[slot].includes('leather') ? `,display:{color:${parseInt(variant.replacedMobArmorColors[slot].replace('#', ''), 16)}}` : '';
+                                const enchantments = variant.replacedMobEnchantments[slot].map(e => `{id:"minecraft:${e.id}",lvl:${e.level || 1}}`).join(',');
+                                commands.push(`execute as @e[tag=${variant.replacedMobTag},tag=!${variant.readyTag}] run replaceitem entity @s armor.${slot} minecraft:${variant.replacedMobArmor[slot]}{CustomModelData:${variant.replacedMobCustomModelData},Unbreakable:1b${color}${enchantments ? `,Enchantments:[${enchantments}]` : ''}} 1`);
+                            }
+                        });
+                        ['mainHand', 'offHand'].forEach(slot => {
+                            if (variant.replacedMobItems[slot]) {
+                                const enchantments = variant.replacedMobEnchantments[slot].map(e => `{id:"minecraft:${e.id}",lvl:${e.level || 1}}`).join(',');
+                                commands.push(`execute as @e[tag=${variant.replacedMobTag},tag=!${variant.readyTag}] run replaceitem entity @s weapon.${slot.toLowerCase()} minecraft:${variant.replacedMobItems[slot]}{CustomModelData:${variant.replacedMobCustomModelData},Unbreakable:1b${enchantments ? `,Enchantments:[${enchantments}]` : ''}} 1`);
+                            }
+                        });
+                        variant.replacedMobEffects.forEach(effect => {
+                            if (effect.name) {
+                                commands.push(`execute as @e[tag=${variant.replacedMobTag},tag=!${variant.readyTag}] run effect give @s ${effect.name} ${effect.duration || 999999} ${effect.amplifier || 0} true`);
+                            }
+                        });
+                        commands.push('');
+                    }
+
+                    commands.push(`# 33 ======================================= Passenger Mob Properties`);
+                    if (variant.passengerMobType) {
+                        if (variant.passengerMobName) {
+                            const nameJson = variant.passengerMobNameColors.map(c => `{"text":"${c.letter}","color":"${c.color}","bold":${c.bold},"italic":${c.italic}}`).join(',');
+                            commands.push(`execute as @e[tag=${variant.passengerMobTag},tag=!${variant.readyTag}] run data merge entity @s {CustomName:'{"text":"","extra":[${nameJson}]}',CustomNameVisible:1b}`);
+                            commands.push(`execute as @e[tag=${variant.passengerMobTag}] at @s unless entity @a[distance=..${variant.passengerMobNameVisibleDistance || 60}] run data merge entity @s {CustomNameVisible:0b}`);
+                            commands.push(`execute as @e[tag=${variant.passengerMobTag}] at @s if entity @a[distance=..${variant.passengerMobNameVisibleDistance || 60}] run data merge entity @s {CustomNameVisible:1b}`);
+                        }
+
+                        ['head', 'chest', 'legs', 'feet'].forEach(slot => {
+                            if (variant.passengerMobArmor[slot]) {
+                                const color = variant.passengerMobArmor[slot].includes('leather') ? `,display:{color:${parseInt(variant.passengerMobArmorColors[slot].replace('#', ''), 16)}}` : '';
+                                const enchantments = variant.passengerMobEnchantments[slot].map(e => `{id:"minecraft:${e.id}",lvl:${e.level || 1}}`).join(',');
+                                commands.push(`execute as @e[tag=${variant.passengerMobTag},tag=!${variant.readyTag}] run replaceitem entity @s armor.${slot} minecraft:${variant.passengerMobArmor[slot]}{CustomModelData:${variant.passengerMobCustomModelData},Unbreakable:1b${color}${enchantments ? `,Enchantments:[${enchantments}]` : ''}} 1`);
+                            }
+                        });
+                        ['mainHand', 'offHand'].forEach(slot => {
+                            if (variant.passengerMobItems[slot]) {
+                                const enchantments = variant.passengerMobEnchantments[slot].map(e => `{id:"minecraft:${e.id}",lvl:${e.level || 1}}`).join(',');
+                                commands.push(`execute as @e[tag=${variant.passengerMobTag},tag=!${variant.readyTag}] run replaceitem entity @s weapon.${slot.toLowerCase()} minecraft:${variant.passengerMobItems[slot]}{CustomModelData:${variant.passengerMobCustomModelData},Unbreakable:1b${enchantments ? `,Enchantments:[${enchantments}]` : ''}} 1`);
+                            }
+                        });
+                        variant.passengerMobEffects.forEach(effect => {
+                            if (effect.name) {
+                                commands.push(`execute as @e[tag=${variant.passengerMobTag},tag=!${variant.readyTag}] run effect give @s ${effect.name} ${effect.duration || 999999} ${effect.amplifier || 0} true`);
+                            }
+                        });
+                        commands.push('');
+                    }
+                } else {
+                    // # 34 ======================================= Normal Mob Properties (if not replaced)
+                    if (variant.armor.head) {
+                        const color = variant.armor.head.includes('leather') ? `,display:{color:${parseInt(variant.armorColors.head.replace('#', ''), 16)}}` : '';
+                        const enchantments = variant.enchantments.head.map(e => `{id:"minecraft:${e.id}",lvl:${e.level || 1}}`).join(',');
+                        commands.push(`execute as @e[tag=${variant.tag},tag=!${variant.readyTag}] run replaceitem entity @s armor.head minecraft:${variant.armor.head}{CustomModelData:100,Unbreakable:1b${color}${enchantments ? `,Enchantments:[${enchantments}]` : ''}} 1`);
+                        commands.push('');
+                    }
+
+                    if (variant.armor.chest) {
+                        const color = variant.armor.chest.includes('leather') ? `,display:{color:${parseInt(variant.armorColors.chest.replace('#', ''), 16)}}` : '';
+                        const enchantments = variant.enchantments.chest.map(e => `{id:"minecraft:${e.id}",lvl:${e.level || 1}}`).join(',');
+                        commands.push(`execute as @e[tag=${variant.tag},tag=!${variant.readyTag}] run replaceitem entity @s armor.chest minecraft:${variant.armor.chest}{CustomModelData:100,Unbreakable:1b${color}${enchantments ? `,Enchantments:[${enchantments}]` : ''}} 1`);
+                        commands.push('');
+                    }
+
+                    if (variant.armor.legs) {
+                        const color = variant.armor.legs.includes('leather') ? `,display:{color:${parseInt(variant.armorColors.legs.replace('#', ''), 16)}}` : '';
+                        const enchantments = variant.enchantments.legs.map(e => `{id:"minecraft:${e.id}",lvl:${e.level || 1}}`).join(',');
+                        commands.push(`execute as @e[tag=${variant.tag},tag=!${variant.readyTag}] run replaceitem entity @s armor.legs minecraft:${variant.armor.legs}{CustomModelData:100,Unbreakable:1b${color}${enchantments ? `,Enchantments:[${enchantments}]` : ''}} 1`);
+                        commands.push('');
+                    }
+
+                    if (variant.armor.feet) {
+                        const color = variant.armor.feet.includes('leather') ? `,display:{color:${parseInt(variant.armorColors.feet.replace('#', ''), 16)}}` : '';
+                        const enchantments = variant.enchantments.feet.map(e => `{id:"minecraft:${e.id}",lvl:${e.level || 1}}`).join(',');
+                        commands.push(`execute as @e[tag=${variant.tag},tag=!${variant.readyTag}] run replaceitem entity @s armor.feet minecraft:${variant.armor.feet}{CustomModelData:100,Unbreakable:1b${color}${enchantments ? `,Enchantments:[${enchantments}]` : ''}} 1`);
+                        commands.push('');
+                    }
+
+                    if (variant.items.mainHand) {
+                        const enchantments = variant.enchantments.mainHand.map(e => `{id:"minecraft:${e.id}",lvl:${e.level || 1}}`).join(',');
+                        commands.push(`execute as @e[tag=${variant.tag},tag=!${variant.readyTag}] run replaceitem entity @s weapon.mainhand minecraft:${variant.items.mainHand}{CustomModelData:100,Unbreakable:1b${enchantments ? `,Enchantments:[${enchantments}]` : ''}} 1`);
+                        commands.push('');
+                    }
+
+                    if (variant.items.offHand) {
+                        const enchantments = variant.enchantments.offHand.map(e => `{id:"minecraft:${e.id}",lvl:${e.level || 1}}`).join(',');
+                        commands.push(`execute as @e[tag=${variant.tag},tag=!${variant.readyTag}] run replaceitem entity @s weapon.offhand minecraft:${variant.items.offHand}{CustomModelData:100,Unbreakable:1b${enchantments ? `,Enchantments:[${enchantments}]` : ''}} 1`);
+                        commands.push('');
+                    }
+
+                    // # 35 ======================================= Custom Name Logic
+                    if (useCustomName && variant.name) {
+                        const nameJson = variant.nameColors.map(c => `{"text":"${c.letter}","color":"${c.color}","bold":${c.bold},"italic":${c.italic}}`).join(',');
+                        commands.push(`execute as @e[tag=${variant.tag},tag=!${variant.readyTag}] run data merge entity @s {CustomName:'{"text":"","extra":[${nameJson}]}',CustomNameVisible:1b}`);
+                        commands.push('');
+
+                        commands.push(`execute as @e[tag=${variant.tag}] at @s unless entity @a[distance=..${variant.nameVisibleDistance || 60}] run data merge entity @s {CustomNameVisible:0b}`);
+                        commands.push(`execute as @e[tag=${variant.tag}] at @s if entity @a[distance=..${variant.nameVisibleDistance || 60}] run data merge entity @s {CustomNameVisible:1b}`);
+                        commands.push('');
+                    }
+
+                    // # 36 ======================================= Effects Logic
+                    variant.effects.forEach(effect => {
+                        if (effect.name) {
+                            const targetTag = mobType === 'creeper' ? variant.tag : `${variant.tag},tag=!${variant.readyTag}`;
+                            commands.push(`execute as @e[tag=${targetTag}] run effect give @s ${effect.name} ${effect.duration || 999999} ${effect.amplifier || 0} true`);
+                        }
+                    });
+                    commands.push('');
+
+                    // # 37 ======================================= Creeper Specific NBT
+                    if (mobType === 'creeper' && (variant.creeperPowered || variant.creeperExplosionRadius || variant.creeperFuse)) {
+                        const powered = variant.creeperPowered ? '1b' : '0b';
+                        const explosionRadius = variant.creeperExplosionRadius ? `,ExplosionRadius:${variant.creeperExplosionRadius}` : '';
+                        const fuse = variant.creeperFuse ? `,Fuse:${variant.creeperFuse}` : '';
+                        commands.push(`execute as @e[tag=${variant.tag},tag=!${variant.readyTag}] run data merge entity @s {powered:${powered}${explosionRadius}${fuse}}`);
+                        commands.push('');
+                    }
+                }
+
+                // # 38 ======================================= Advanced Command (Not in UI, but still generated if present)
+                if (advancedCommand) {
+                    commands.push(`# Comando Avanzado para Variante ${index + 1}`);
+                    commands.push(advancedCommand);
+                    commands.push('');
+                }
+
+                // # 39 ======================================= Mark as Ready
+                if (variant.replaceMob) {
+                    if (variant.replacedMobType) {
+                        commands.push(`execute as @e[tag=${variant.replacedMobTag},tag=!${variant.readyTag}] run tag @s add ${variant.readyTag}`);
+                    }
+                    if (variant.passengerMobType) {
+                        commands.push(`execute as @e[tag=${variant.passengerMobTag},tag=!${variant.readyTag}] run tag @s add ${variant.readyTag}`);
+                    }
+                } else {
+                    commands.push(`execute as @e[tag=${variant.tag},tag=!${variant.readyTag}] run tag @s add ${variant.readyTag}`);
+                }
+                commands.push('');
+            });
+
+            // # 40 ======================================= Reset Scoreboard
+            if (variantCount === 1) {
+                commands.push(`# Reiniciar contador para una sola variante`);
+                commands.push(`execute if score ${mobPrefix}c ${mobPrefix}c matches 2.. run scoreboard players set ${mobPrefix}c ${mobPrefix}c 1`);
+            } else {
+                commands.push(`# Reiniciar contador para múltiples variantes`);
+                commands.push(`execute if score ${mobPrefix}c ${mobPrefix}c matches ${variantCount}.. run scoreboard players set ${mobPrefix}c ${mobPrefix}c 0`);
+            }
+
+            const blob = new Blob([commands.join('\n')], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${fileName}.mcfunction`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // # 42 ======================================
+        function exportConfiguration() {
+            const configData = {
+                mobType: mobType,
+                variantCount: variantCount,
+                fileName: fileName,
+                useCustomName: useCustomName,
+                unlockTags: unlockTags,
+                unlockEffects: unlockEffects,
+                showWarnings: showWarnings,
+                variants: variants
+            };
+
+            const now = new Date();
+            const dateTime = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()} - ${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
+
+            let configText = `IMPORTANTE: ESTO ES UNA CONFIGURACIÓN, NO CAMBIES ESTO SI NO QUIERES QUE TU MOB ESTÉ CORRUPTO. GRACIAS.\n\n`;
+            configText += `Configuración de: ${configData.mobType || 'Desconocido'}\n`;
+            configText += `Fecha y Hora: ${dateTime}\n`;
+            configText += `Tipo de Mob: ${configData.mobType || 'N/A'}\n`;
+            configText += `Número de Variantes: ${configData.variantCount}\n`;
+            configText += `Nombre del Archivo: ${configData.fileName}\n`;
+            configText += `Usar Nombre Personalizado: ${configData.useCustomName ? 'Sí' : 'No'}\n`;
+            configText += `Desbloquear Edición de Tags: ${configData.unlockTags ? 'Sí' : 'No'}\n`;
+            configText += `Desbloquear Edición Manual de Efectos: ${configData.unlockEffects ? 'Sí' : 'No'}\n`;
+            configText += `Mostrar Advertencias: ${configData.showWarnings ? 'Sí' : 'No'}\n`;
+            configText += `\n====================================================================\n\n`;
+
+            configData.variants.forEach((variant, index) => {
+                configText += `VARIANTE ${index + 1} ====================================================\n`;
+                configText += `  ID Interno: ${variant.id}\n`;
+                configText += `  Reemplazar Mob: ${variant.replaceMob ? 'Sí' : 'No'}\n`;
+
+                if (variant.replaceMob) {
+                    configText += `  ------------------------------------------------------------------\n`;
+                    configText += `  MOB REEMPLAZADO (DEBAJO):\n`;
+                    configText += `    Tipo: ${variant.replacedMobType || 'N/A'}\n`;
+                    configText += `    Tag: ${variant.replacedMobTag || 'N/A'}\n`;
+                    configText += `    Nombre: ${variant.replacedMobName || 'Sin Nombre'}\n`;
+                    if (variant.replacedMobNameColors && variant.replacedMobNameColors.length > 0) {
+                        configText += `      Colores del Nombre: ${JSON.stringify(variant.replacedMobNameColors)}\n`;
+                    }
+                    configText += `    CustomModelData: ${variant.replacedMobCustomModelData || 'N/A'}\n`;
+                    configText += `    Distancia de Visibilidad: ${variant.replacedMobNameVisibleDistance || 'N/A'}\n`;
+                    configText += `    Armadura:\n`;
+                    ['head', 'chest', 'legs', 'feet'].forEach(slot => {
+                        const armor = variant.replacedMobArmor[slot];
+                        const color = variant.replacedMobArmorColors[slot];
+                        const enchantments = variant.replacedMobEnchantments[slot];
+                        configText += `      ${slot.charAt(0).toUpperCase() + slot.slice(1)}: ${armor || 'Ninguno'}`;
+                        if (armor.includes('leather')) configText += ` (Color: ${color})`;
+                        if (enchantments && enchantments.length > 0) {
+                            configText += ` (Encantamientos: ${enchantments.map(e => `${e.id} Lvl ${e.level}`).join(', ')})`;
+                        }
+                        configText += `\n`;
+                    });
+                    configText += `    Items:\n`;
+                    ['mainHand', 'offHand'].forEach(slot => {
+                        const item = variant.replacedMobItems[slot];
+                        const enchantments = variant.replacedMobEnchantments[slot];
+                        configText += `      ${slot === 'mainHand' ? 'Mano Principal' : 'Mano Secundaria'}: ${item || 'Ninguno'}`;
+                        if (enchantments && enchantments.length > 0) {
+                            configText += ` (Encantamientos: ${enchantments.map(e => `${e.id} Lvl ${e.level}`).join(', ')})`;
+                        }
+                        configText += `\n`;
+                    });
+                    configText += `    Efectos:\n`;
+                    if (variant.replacedMobEffects && variant.replacedMobEffects.length > 0) {
+                        variant.replacedMobEffects.forEach(effect => {
+                            configText += `      - ${effect.name || 'N/A'} (Duración: ${effect.duration || 'N/A'}, Amplificador: ${effect.amplifier || 'N/A'})\n`;
+                        });
+                    } else {
+                        configText += `      Ninguno\n`;
+                    }
+
+                    configText += `  ------------------------------------------------------------------\n`;
+                    configText += `  MOB PASAJERO (ENCIMA):\n`;
+                    configText += `    Tipo: ${variant.passengerMobType || 'N/A'}\n`;
+                    configText += `    Tag: ${variant.passengerMobTag || 'N/A'}\n`;
+                    configText += `    Nombre: ${variant.passengerMobName || 'Sin Nombre'}\n`;
+                    if (variant.passengerMobNameColors && variant.passengerMobNameColors.length > 0) {
+                        configText += `      Colores del Nombre: ${JSON.stringify(variant.passengerMobNameColors)}\n`;
+                    }
+                    configText += `    CustomModelData: ${variant.passengerMobCustomModelData || 'N/A'}\n`;
+                    configText += `    Distancia de Visibilidad: ${variant.passengerMobNameVisibleDistance || 'N/A'}\n`;
+                    configText += `    Armadura:\n`;
+                    ['head', 'chest', 'legs', 'feet'].forEach(slot => {
+                        const armor = variant.passengerMobArmor[slot];
+                        const color = variant.passengerMobArmorColors[slot];
+                        const enchantments = variant.passengerMobEnchantments[slot];
+                        configText += `      ${slot.charAt(0).toUpperCase() + slot.slice(1)}: ${armor || 'Ninguno'}`;
+                        if (armor.includes('leather')) configText += ` (Color: ${color})`;
+                        if (enchantments && enchantments.length > 0) {
+                            configText += ` (Encantamientos: ${enchantments.map(e => `${e.id} Lvl ${e.level}`).join(', ')})`;
+                        }
+                        configText += `\n`;
+                    });
+                    configText += `    Items:\n`;
+                    ['mainHand', 'offHand'].forEach(slot => {
+                        const item = variant.passengerMobItems[slot];
+                        const enchantments = variant.passengerMobEnchantments[slot];
+                        configText += `      ${slot === 'mainHand' ? 'Mano Principal' : 'Mano Secundaria'}: ${item || 'Ninguno'}`;
+                        if (enchantments && enchantments.length > 0) {
+                            configText += ` (Encantamientos: ${enchantments.map(e => `${e.id} Lvl ${e.level}`).join(', ')})`;
+                        }
+                        configText += `\n`;
+                    });
+                    configText += `    Efectos:\n`;
+                    if (variant.passengerMobEffects && variant.passengerMobEffects.length > 0) {
+                        variant.passengerMobEffects.forEach(effect => {
+                            configText += `      - ${effect.name || 'N/A'} (Duración: ${effect.duration || 'N/A'}, Amplificador: ${effect.amplifier || 'N/A'})\n`;
+                        });
+                    } else {
+                        configText += `      Ninguno\n`;
+                    }
+                } else {
+                    configText += `  Nombre de la Variante: ${variant.name || 'Sin Nombre'}\n`;
+                    if (variant.nameColors && variant.nameColors.length > 0) {
+                        configText += `    Colores del Nombre: ${JSON.stringify(variant.nameColors)}\n`;
+                    }
+                    configText += `  CustomModelData: ${variant.customModelData || 'N/A'}\n`;
+                    configText += `  Distancia de Visibilidad: ${variant.nameVisibleDistance || 'N/A'}\n`;
+                    configText += `  Armadura:\n`;
+                    ['head', 'chest', 'legs', 'feet'].forEach(slot => {
+                        const armor = variant.armor[slot];
+                        const color = variant.armorColors[slot];
+                        const enchantments = variant.enchantments[slot];
+                        configText += `    ${slot.charAt(0).toUpperCase() + slot.slice(1)}: ${armor || 'Ninguno'}`;
+                        if (armor.includes('leather')) configText += ` (Color: ${color})`;
+                        if (enchantments && enchantments.length > 0) {
+                            configText += ` (Encantamientos: ${enchantments.map(e => `${e.id} Lvl ${e.level}`).join(', ')})`;
+                        }
+                        configText += `\n`;
+                    });
+                    configText += `  Items:\n`;
+                    ['mainHand', 'offHand'].forEach(slot => {
+                        const item = variant.items[slot];
+                        const enchantments = variant.enchantments[slot];
+                        configText += `    ${slot === 'mainHand' ? 'Mano Principal' : 'Mano Secundaria'}: ${item || 'Ninguno'}`;
+                        if (enchantments && enchantments.length > 0) {
+                            configText += ` (Encantamientos: ${enchantments.map(e => `${e.id} Lvl ${e.level}`).join(', ')})`;
+                        }
+                        configText += `\n`;
+                    });
+                    configText += `  Efectos:\n`;
+                    if (variant.effects && variant.effects.length > 0) {
+                        variant.effects.forEach(effect => {
+                            configText += `    - ${effect.name || 'N/A'} (Duración: ${effect.duration || 'N/A'}, Amplificador: ${effect.amplifier || 'N/A'})\n`;
+                        });
+                    } else {
+                        configText += `    Ninguno\n`;
+                    }
+
+                    if (variant.isCreeper) {
+                        configText += `  Configuración de Creeper:\n`;
+                        configText += `    Cargado: ${variant.creeperPowered ? 'Sí' : 'No'}\n`;
+                        configText += `    Radio de Explosión: ${variant.creeperExplosionRadius || 'Por Defecto'}\n`;
+                        configText += `    Tiempo de Fusible: ${variant.creeperFuse || 'Por Defecto'}\n`;
+                    }
+                }
+                configText += `  Tags:\n`;
+                configText += `    Tag de Variante: ${variant.tag}\n`;
+                configText += `    Tag de Listo: ${variant.readyTag}\n`;
+                configText += `\n====================================================================\n\n`;
+            });
+
+            const blob = new Blob([configText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `configuracion_mob_${mobType || 'desconocido'}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // # 43 ======================================
+        // Función para mostrar el overlay de carga
+        function showLoadingOverlay() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            document.body.style.overflow = 'hidden'; // Evita el scroll durante la carga
+        }
+
+        // Función para ocultar el overlay de carga
+        function hideLoadingOverlay() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+            document.body.style.overflow = ''; // Restaura el scroll
+        }
+
+        // Función para reiniciar el estado de la aplicación
+        function resetApplicationState() {
+            // Restablecer variables globales a sus valores iniciales
+            mobType = 'zombie';
+            variantCount = 1;
+            variants = []; // Se inicializará de nuevo en initializeVariants
+            isMobile = false; // Se recalculará en DOMContentLoaded
+            unlockTags = false;
+            unlockEffects = false;
+            advancedCommand = '';
+            showWarnings = true;
+            activeTab = 'general';
+            activeVariant = 0;
+            openAccordion = { // Restablecer todos los acordeones a cerrados
+                name: false,
+                armor: false,
+                items: false,
+                effects: false,
+                tags: false,
+                replaceMob: false,
+                creeperSettings: false,
+                replacedMobConfig: false, // Nuevo acordeón para el mob reemplazado
+                passengerMobConfig: false // Nuevo acordeón para el mob pasajero
+            };
+            fileName = 'tick';
+            useCustomName = false;
+
+            // Restablecer elementos de la UI a sus valores por defecto
+            document.getElementById('mobTypeInput').value = mobType;
+            document.getElementById('variantCountInput').value = variantCount;
+            document.getElementById('fileNameInput').value = fileName;
+            document.getElementById('useCustomNameCheckbox').checked = useCustomName;
+            document.getElementById('unlockTagsCheckbox').checked = unlockTags;
+            document.getElementById('unlockEffectsCheckbox').checked = unlockEffects;
+            document.getElementById('showWarningsCheckbox').checked = showWarnings;
+
+            // Asegurarse de que la pestaña "General" esté activa
+            switchTab('general');
+
+            // Re-inicializar las variantes y renderizar la UI
+            initializeVariants();
+        }
+
+        async function importConfiguration(event) {
+            showLoadingOverlay(); // Mostrar overlay de carga
+
+            // Pequeño retraso para que el overlay se muestre antes de procesar el archivo
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            const file = event.target.files[0];
+            if (!file) {
+                hideLoadingOverlay();
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const content = e.target.result;
+                try {
+                    // Reiniciar la aplicación antes de cargar la nueva configuración
+                    resetApplicationState();
+
+                    const parsedConfig = parseConfigText(content);
+
+                    // Aplicar la configuración parseada a las variables globales
+                    mobType = parsedConfig.mobType;
+                    variantCount = parsedConfig.variantCount;
+                    fileName = parsedConfig.fileName;
+                    useCustomName = parsedConfig.useCustomName;
+                    unlockTags = parsedConfig.unlockTags;
+                    unlockEffects = parsedConfig.unlockEffects;
+                    showWarnings = parsedConfig.showWarnings;
+                    variants = parsedConfig.variants;
+
+                    // Actualizar los elementos de la UI con los nuevos valores
+                    document.getElementById('mobTypeInput').value = mobType;
+                    document.getElementById('variantCountInput').value = variantCount;
+                    document.getElementById('fileNameInput').value = fileName;
+                    document.getElementById('useCustomNameCheckbox').checked = useCustomName;
+                    document.getElementById('unlockTagsCheckbox').checked = unlockTags;
+                    document.getElementById('unlockEffectsCheckbox').checked = unlockEffects;
+                    document.getElementById('showWarningsCheckbox').checked = showWarnings;
+
+                    // Re-renderizar paneles para reflejar el nuevo estado
+                    renderVariantsPanel();
+                    renderActiveVariantPanel();
+                    alert('Configuración importada exitosamente.');
+                } catch (error) {
+                    console.error('Error al importar la configuración:', error);
+                    alert('Error al importar la configuración. Asegúrate de que el archivo sea válido y no esté corrupto.');
+                } finally {
+                    hideLoadingOverlay(); // Ocultar overlay de carga
+                    // Limpiar el input de tipo file para que el evento 'change' se dispare de nuevo si se selecciona el mismo archivo
+                    event.target.value = '';
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Helper function to parse the custom text format
+        function parseConfigText(text) {
+            const lines = text.split('\n');
+            const config = {
+                variants: []
+            };
+            let currentVariant = null;
+            let currentSection = null;
+            let currentSubSection = null;
+            let isReplacedMob = false;
+            let isPassengerMob = false;
+
+            lines.forEach(line => {
+                line = line.trim();
+                if (line.startsWith('Configuración de:')) {
+                    // Ignore, just for display
+                } else if (line.startsWith('Fecha y Hora:')) {
+                    // Ignore, just for display
+                } else if (line.startsWith('Tipo de Mob:')) {
+                    config.mobType = line.split(': ')[1];
+                } else if (line.startsWith('Número de Variantes:')) {
+                    config.variantCount = parseInt(line.split(': ')[1]);
+                } else if (line.startsWith('Nombre del Archivo:')) {
+                    config.fileName = line.split(': ')[1];
+                } else if (line.startsWith('Usar Nombre Personalizado:')) {
+                    config.useCustomName = line.split(': ')[1] === 'Sí';
+                } else if (line.startsWith('Desbloquear Edición de Tags:')) {
+                    config.unlockTags = line.split(': ')[1] === 'Sí';
+                } else if (line.startsWith('Desbloquear Edición Manual de Efectos:')) {
+                    config.unlockEffects = line.split(': ')[1] === 'Sí';
+                } else if (line.startsWith('Mostrar Advertencias:')) {
+                    config.showWarnings = line.split(': ')[1] === 'Sí';
+                } else if (line.startsWith('VARIANTE ')) {
+                    const id = parseInt(line.match(/VARIANTE (\d+)/)[1]);
+                    // Use createNewVariant to ensure default structure, then override with parsed data
+                    currentVariant = createNewVariant(id);
+                    config.variants.push(currentVariant);
+                    currentSection = null;
+                    currentSubSection = null;
+                    isReplacedMob = false;
+                    isPassengerMob = false;
+                } else if (currentVariant) {
+                    if (line.startsWith('ID Interno:')) {
+                        currentVariant.id = parseInt(line.split(': ')[1]);
+                    } else if (line.startsWith('Reemplazar Mob:')) {
+                        currentVariant.replaceMob = line.split(': ')[1] === 'Sí';
+                    } else if (line.startsWith('Nombre de la Variante:')) {
+                        currentVariant.name = line.split(': ')[1];
+                    } else if (line.startsWith('Colores del Nombre:')) {
+                        try {
+                            currentVariant.nameColors = JSON.parse(line.substring(line.indexOf(':') + 1).trim());
+                        } catch (e) {
+                            console.warn('Error parsing name colors:', e);
+                            currentVariant.nameColors = [];
+                        }
+                    } else if (line.startsWith('CustomModelData:')) {
+                        const value = line.split(': ')[1];
+                        if (isReplacedMob) currentVariant.replacedMobCustomModelData = value;
+                        else if (isPassengerMob) currentVariant.passengerMobCustomModelData = value;
+                        else currentVariant.customModelData = value;
+                    } else if (line.startsWith('Distancia de Visibilidad:')) {
+                        const value = line.split(': ')[1];
+                        if (isReplacedMob) currentVariant.replacedMobNameVisibleDistance = value;
+                        else if (isPassengerMob) currentVariant.passengerMobNameVisibleDistance = value;
+                        else currentVariant.nameVisibleDistance = value;
+                    } else if (line.startsWith('Armadura:')) {
+                        currentSection = 'armor';
+                        currentSubSection = null;
+                    } else if (line.startsWith('Items:')) {
+                        currentSection = 'items';
+                        currentSubSection = null;
+                    } else if (line.startsWith('Efectos:')) {
+                        currentSection = 'effects';
+                        currentSubSection = null;
+                    } else if (line.startsWith('Tags:')) {
+                        currentSection = 'tags';
+                        currentSubSection = null;
+                    } else if (line.startsWith('Configuración de Creeper:')) {
+                        currentSection = 'creeperSettings';
+                        currentSubSection = null;
+                    } else if (line.startsWith('MOB REEMPLAZADO (DEBAJO):')) {
+                        isReplacedMob = true;
+                        isPassengerMob = false;
+                        currentSection = null;
+                        currentSubSection = null;
+                    } else if (line.startsWith('MOB PASAJERO (ENCIMA):')) {
+                        isPassengerMob = true;
+                        isReplacedMob = false;
+                        currentSection = null;
+                        currentSubSection = null;
+                    } else if (line.startsWith('Tipo:')) {
+                        const value = line.split(': ')[1];
+                        if (isReplacedMob) currentVariant.replacedMobType = value;
+                        else if (isPassengerMob) currentVariant.passengerMobType = value;
+                    } else if (line.startsWith('Tag:')) {
+                        const value = line.split(': ')[1];
+                        if (isReplacedMob) currentVariant.replacedMobTag = value;
+                        else if (isPassengerMob) currentVariant.passengerMobTag = value;
+                    } else if (line.startsWith('Nombre:')) {
+                        const value = line.split(': ')[1];
+                        if (isReplacedMob) currentVariant.replacedMobName = value;
+                        else if (isPassengerMob) currentVariant.passengerMobName = value;
+                    } else if (line.startsWith('Colores del Nombre:')) {
+                        try {
+                            const value = JSON.parse(line.substring(line.indexOf(':') + 1).trim());
+                            if (isReplacedMob) currentVariant.replacedMobNameColors = value;
+                            else if (isPassengerMob) currentVariant.passengerMobNameColors = value;
+                        } catch (e) {
+                            console.warn('Error parsing name colors for replaced/passenger mob:', e);
+                        }
+                    } else if (currentSection === 'armor') {
+                        const match = line.match(/^(Head|Chest|Legs|Feet):\s*(.*?)(?:\s*\(Color:\s*(#[\da-fA-F]+)\))?(?:\s*\(Encantamientos:\s*(.*)\))?$/);
+                        if (match) {
+                            const slot = match[1].toLowerCase();
+                            const item = match[2].trim();
+                            const color = match[3] || '#ffffff';
+                            const enchantmentsText = match[4];
+
+                            const targetArmor = isReplacedMob ? currentVariant.replacedMobArmor : (isPassengerMob ? currentVariant.passengerMobArmor : currentVariant.armor);
+                            const targetArmorColors = isReplacedMob ? currentVariant.replacedMobArmorColors : (isPassengerMob ? currentVariant.passengerMobArmorColors : currentVariant.armorColors);
+                            const targetEnchantments = isReplacedMob ? currentVariant.replacedMobEnchantments : (isPassengerMob ? currentVariant.passengerMobEnchantments : currentVariant.enchantments);
+
+                            targetArmor[slot] = item === 'Ninguno' ? '' : item;
+                            targetArmorColors[slot] = color;
+                            if (enchantmentsText) {
+                                targetEnchantments[slot] = enchantmentsText.split(', ').map(e => {
+                                    const parts = e.split(' Lvl ');
+                                    return { id: parts[0], level: parseInt(parts[1]) || 1 };
+                                });
+                            } else {
+                                targetEnchantments[slot] = [];
+                            }
+                        }
+                    } else if (currentSection === 'items') {
+                        const match = line.match(/^(Mano Principal|Mano Secundaria):\s*(.*?)(?:\s*\(Encantamientos:\s*(.*)\))?$/);
+                        if (match) {
+                            const slotName = match[1];
+                            const slot = slotName === 'Mano Principal' ? 'mainHand' : 'offHand';
+                            const item = match[2].trim();
+                            const enchantmentsText = match[3];
+
+                            const targetItems = isReplacedMob ? currentVariant.replacedMobItems : (isPassengerMob ? currentVariant.passengerMobItems : currentVariant.items);
+                            const targetEnchantments = isReplacedMob ? currentVariant.replacedMobEnchantments : (isPassengerMob ? currentVariant.passengerMobEnchantments : currentVariant.enchantments);
+
+                            targetItems[slot] = item === 'Ninguno' ? '' : item;
+                            if (enchantmentsText) {
+                                targetEnchantments[slot] = enchantmentsText.split(', ').map(e => {
+                                    const parts = e.split(' Lvl ');
+                                    return { id: parts[0], level: parseInt(parts[1]) || 1 };
+                                });
+                            } else {
+                                targetEnchantments[slot] = [];
+                            }
+                        }
+                    } else if (currentSection === 'effects') {
+                        const match = line.match(/^- (.*?) \(Duración: (.*?), Amplificador: (.*?)\)$/);
+                        if (match) {
+                            const name = match[1];
+                            const duration = match[2];
+                            const amplifier = match[3];
+                            const effect = { name, duration, amplifier };
+
+                            const targetEffects = isReplacedMob ? currentVariant.replacedMobEffects : (isPassengerMob ? currentVariant.passengerMobEffects : currentVariant.effects);
+                            targetEffects.push(effect);
+                        } else if (line === 'Ninguno') {
+                            // No effects, do nothing
+                        }
+                    } else if (currentSection === 'tags') {
+                        if (line.startsWith('Tag de Variante:')) {
+                            currentVariant.tag = line.split(': ')[1];
+                        } else if (line.startsWith('Tag de Listo:')) {
+                            currentVariant.readyTag = line.split(': ')[1];
+                        }
+                    } else if (currentSection === 'creeperSettings') {
+                        if (line.startsWith('Cargado:')) {
+                            currentVariant.creeperPowered = line.split(': ')[1] === 'Sí';
+                        } else if (line.startsWith('Radio de Explosión:')) {
+                            currentVariant.creeperExplosionRadius = line.split(': ')[1] === 'Por Defecto' ? '' : line.split(': ')[1];
+                        } else if (line.startsWith('Tiempo de Fusible:')) {
+                            currentVariant.creeperFuse = line.split(': ')[1] === 'Por Defecto' ? '' : line.split(': ')[1];
+                        }
+                    }
+                }
+            });
+            return config;
+        }
+
+        // # 41 ======================================= Event Listeners for General Settings
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeVariants();
+            renderVariantsPanel();
+            renderActiveVariantPanel();
+
+            document.getElementById('variantCountInput').addEventListener('input', (e) => {
+                updateVariantCount(e.target.value);
+            });
+
+            document.getElementById('mobTypeInput').addEventListener('input', (e) => {
+                mobType = e.target.value.toLowerCase();
+                variants.forEach((v, i) => {
+                    const mobPrefix = mobAbbreviations[mobType] || mobType.substring(0, 2);
+                    v.tag = `${mobPrefix}${i + 1}`;
+                    v.readyTag = `${mobPrefix}l${i + 1}`;
+                    v.isCreeper = mobType === 'creeper';
+                    if (v.replaceMob) {
+                        v.replacedMobTag = `${mobPrefix}r${i + 1}`;
+                        v.passengerMobTag = `${mobPrefix}p${i + 1}`;
+                    }
+                });
+                renderVariantsPanel();
+                renderActiveVariantPanel();
+            });
+
+            document.getElementById('fileNameInput').addEventListener('input', (e) => {
+                fileName = e.target.value;
+            });
+
+            document.getElementById('useCustomNameCheckbox').addEventListener('change', (e) => {
+                useCustomName = e.target.checked;
+                renderActiveVariantPanel();
+            });
+
+            document.getElementById('unlockTagsCheckbox').addEventListener('change', (e) => {
+                unlockTags = e.target.checked;
+                renderActiveVariantPanel();
+            });
+
+            document.getElementById('unlockEffectsCheckbox').addEventListener('change', (e) => {
+                unlockEffects = e.target.checked;
+                renderActiveVariantPanel();
+            });
+
+            document.getElementById('showWarningsCheckbox').addEventListener('change', (e) => {
+                showWarnings = e.target.checked;
+                renderActiveVariantPanel();
+            });
+
+            document.getElementById('generateDatapackButton').addEventListener('click', generateDatapack);
+            document.getElementById('exportConfigButton').addEventListener('click', exportConfiguration);
+            document.getElementById('importConfigButton').addEventListener('click', () => {
+                document.getElementById('importFileInput').click();
+            });
+            document.getElementById('importFileInput').addEventListener('change', importConfiguration);
+
+
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    switchTab(e.target.dataset.tab);
+                });
+            });
+
+            const mobTypesDatalist = document.getElementById('mobTypes');
+            mobTypesDatalist.innerHTML = validMobs.map(mob => `<option value="${mob}"></option>`).join('');
+
+            const enchantmentListDatalist = document.createElement('datalist');
+            enchantmentListDatalist.id = 'enchantmentList';
+            enchantmentListDatalist.innerHTML = validEnchantments.map(enchant => `<option value="${enchant}"></option>`).join('');
+            document.body.appendChild(enchantmentListDatalist);
+
+            const itemListDatalist = document.createElement('datalist');
+            itemListDatalist.id = 'itemList';
+            itemListDatalist.innerHTML = validItems.map(item => `<option value="${item}"></option>`).join('');
+            document.body.appendChild(itemListDatalist);
+
+            const armorListDatalist = document.createElement('datalist');
+            armorListDatalist.id = 'armorList';
+            armorListDatalist.innerHTML = validArmor.map(armor => `<option value="${armor}"></option>`).join('');
+            document.body.appendChild(armorListDatalist);
+
+            const effectListDatalist = document.createElement('datalist');
+            effectListDatalist.id = 'effectList';
+            effectListDatalist.innerHTML = validEffects.map(effect => `<option value="${effect}"></option>`).join('');
+            document.body.appendChild(effectListDatalist);
+
+            isMobile = window.innerWidth <= 768;
+            window.addEventListener('resize', () => {
+                isMobile = window.innerWidth <= 768;
+                document.querySelector('.mobile-instructions').style.display = isMobile ? 'block' : 'none';
+            });
+            document.querySelector('.mobile-instructions').style.display = isMobile ? 'block' : 'none';
+        });
+    </script>
+</body>
+</html>
