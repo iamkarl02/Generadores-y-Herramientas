@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generadores de Variables</title>
+    <link rel="icon" href="../../pikachu.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --accent: #f72585;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --success: #4cc9f0;
+            --warning: #f8961e;
+            --danger: #ef233c;
+            --border-radius: 12px;
+            --box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: var(--light);
+            color: var(--dark);
+            text-align: center;
+            padding: 20px;
+            line-height: 1.6;
+            opacity: 0;
+            animation: fadeIn 0.8s ease-in forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .container {
+            background-color: white;
+            padding: 3rem 4rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            max-width: 900px;
+            width: 100%;
+            margin: 20px;
+            transform: translateY(20px);
+            opacity: 0;
+            animation: slideUp 0.8s ease-out 0.3s forwards;
+            border: 1px solid rgba(0, 0, 0, 0.03);
+        }
+
+        @keyframes slideUp {
+            to { 
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        h1 {
+            color: var(--dark);
+            margin-bottom: 1.5rem;
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1.2;
+            background: linear-gradient(45deg, var(--secondary), var(--primary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        p {
+            font-size: 1.1rem;
+            margin-bottom: 2.5rem;
+            color: var(--gray);
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: white;
+            padding: 1.5rem 2rem;
+            border-radius: var(--border-radius);
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: var(--transition);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            border: none;
+            min-height: 120px;
+        }
+
+        .button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.1) 100%);
+            z-index: -1;
+            transition: var(--transition);
+            opacity: 0;
+        }
+
+        .button:hover::before {
+            opacity: 1;
+        }
+
+        .button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Aged Gradient Styles */
+        .button.v4 {
+            background: linear-gradient(135deg, #d45a8f 0%, #b83e5f 50%, #8c2a3f 100%); /* Muted accent to darker red */
+        }
+
+        .button.v3 {
+            background: linear-gradient(135deg, #8ac7e0 0%, #6fa0c0 50%, #4878a0 100%); /* Desaturated success to darker blue */
+        }
+
+        .button.v2 {
+            background: linear-gradient(135deg, #6a85e0 0%, #5268c0 50%, #3a4b90 100%); /* Muted primary to darker secondary */
+        }
+
+        .button.v1 {
+            background: linear-gradient(135deg, #e0b06a 0%, #c08a52 50%, #a06a3a 100%); /* Desaturated warning to darker orange */
+        }
+
+        .button-label {
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.9);
+            font-weight: 400;
+        }
+
+        .button-label strong {
+            font-weight: 500;
+            color: white;
+        }
+
+        .version-badge {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: rgba(255,255,255,0.2);
+            padding: 0.2rem 0.5rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 2rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            p {
+                font-size: 1rem;
+            }
+            
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 1.5rem;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .button {
+                padding: 1.2rem;
+                min-height: 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="main-content">
+        <h1>Selecciona tu Generador de Variables</h1>
+        <p>Accede a las diferentes versiones de nuestro generador de variables. Te recomendamos usar la versión más reciente para disfrutar de las últimas mejoras y funcionalidades. Cualquier problema, no dudes en contactarnos.</p>
+
+        <div class="button-group">
+            <a href="generador_variables_v4.html" class="button v4">
+                <span class="version-badge">V4</span>
+                Generador Experimental
+                <span class="button-label"><strong>(Versión Más Reciente)</strong></span>
+            </a>
+            <a href="generador_variables_v3.html" class="button v3">
+                <span class="version-badge">V3</span>
+                Generador Avanzado
+                <span class="button-label"><strong>(Versión Reciente)</strong></span>
+            </a>
+            <a href="generador_variables_v2.html" class="button v2">
+                <span class="version-badge">V2</span>
+                Generador Mejorado
+                <span class="button-label">(Versión Antigua)</span>
+            </a>
+            <a href="generador_variables_v1.html" class="button v1">
+                <span class="version-badge">V1</span>
+                Generador Básico
+                <span class="button-label">(Versión Muy Antigua)</span>
+            </a>
+            <a href="generador_variables_v0.html" class="button v1">
+                <span class="version-badge">V0</span>
+                Generador Clásico
+                <span class="button-label">(Versión Histórica)</span>
+            </a>
+        </div>
+    </div>
+</body>
+</html>
