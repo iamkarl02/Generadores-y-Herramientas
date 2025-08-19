@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, loadial-scale=1.0">
     <title>Generador Premium de Datapacks - Minecraft</title>
     <link rel="icon" href="../../pikachu.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -509,7 +509,7 @@
         }
 
         descInput.addEventListener('input', updateDescriptionPreview);
-        updateDescriptionPreview(); // Initial update
+        updateDescriptionPreview(); // loadial update
 
         // Función para generar datapack con estructura completa
         btnGenerate.addEventListener('click', async () => {
@@ -578,14 +578,14 @@
             const functionsFolder = nsFolder.folder('functions');
 
             // Archivos de funciones básicos
-            const initFunction = `# Función de inicialización\n# Se ejecuta cuando el datapack se carga\nsay ¡El datapack ${dpName} ha sido cargado!`;
+            const loadFunction = `# Función de inicialización\n# Se ejecuta cuando el datapack se carga\nsay ¡El datapack ${dpName} ha sido cargado!`;
             const tickFunction = `# Función de tick\n# Se ejecuta cada tick del juego (20 veces por segundo)\n# Aquí puedes poner comandos que necesiten ejecutarse constantemente`;
             const holaFunction = `# Función de ejemplo\n# Puedes llamar a esta función con: function ${namespace}:hola\nsay ¡Hola desde ${dpName}!`;
 
-            functionsFolder.file('init.mcfunction', initFunction);
+            functionsFolder.file('load.mcfunction', loadFunction);
             functionsFolder.file('tick.mcfunction', tickFunction);
             functionsFolder.file('hola.mcfunction', holaFunction);
-            functionsFolder.file('LEEME.txt', `Esta carpeta contiene los archivos .mcfunction con los comandos del datapack.\n\n- init.mcfunction: Se ejecuta al cargar el datapack\n- tick.mcfunction: Se ejecuta cada tick del juego\n- hola.mcfunction: Función de ejemplo que puedes llamar cuando quieras`);
+            functionsFolder.file('LEEME.txt', `Esta carpeta contiene los archivos .mcfunction con los comandos del datapack.\n\n- load.mcfunction: Se ejecuta al cargar el datapack\n- tick.mcfunction: Se ejecuta cada tick del juego\n- hola.mcfunction: Función de ejemplo que puedes llamar cuando quieras`);
 
             // Carpetas opcionales con archivos LEEME.txt
             const optionalFolders = [
