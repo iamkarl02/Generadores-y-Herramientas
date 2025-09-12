@@ -48,12 +48,19 @@
       background: linear-gradient(135deg, #ff4d4d, #cc0000);
     }
 
-    .btn-v2 {
+    .btn-v2medio {
       background: linear-gradient(135deg, #008000, #004d00);
     }
 
-    .btn-v2:hover {
+    .btn-v2medio:hover {
       background: linear-gradient(135deg, #00cc00, #006600);
+    }
+    .btn-v2izquierda {
+      background: linear-gradient(135deg, #119111, #115e11);
+    }
+
+    .btn-v2izquierda:hover {
+      background: linear-gradient(135deg, #11dd11, #117711);
     }
   </style>
 </head>
@@ -61,7 +68,8 @@
   <div class="container">
     <h1>Elige versión del Casino</h1>
     <button onclick="entrarV1()">Versión V1</button>
-    <button class="btn-v2" onclick="entrarV2()">Versión V2 (Nueva)</button>
+    <button class="btn-v2medio" onclick="entrarV2medio()">Versión V2 (Nueva medio)</button>
+    <button class="btn-v2izquierda" onclick="entrarV2izquierda()">Versión V2 (Nueva izquierda)</button>
   </div>
 
   <script>
@@ -69,9 +77,14 @@
       window.location.href = "casinov1.html";
     }
 
-    function entrarV2() {
-      window.location.href = "casinov2.html";
+    function entrarV2medio(medio)() {
+      window.location.href = "casinov2medio.html";
+    }
+
+    function entrarV2izquierda(izquierda) {
+      window.location.href = "casinov2izquierda.html";
     }
   </script>
 </body>
 </html>
+
