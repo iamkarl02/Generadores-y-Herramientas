@@ -1,0 +1,3448 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Ruleta Casino</title>
+  <link rel="icon" href="../pikachu.png" type="image/png">
+  <style>
+    /* Estilos Generales y Reseteo */
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 8px;
+      background-color: #4a2c0e;
+      background-image:
+        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.05) 0%, rgba(0, 0, 0, 0.2) 100%),
+        linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.3) 100%),
+        linear-gradient(135deg, #5c3a1a 0%, #3a220c 50%, #5c3a1a 100%);
+      background-size: 100% 100%, 100% 100%, 100% 100%;
+      background-blend-mode: overlay, overlay, normal;
+      color: white; font-family: 'Segoe UI', sans-serif;
+      display: grid;
+      /* Modificación del grid para incluir los reproductores de audio en las esquinas del dock */
+      /* Se ajusta para que los reproductores y el dock floten en la parte superior */
+      grid-template-columns: 1fr 1fr; /* Dos columnas para el contenido principal */
+      grid-template-rows: auto 1fr; /* Fila superior para el contenido flotante, fila principal para ruleta y apuestas */
+      grid-template-areas:
+        "float-top float-top" /* Área para los elementos flotantes (reproductores y dock) */
+        "ruleta apuestas";
+      gap: 16px;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Contenedor para los elementos flotantes (reproductores y dock) */
+    .float-top-container {
+        grid-area: float-top;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px; /* Espacio alrededor de los elementos flotantes */
+        position: relative; /* Necesario para z-index */
+        z-index: 10;
+        gap: 16px; /* Espacio entre los elementos */
+    }
+
+    /* --- Temas --- */
+    /* Tema Clásico (Verde/Marrón - por defecto) */
+    body.theme-classic {
+      background-color: #4a2c0e;
+      background-image:
+        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.05) 0%, rgba(0, 0, 0, 0.2) 100%),
+        linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.3) 100%),
+        linear-gradient(135deg, #5c3a1a 0%, #3a220c 50%, #5c3a1a 100%);
+      color: white;
+    }
+    .theme-classic .dock, .theme-classic .controls, .theme-classic .audio-panel,
+    .theme-classic #paymentInfo, .theme-classic .player-card,
+    .theme-classic #configModal .modal-content, .theme-classic #gameSettingsModal .modal-content,
+    .theme-classic #infoModal .modal-content, .theme-classic #playerSelectModal .modal-content,
+    .theme-classic #adminLoginModal .modal-content, .theme-classic #eliminatedPlayerModal .modal-content,
+    .theme-classic .config-section, .theme-classic .info-column, .theme-classic #playerSelectModal .player-list-container,
+    .theme-classic .audio-player-left, .theme-classic .audio-player-right { /* Añadidos los nuevos reproductores */
+        background: rgba(0, 0, 0, 0.7);
+        border-color: #0f0;
+        box-shadow: 0 0 12px #005500;
+    }
+    .theme-classic .dock a, .theme-classic .controls h2, .theme-classic .player-card h2,
+    .theme-classic .modal-content h2, .theme-classic .config-section h3, .theme-classic .info-column h3,
+    .theme-classic #paymentInfo h3, .theme-classic #paymentInfo span, .theme-classic .controls .audio-controls-group label,
+    .theme-classic .audio-player-left .song-title, .theme-classic .audio-player-right .song-title { /* Añadidos los nuevos reproductores */
+        color: #0f0;
+        text-shadow: 0 0 4px #00ff55;
+    }
+    .theme-classic input { /* Keep input styles separate */
+        border-color: #0f0;
+        background: #0a0;
+        color: #ddffdd;
+    }
+    .theme-classic input:focus {
+        border-color: #6f6;
+        background: #0f0;
+        color: #003300;
+        box-shadow: 0 0 8px #6f6;
+    }
+    /* General button styles for classic theme */
+    .theme-classic button {
+        border-color: #0f0;
+        background: #00cc44; /* A slightly darker green for general buttons */
+        color: #ffffff; /* White text for contrast */
+    }
+    .theme-classic button:hover {
+        background-color: #00bb33;
+        box-shadow: 0 0 12px #0f0;
+    }
+    /* Specific button overrides for classic theme */
+    .theme-classic .color-buttons button.red { background-color: #cc0000; border-color: #ff0000; color: white; }
+    .theme-classic .color-buttons button.red:hover { background-color: #990000; box-shadow: 0 0 8px #ff0000; }
+    .theme-classic .color-buttons button.black { background-color: #333; border-color: #666; color: white; }
+    .theme-classic .color-buttons button.black:hover { background-color: #000; box-shadow: 0 0 8px #666; }
+    .theme-classic .color-buttons button.green { background-color: #008000; border-color: #00ff00; color: white; }
+    .theme-classic .color-buttons button.green:hover { background-color: #005500; box-shadow: 0 0 8px #00ff00; }
+    .theme-classic .select-player-button { background-color: #007bff; border-color: #007bff; color: white; }
+    .theme-classic .select-player-button:hover { background-color: #0056b3; box-shadow: 0 0 8px #007bff; }
+    .theme-classic .led-bar { background: linear-gradient(90deg, #0f0, #050); box-shadow: 0 0 6px #0f0; }
+    .theme-classic #eliminatedPlayerModal .modal-content { border-color: #ff0000; box-shadow: 0 0 60px rgba(255, 0, 0, 0.9); background: linear-gradient(145deg, rgba(50, 0, 0, 0.98), rgba(20, 0, 0, 0.98)); }
+    .theme-classic #eliminatedPlayerModal .modal-content h2 { color: #ff0000; text-shadow: 0 0 20px #ff0000, 0 0 30px #ff0000; }
+    .theme-classic #adminLoginModal .modal-content { border-color: #00ff00; box-shadow: 0 0 24px rgba(0, 255, 0, 0.7); background: linear-gradient(145deg, rgba(0, 0, 0, 0.95), rgba(20, 20, 20, 0.95)); }
+    .theme-classic #adminLoginModal .modal-content h2 { color: #00ff00; text-shadow: 0 0 8px #00ff00; }
+    .theme-classic #adminLoginModal .modal-content input { border: 1px solid #00cc44; background: #1a1a1a; color: #ddffdd; }
+    .theme-classic #adminLoginModal .modal-content input:focus { border-color: #00ff00; box-shadow: 0 0 12px rgba(0, 255, 0, 0.5); }
+    .theme-classic #adminLoginModal .modal-buttons button.accept { background-color: #00cc44; border-color: #00ff00; }
+    .theme-classic #adminLoginModal .modal-buttons button.accept:hover { background-color: #00bb33; box-shadow: 0 0 16px #00ff00; }
+    .theme-classic #adminLoginModal .modal-buttons button.cancel { background-color: #cc0000; border-color: #ff0000; }
+    .theme-classic #adminLoginModal .modal-buttons button.cancel:hover { background-color: #990000; box-shadow: 0 0 16px #ff0000; }
+    .theme-classic #themeModal .theme-options button.theme-classic-btn { background-color: #008000; border-color: #00ff00; color: white; }
+    .theme-classic #themeModal .theme-options button.theme-classic-btn:hover { background-color: #006400; box-shadow: 0 0 8px #00ff00; }
+    .theme-classic #themeModal .theme-options button.theme-dark-btn { background-color: #333; border-color: #555; color: #e0e0e0; }
+    .theme-classic #themeModal .theme-options button.theme-dark-btn:hover { background-color: #555; box-shadow: 0 0 8px #777; }
+    .theme-classic #themeModal .close-button { background-color: #cc0000; border-color: #ff0000; color: white; }
+    .theme-classic #themeModal .close-button:hover { background-color: #990000; box-shadow: 0 0 8px #ff0000; }
+    .theme-classic .modal-content button { /* General modal buttons */
+        background-color: #00cc44;
+        border: 2px solid #0f0;
+        color: white;
+    }
+    .theme-classic .modal-content button:hover {
+        background-color: #00bb33;
+        box-shadow: 0 0 14px #0f0;
+    }
+    .theme-classic #infoModal .info-column li button, .theme-classic #playerSelectModal .player-list-container .info-column li button {
+        background-color: #cc0000;
+        border: 1px solid #ff0000;
+        color: white;
+    }
+    .theme-classic #infoModal .info-column li button:hover, .theme-classic #playerSelectModal .player-list-container .info-column li button:hover {
+        background-color: #990000;
+        box-shadow: 0 0 4px #ff0000;
+    }
+    .theme-classic #playerSelectModal .player-list-container li button {
+        background-color: #00cc44;
+        border: 1px solid #0f0;
+        color: white;
+    }
+    .theme-classic #playerSelectModal .player-list-container li button:hover {
+        background-color: #00bb33;
+        box-shadow: 0 0 6px #0f0;
+    }
+    .theme-classic .controls .audio-controls-group button,
+    .theme-classic .audio-player-left .audio-controls-group button,
+    .theme-classic .audio-player-right .audio-controls-group button { /* Añadidos los nuevos reproductores */
+        background: #0a0;
+        border: 1px solid #0f0;
+        color: white;
+    }
+    .theme-classic .controls .audio-controls-group button:hover,
+    .theme-classic .audio-player-left .audio-controls-group button:hover,
+    .theme-classic .audio-player-right .audio-controls-group button:hover { /* Añadidos los nuevos reproductores */
+        background-color: #0f0;
+        color: #000;
+    }
+
+
+    /* Tema Oscuro */
+    body.theme-dark {
+      background-color: #1a1a1a;
+      background-image:
+        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.02) 0%, rgba(0, 0, 0, 0.3) 100%),
+        linear-gradient(180deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.2) 50%, rgba(0, 0, 0, 0.4) 100%),
+        linear-gradient(135deg, #2c2c2c 0%, #000000 50%, #2c2c2c 100%);
+      color: #e0e0e0;
+    }
+    .theme-dark .dock, .theme-dark .controls, .theme-dark .audio-panel,
+    .theme-dark #paymentInfo, .theme-dark .player-card,
+    .theme-dark #configModal .modal-content, .theme-dark #gameSettingsModal .modal-content,
+    .theme-dark #infoModal .modal-content, .theme-dark #playerSelectModal .modal-content,
+    .theme-dark #adminLoginModal .modal-content, .theme-dark #eliminatedPlayerModal .modal-content,
+    .theme-dark .config-section, .theme-dark .info-column, .theme-dark #playerSelectModal .player-list-container,
+    .theme-dark .audio-player-left, .theme-dark .audio-player-right { /* Añadidos los nuevos reproductores */
+        background: rgba(0, 0, 0, 0.9);
+        border-color: #555;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+    }
+    .theme-dark .dock a, .theme-dark .controls h2, .theme-dark .player-card h2,
+    .theme-dark .modal-content h2, .theme-dark .config-section h3, .theme-dark .info-column h3,
+    .theme-dark #paymentInfo h3, .theme-dark #paymentInfo span, .theme-dark .controls .audio-controls-group label,
+    .theme-dark .audio-player-left .song-title, .theme-dark .audio-player-right .song-title { /* Añadidos los nuevos reproductores */
+        color: #888;
+        text-shadow: none;
+    }
+    .theme-dark input { /* Keep input styles separate */
+        border-color: #555;
+        background: #333;
+        color: #e0e0e0;
+    }
+    .theme-dark input:focus {
+        border-color: #777;
+        background: #444;
+        color: #fff;
+        box-shadow: 0 0 8px #777;
+    }
+    /* General button styles for dark theme */
+    .theme-dark button {
+        border-color: #555;
+        background: #444; /* A slightly lighter gray for general buttons */
+        color: #e0e0e0; /* Light gray text for contrast */
+    }
+    .theme-dark button:hover {
+        background-color: #555;
+        box-shadow: 0 0 10px #777;
+    }
+    /* Specific button overrides for dark theme */
+    .theme-dark .color-buttons button.red { background-color: #8b0000; border-color: #cc0000; color: white; }
+    .theme-dark .color-buttons button.red:hover { background-color: #660000; box-shadow: 0 0 8px #cc0000; }
+    .theme-dark .color-buttons button.black { background-color: #222; border-color: #444; color: white; }
+    .theme-dark .color-buttons button.black:hover { background-color: #000; box-shadow: 0 0 8px #444; }
+    .theme-dark .color-buttons button.green { background-color: #006400; border-color: #008000; color: white; }
+    .theme-dark .color-buttons button.green:hover { background-color: #004400; box-shadow: 0 0 8px #008000; }
+    .theme-dark .select-player-button { background-color: #336699; border-color: #4477aa; color: white; }
+    .theme-dark .select-player-button:hover { background-color: #225588; box-shadow: 0 0 8px #4477aa; }
+    .theme-dark .led-bar { background: linear-gradient(90deg, #555, #333); box-shadow: 0 0 6px #555; }
+    .theme-dark #eliminatedPlayerModal .modal-content { border-color: #cc0000; box-shadow: 0 0 60px rgba(204, 0, 0, 0.7); background: linear-gradient(145deg, rgba(30, 0, 0, 0.98), rgba(10, 0, 0, 0.98)); }
+    .theme-dark #eliminatedPlayerModal .modal-content h2 { color: #cc0000; text-shadow: 0 0 15px #cc0000; }
+    .theme-dark #adminLoginModal .modal-content { border-color: #444; box-shadow: 0 0 20px rgba(0, 0, 0, 0.7); background: linear-gradient(145deg, rgba(0, 0, 0, 0.95), rgba(10, 10, 10, 0.95)); }
+    .theme-dark #adminLoginModal .modal-content h2 { color: #888; text-shadow: none; }
+    .theme-dark #adminLoginModal .modal-content input { border: 1px solid #444; background: #222; color: #e0e0e0; }
+    .theme-dark #adminLoginModal .modal-content input:focus { border-color: #666; box-shadow: 0 0 10px rgba(100, 100, 100, 0.5); }
+    .theme-dark #adminLoginModal .modal-buttons button.accept { background-color: #336699; border-color: #4477aa; }
+    .theme-dark #adminLoginModal .modal-buttons button.accept:hover { background-color: #225588; box-shadow: 0 0 12px #4477aa; }
+    .theme-dark #adminLoginModal .modal-buttons button.cancel { background-color: #8b0000; border-color: #cc0000; }
+    .theme-dark #adminLoginModal .modal-buttons button.cancel:hover { background-color: #660000; box-shadow: 0 0 12px #cc0000; }
+    /* Corrección para el tema clásico en modo oscuro */
+    .theme-dark #themeModal .theme-options button.theme-classic-btn { background-color: #444; border-color: #555; color: #e0e0e0; }
+    .theme-dark #themeModal .theme-options button.theme-classic-btn:hover { background-color: #555; box-shadow: 0 0 8px #777; }
+    .theme-dark #themeModal .theme-options button.theme-dark-btn { background-color: #333; border-color: #555; color: #e0e0e0; }
+    .theme-dark #themeModal .theme-options button.theme-dark-btn:hover { background-color: #555; box-shadow: 0 0 8px #777; }
+    .theme-dark #themeModal .close-button { background-color: #cc0000; border-color: #ff0000; color: white; }
+    .theme-dark #themeModal .close-button:hover { background-color: #990000; box-shadow: 0 0 8px #ff0000; }
+    .theme-dark .modal-content button { /* General modal buttons */
+        background-color: #444;
+        border: 2px solid #555;
+        color: #e0e0e0;
+    }
+    .theme-dark .modal-content button:hover {
+        background-color: #555;
+        box-shadow: 0 0 14px #777;
+    }
+    .theme-dark #infoModal .info-column li button, .theme-dark #playerSelectModal .player-list-container .info-column li button {
+        background-color: #8b0000;
+        border: 1px solid #cc0000;
+        color: white;
+    }
+    .theme-dark #infoModal .info-column li button:hover, .theme-dark #playerSelectModal .player-list-container .info-column li button:hover {
+        background-color: #660000;
+        box-shadow: 0 0 4px #cc0000;
+    }
+    .theme-dark #playerSelectModal .player-list-container li button {
+        background-color: #336699;
+        border: 1px solid #4477aa;
+        color: white;
+    }
+    .theme-dark #playerSelectModal .player-list-container li button:hover {
+        background-color: #225588;
+        box-shadow: 0 0 6px #4477aa;
+    }
+    .theme-dark .controls .audio-controls-group button,
+    .theme-dark .audio-player-left .audio-controls-group button,
+    .theme-dark .audio-player-right .audio-controls-group button { /* Añadidos los nuevos reproductores */
+        background: #333;
+        border: 1px solid #555;
+        color: #e0e0e0;
+    }
+    .theme-dark .controls .audio-controls-group button:hover,
+    .theme-dark .audio-player-left .audio-controls-group button:hover,
+    .theme-dark .audio-player-right .audio-controls-group button:hover { /* Añadidos los nuevos reproductores */
+        background-color: #555;
+        color: #fff;
+    }
+
+    /* Tema Azul Neón */
+    body.theme-neonblue {
+        background-color: #000033;
+        background-image:
+            radial-gradient(circle at 50% 50%, rgba(0, 255, 255, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%),
+            linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.5) 100%),
+            linear-gradient(135deg, #000066 0%, #000011 50%, #000066 100%);
+        color: #00ffff;
+    }
+    .theme-neonblue .dock, .theme-neonblue .controls, .theme-neonblue .audio-panel,
+    .theme-neonblue #paymentInfo, .theme-neonblue .player-card,
+    .theme-neonblue #configModal .modal-content, .theme-neonblue #gameSettingsModal .modal-content,
+    .theme-neonblue #infoModal .modal-content, .theme-neonblue #playerSelectModal .modal-content,
+    .theme-neonblue #adminLoginModal .modal-content, .theme-neonblue #eliminatedPlayerModal .modal-content,
+    .theme-neonblue .config-section, .theme-neonblue .info-column, .theme-neonblue #playerSelectModal .player-list-container,
+    .theme-neonblue .audio-player-left, .theme-neonblue .audio-player-right { /* Añadidos los nuevos reproductores */
+        background: rgba(0, 0, 50, 0.9);
+        border-color: #00ffff;
+        box-shadow: 0 0 15px #00ffff;
+    }
+    .theme-neonblue .dock a, .theme-neonblue .controls h2, .theme-neonblue .player-card h2,
+    .theme-neonblue .modal-content h2, .theme-neonblue .config-section h3, .theme-neonblue .info-column h3,
+    .theme-neonblue #paymentInfo h3, .theme-neonblue #paymentInfo span, .theme-neonblue .controls .audio-controls-group label,
+    .theme-neonblue .audio-player-left .song-title, .theme-neonblue .audio-player-right .song-title { /* Añadidos los nuevos reproductores */
+        color: #00ffff;
+        text-shadow: 0 0 8px #00ffff;
+    }
+    .theme-neonblue input {
+        border-color: #00cccc;
+        background: #000044;
+        color: #ccffff;
+    }
+    .theme-neonblue input:focus {
+        border-color: #00ffff;
+        background: #000066;
+        color: #ffffff;
+        box-shadow: 0 0 10px #00ffff;
+    }
+    .theme-neonblue button {
+        border-color: #00cccc;
+        background: #0066cc;
+        color: white;
+    }
+    .theme-neonblue button:hover {
+        background-color: #0088ff;
+        box-shadow: 0 0 15px #00ffff;
+    }
+    .theme-neonblue .color-buttons button.red { background-color: #cc0000; border-color: #ff0000; color: white; }
+    .theme-neonblue .color-buttons button.red:hover { background-color: #990000; box-shadow: 0 0 8px #ff0000; }
+    .theme-neonblue .color-buttons button.black { background-color: #333; border-color: #666; color: white; }
+    .theme-neonblue .color-buttons button.black:hover { background-color: #000; box-shadow: 0 0 8px #666; }
+    .theme-neonblue .color-buttons button.green { background-color: #008000; border-color: #00ff00; color: white; }
+    .theme-neonblue .color-buttons button.green:hover { background-color: #005500; box-shadow: 0 0 8px #00ff00; }
+    .theme-neonblue .select-player-button { background-color: #007bff; border-color: #007bff; color: white; }
+    .theme-neonblue .select-player-button:hover { background-color: #0056b3; box-shadow: 0 0 8px #007bff; }
+    .theme-neonblue .led-bar { background: linear-gradient(90deg, #00ffff, #006666); box-shadow: 0 0 8px #00ffff; }
+    .theme-neonblue #eliminatedPlayerModal .modal-content { border-color: #ff0000; box-shadow: 0 0 60px rgba(255, 0, 0, 0.9); background: linear-gradient(145deg, rgba(50, 0, 0, 0.98), rgba(20, 0, 0, 0.98)); }
+    .theme-neonblue #eliminatedPlayerModal .modal-content h2 { color: #ff0000; text-shadow: 0 0 20px #ff0000, 0 0 30px #ff0000; }
+    .theme-neonblue #adminLoginModal .modal-content { border-color: #00ffff; box-shadow: 0 0 24px rgba(0, 255, 255, 0.7); background: linear-gradient(145deg, rgba(0, 0, 50, 0.95), rgba(0, 0, 20, 0.95)); }
+    .theme-neonblue #adminLoginModal .modal-content h2 { color: #00ffff; text-shadow: 0 0 8px #00ffff; }
+    .theme-neonblue #adminLoginModal .modal-content input { border: 1px solid #00cccc; background: #000044; color: #ccffff; }
+    .theme-neonblue #adminLoginModal .modal-content input:focus { border-color: #00ffff; box-shadow: 0 0 12px rgba(0, 255, 255, 0.5); }
+    .theme-neonblue #adminLoginModal .modal-buttons button.accept { background-color: #0066cc; border-color: #00ffff; }
+    .theme-neonblue #adminLoginModal .modal-buttons button.accept:hover { background-color: #0088ff; box-shadow: 0 0 16px #00ffff; }
+    .theme-neonblue #adminLoginModal .modal-buttons button.cancel { background-color: #cc0000; border-color: #ff0000; }
+    .theme-neonblue #adminLoginModal .modal-buttons button.cancel:hover { background-color: #990000; box-shadow: 0 0 16px #ff0000; }
+    .theme-neonblue #themeModal .theme-options button.theme-neonblue-btn { background-color: #0066cc; border-color: #00ffff; color: white; }
+    .theme-neonblue #themeModal .theme-options button.theme-neonblue-btn:hover { background-color: #0088ff; box-shadow: 0 0 8px #00ffff; }
+    .theme-neonblue .modal-content button {
+        background-color: #0066cc;
+        border: 2px solid #00cccc;
+        color: white;
+    }
+    .theme-neonblue .modal-content button:hover {
+        background-color: #0088ff;
+        box-shadow: 0 0 14px #00ffff;
+    }
+    .theme-neonblue #infoModal .info-column li button, .theme-neonblue #playerSelectModal .player-list-container .info-column li button {
+        background-color: #cc0000;
+        border: 1px solid #ff0000;
+        color: white;
+    }
+    .theme-neonblue #infoModal .info-column li button:hover, .theme-neonblue #playerSelectModal .player-list-container .info-column li button:hover {
+        background-color: #990000;
+        box-shadow: 0 0 4px #ff0000;
+    }
+    .theme-neonblue #playerSelectModal .player-list-container li button {
+        background-color: #0066cc;
+        border: 1px solid #00cccc;
+        color: white;
+    }
+    .theme-neonblue #playerSelectModal .player-list-container li button:hover {
+        background-color: #0088ff;
+        box-shadow: 0 0 6px #00ffff;
+    }
+    .theme-neonblue .controls .audio-controls-group button,
+    .theme-neonblue .audio-player-left .audio-controls-group button,
+    .theme-neonblue .audio-player-right .audio-controls-group button { /* Añadidos los nuevos reproductores */
+        background: #004488;
+        border: 1px solid #00cccc;
+        color: white;
+    }
+    .theme-neonblue .controls .audio-controls-group button:hover,
+    .theme-neonblue .audio-player-left .audio-controls-group button:hover,
+    .theme-neonblue .audio-player-right .audio-controls-group button:hover { /* Añadidos los nuevos reproductores */
+        background-color: #0066cc;
+        color: #fff;
+    }
+
+    /* Tema Oro Real */
+    body.theme-royalgold {
+        background-color: #332200;
+        background-image:
+            radial-gradient(circle at 50% 50%, rgba(255, 215, 0, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%),
+            linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.5) 100%),
+            linear-gradient(135deg, #664400 0%, #221100 50%, #664400 100%);
+        color: #ffd700;
+    }
+    .theme-royalgold .dock, .theme-royalgold .controls, .theme-royalgold .audio-panel,
+    .theme-royalgold #paymentInfo, .theme-royalgold .player-card,
+    .theme-royalgold #configModal .modal-content, .theme-royalgold #gameSettingsModal .modal-content,
+    .theme-royalgold #infoModal .modal-content, .theme-royalgold #playerSelectModal .modal-content,
+    .theme-royalgold #adminLoginModal .modal-content, .theme-royalgold #eliminatedPlayerModal .modal-content,
+    .theme-royalgold .config-section, .theme-royalgold .info-column, .theme-royalgold #playerSelectModal .player-list-container,
+    .theme-royalgold .audio-player-left, .theme-royalgold .audio-player-right { /* Añadidos los nuevos reproductores */
+        background: rgba(50, 30, 0, 0.9);
+        border-color: #ffd700;
+        box-shadow: 0 0 15px #ffd700;
+    }
+    .theme-royalgold .dock a, .theme-royalgold .controls h2, .theme-royalgold .player-card h2,
+    .theme-royalgold .modal-content h2, .theme-royalgold .config-section h3, .theme-royalgold .info-column h3,
+    .theme-royalgold #paymentInfo h3, .theme-royalgold #paymentInfo span, .theme-royalgold .controls .audio-controls-group label,
+    .theme-royalgold .audio-player-left .song-title, .theme-royalgold .audio-player-right .song-title { /* Añadidos los nuevos reproductores */
+        color: #ffd700;
+        text-shadow: 0 0 8px #ffd700;
+    }
+    .theme-royalgold input {
+        border-color: #ccaa00;
+        background: #443300;
+        color: #fff8dc;
+    }
+    .theme-royalgold input:focus {
+        border-color: #ffd700;
+        background: #664400;
+        color: #ffffff;
+        box-shadow: 0 0 10px #ffd700;
+    }
+    .theme-royalgold button {
+        border-color: #ccaa00;
+        background: #aa8800;
+        color: white;
+    }
+    .theme-royalgold button:hover {
+        background-color: #ccaa00;
+        box-shadow: 0 0 15px #ffd700;
+    }
+    .theme-royalgold .color-buttons button.red { background-color: #cc0000; border-color: #ff0000; color: white; }
+    .theme-royalgold .color-buttons button.red:hover { background-color: #990000; box-shadow: 0 0 8px #ff0000; }
+    .theme-royalgold .color-buttons button.black { background-color: #333; border-color: #666; color: white; }
+    .theme-royalgold .color-buttons button.black:hover { background-color: #000; box-shadow: 0 0 8px #666; }
+    .theme-royalgold .color-buttons button.green { background-color: #008000; border-color: #00ff00; color: white; }
+    .theme-royalgold .color-buttons button.green:hover { background-color: #005500; box-shadow: 0 0 8px #00ff00; }
+    .theme-royalgold .select-player-button { background-color: #007bff; border-color: #007bff; color: white; }
+    .theme-royalgold .select-player-button:hover { background-color: #0056b3; box-shadow: 0 0 8px #007bff; }
+    .theme-royalgold .led-bar { background: linear-gradient(90deg, #ffd700, #aa8800); box-shadow: 0 0 8px #ffd700; }
+    .theme-royalgold #eliminatedPlayerModal .modal-content { border-color: #ff0000; box-shadow: 0 0 60px rgba(255, 0, 0, 0.9); background: linear-gradient(145deg, rgba(50, 0, 0, 0.98), rgba(20, 0, 0, 0.98)); }
+    .theme-royalgold #eliminatedPlayerModal .modal-content h2 { color: #ff0000; text-shadow: 0 0 20px #ff0000, 0 0 30px #ff0000; }
+    .theme-royalgold #adminLoginModal .modal-content { border-color: #ffd700; box-shadow: 0 0 24px rgba(255, 215, 0, 0.7); background: linear-gradient(145deg, rgba(50, 30, 0, 0.95), rgba(20, 10, 0, 0.95)); }
+    .theme-royalgold #adminLoginModal .modal-content h2 { color: #ffd700; text-shadow: 0 0 8px #ffd700; }
+    .theme-royalgold #adminLoginModal .modal-content input { border: 1px solid #ccaa00; background: #443300; color: #fff8dc; }
+    .theme-royalgold #adminLoginModal .modal-content input:focus { border-color: #ffd700; box-shadow: 0 0 12px rgba(255, 215, 0, 0.5); }
+    .theme-royalgold #adminLoginModal .modal-buttons button.accept { background-color: #aa8800; border-color: #ffd700; }
+    .theme-royalgold #adminLoginModal .modal-buttons button.accept:hover { background-color: #ccaa00; box-shadow: 0 0 16px #ffd700; }
+    .theme-royalgold #adminLoginModal .modal-buttons button.cancel { background-color: #cc0000; border-color: #ff0000; }
+    .theme-royalgold #adminLoginModal .modal-buttons button.cancel:hover { background-color: #990000; box-shadow: 0 0 16px #ff0000; }
+    .theme-royalgold #themeModal .theme-options button.theme-royalgold-btn { background-color: #aa8800; border-color: #ffd700; color: white; }
+    .theme-royalgold #themeModal .theme-options button.theme-royalgold-btn:hover { background-color: #ccaa00; box-shadow: 0 0 8px #ffd700; }
+    .theme-royalgold .modal-content button {
+        background-color: #aa8800;
+        border: 2px solid #ccaa00;
+        color: white;
+    }
+    .theme-royalgold .modal-content button:hover {
+        background-color: #ccaa00;
+        box-shadow: 0 0 14px #ffd700;
+    }
+    .theme-royalgold #infoModal .info-column li button, .theme-royalgold #playerSelectModal .player-list-container .info-column li button {
+        background-color: #cc0000;
+        border: 1px solid #ff0000;
+        color: white;
+    }
+    .theme-royalgold #infoModal .info-column li button:hover, .theme-royalgold #playerSelectModal .player-list-container .info-column li button:hover {
+        background-color: #990000;
+        box-shadow: 0 0 4px #ff0000;
+    }
+    .theme-royalgold #playerSelectModal .player-list-container li button {
+        background-color: #aa8800;
+        border: 1px solid #ccaa00;
+        color: white;
+    }
+    .theme-royalgold #playerSelectModal .player-list-container li button:hover {
+        background-color: #ccaa00;
+        box-shadow: 0 0 6px #ffd700;
+    }
+    .theme-royalgold .controls .audio-controls-group button,
+    .theme-royalgold .audio-player-left .audio-controls-group button,
+    .theme-royalgold .audio-player-right .audio-controls-group button { /* Añadidos los nuevos reproductores */
+        background: #886600;
+        border: 1px solid #ccaa00;
+        color: white;
+    }
+    .theme-royalgold .controls .audio-controls-group button:hover,
+    .theme-royalgold .audio-player-left .audio-controls-group button:hover,
+    .theme-royalgold .audio-player-right .audio-controls-group button:hover { /* Añadidos los nuevos reproductores */
+        background-color: #aa8800;
+        color: #fff;
+    }
+
+    /* Tema Ciberpunk */
+    body.theme-cyberpunk {
+        background-color: #1a001a;
+        background-image:
+            radial-gradient(circle at 50% 50%, rgba(255, 0, 255, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%),
+            linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.5) 100%),
+            linear-gradient(135deg, #330033 0%, #000000 50%, #330033 100%);
+        color: #00ff00;
+    }
+    .theme-cyberpunk .dock, .theme-cyberpunk .controls, .theme-cyberpunk .audio-panel,
+    .theme-cyberpunk #paymentInfo, .theme-cyberpunk .player-card,
+    .theme-cyberpunk #configModal .modal-content, .theme-cyberpunk #gameSettingsModal .modal-content,
+    .theme-cyberpunk #infoModal .modal-content, .theme-cyberpunk #playerSelectModal .modal-content,
+    .theme-cyberpunk #adminLoginModal .modal-content, .theme-cyberpunk #eliminatedPlayerModal .modal-content,
+    .theme-cyberpunk .config-section, .theme-cyberpunk .info-column, .theme-cyberpunk #playerSelectModal .player-list-container,
+    .theme-cyberpunk .audio-player-left, .theme-cyberpunk .audio-player-right { /* Añadidos los nuevos reproductores */
+        background: rgba(20, 0, 20, 0.9);
+        border-color: #00ff00;
+        box-shadow: 0 0 15px #ff00ff;
+    }
+    .theme-cyberpunk .dock a, .theme-cyberpunk .controls h2, .theme-cyberpunk .player-card h2,
+    .theme-cyberpunk .modal-content h2, .theme-cyberpunk .config-section h3, .theme-cyberpunk .info-column h3,
+    .theme-cyberpunk #paymentInfo h3, .theme-cyberpunk #paymentInfo span, .theme-cyberpunk .controls .audio-controls-group label,
+    .theme-cyberpunk .audio-player-left .song-title, .theme-cyberpunk .audio-player-right .song-title { /* Añadidos los nuevos reproductores */
+        color: #00ff00;
+        text-shadow: 0 0 8px #ff00ff;
+    }
+    .theme-cyberpunk input {
+        border-color: #ff00ff;
+        background: #220022;
+        color: #00ff00;
+    }
+    .theme-cyberpunk input:focus {
+        border-color: #00ff00;
+        background: #330033;
+        color: #ffffff;
+        box-shadow: 0 0 10px #00ff00;
+    }
+    .theme-cyberpunk button {
+        border-color: #ff00ff;
+        background: #880088;
+        color: #00ff00;
+    }
+    .theme-cyberpunk button:hover {
+        background-color: #cc00cc;
+        box-shadow: 0 0 15px #00ff00;
+    }
+    .theme-cyberpunk .color-buttons button.red { background-color: #cc0000; border-color: #ff0000; color: white; }
+    .theme-cyberpunk .color-buttons button.red:hover { background-color: #990000; box-shadow: 0 0 8px #ff0000; }
+    .theme-cyberpunk .color-buttons button.black { background-color: #333; border-color: #666; color: white; }
+    .theme-cyberpunk .color-buttons button.black:hover { background-color: #000; box-shadow: 0 0 8px #666; }
+    .theme-cyberpunk .color-buttons button.green { background-color: #008000; border-color: #00ff00; color: white; }
+    .theme-cyberpunk .color-buttons button.green:hover { background-color: #005500; box-shadow: 0 0 8px #00ff00; }
+    .theme-cyberpunk .select-player-button { background-color: #007bff; border-color: #007bff; color: white; }
+    .theme-cyberpunk .select-player-button:hover { background-color: #0056b3; box-shadow: 0 0 8px #007bff; }
+    .theme-cyberpunk .led-bar { background: linear-gradient(90deg, #00ff00, #ff00ff); box-shadow: 0 0 8px #00ff00; }
+    .theme-cyberpunk #eliminatedPlayerModal .modal-content { border-color: #ff0000; box-shadow: 0 0 60px rgba(255, 0, 0, 0.9); background: linear-gradient(145deg, rgba(50, 0, 0, 0.98), rgba(20, 0, 0, 0.98)); }
+    .theme-cyberpunk #eliminatedPlayerModal .modal-content h2 { color: #ff0000; text-shadow: 0 0 20px #ff0000, 0 0 30px #ff0000; }
+    .theme-cyberpunk #adminLoginModal .modal-content { border-color: #00ff00; box-shadow: 0 0 24px rgba(0, 255, 0, 0.7); background: linear-gradient(145deg, rgba(20, 0, 20, 0.95), rgba(0, 0, 0, 0.95)); }
+    .theme-cyberpunk #adminLoginModal .modal-content h2 { color: #00ff00; text-shadow: 0 0 8px #ff00ff; }
+    .theme-cyberpunk #adminLoginModal .modal-content input { border: 1px solid #ff00ff; background: #220022; color: #00ff00; }
+    .theme-cyberpunk #adminLoginModal .modal-content input:focus { border-color: #00ff00; box-shadow: 0 0 12px rgba(0, 255, 0, 0.5); }
+    .theme-cyberpunk #adminLoginModal .modal-buttons button.accept { background-color: #880088; border-color: #ff00ff; }
+    .theme-cyberpunk #adminLoginModal .modal-buttons button.accept:hover { background-color: #cc00cc; box-shadow: 0 0 16px #00ff00; }
+    .theme-cyberpunk #adminLoginModal .modal-buttons button.cancel { background-color: #cc0000; border-color: #ff0000; }
+    .theme-cyberpunk #adminLoginModal .modal-buttons button.cancel:hover { background-color: #990000; box-shadow: 0 0 16px #ff0000; }
+    .theme-cyberpunk #themeModal .theme-options button.theme-cyberpunk-btn { background-color: #880088; border-color: #ff00ff; color: #00ff00; }
+    .theme-cyberpunk #themeModal .theme-options button.theme-cyberpunk-btn:hover { background-color: #cc00cc; box-shadow: 0 0 8px #00ff00; }
+    .theme-cyberpunk .modal-content button {
+        background-color: #880088;
+        border: 2px solid #ff00ff;
+        color: #00ff00;
+    }
+    .theme-cyberpunk .modal-content button:hover {
+        background-color: #cc00cc;
+        box-shadow: 0 0 14px #00ff00;
+    }
+    .theme-cyberpunk #infoModal .info-column li button, .theme-cyberpunk #playerSelectModal .player-list-container .info-column li button {
+        background-color: #cc0000;
+        border: 1px solid #ff0000;
+        color: white;
+    }
+    .theme-cyberpunk #infoModal .info-column li button:hover, .theme-cyberpunk #playerSelectModal .player-list-container .info-column li button:hover {
+        background-color: #990000;
+        box-shadow: 0 0 4px #ff0000;
+    }
+    .theme-cyberpunk #playerSelectModal .player-list-container li button {
+        background-color: #880088;
+        border: 1px solid #ff00ff;
+        color: #00ff00;
+    }
+    .theme-cyberpunk #playerSelectModal .player-list-container li button:hover {
+        background-color: #cc00cc;
+        box-shadow: 0 0 6px #00ff00;
+    }
+    .theme-cyberpunk .controls .audio-controls-group button,
+    .theme-cyberpunk .audio-player-left .audio-controls-group button,
+    .theme-cyberpunk .audio-player-right .audio-controls-group button { /* Añadidos los nuevos reproductores */
+        background: #440044;
+        border: 1px solid #ff00ff;
+        color: #00ff00;
+    }
+    .theme-cyberpunk .controls .audio-controls-group button:hover,
+    .theme-cyberpunk .audio-player-left .audio-controls-group button:hover,
+    .theme-cyberpunk .audio-player-right .audio-controls-group button:hover { /* Añadidos los nuevos reproductores */
+        background-color: #880088;
+        color: #fff;
+    }
+
+    /* Tema Bosque Encantado */
+    body.theme-enchantedforest {
+        background-color: #0a1a0a;
+        background-image:
+            radial-gradient(circle at 50% 50%, rgba(100, 200, 100, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%),
+            linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.5) 100%),
+            linear-gradient(135deg, #1a3a1a 0%, #051005 50%, #1a3a1a 100%);
+        color: #c0e0c0; /* Tono más suave de verde */
+    }
+    .theme-enchantedforest .dock, .theme-enchantedforest .controls, .theme-enchantedforest .audio-panel,
+    .theme-enchantedforest #paymentInfo, .theme-enchantedforest .player-card,
+    .theme-enchantedforest #configModal .modal-content, .theme-enchantedforest #gameSettingsModal .modal-content,
+    .theme-enchantedforest #infoModal .modal-content, .theme-enchantedforest #playerSelectModal .modal-content,
+    .theme-enchantedforest #adminLoginModal .modal-content, .theme-enchantedforest #eliminatedPlayerModal .modal-content,
+    .theme-enchantedforest .config-section, .theme-enchantedforest .info-column, .theme-enchantedforest #playerSelectModal .player-list-container,
+    .theme-enchantedforest .audio-player-left, .theme-enchantedforest .audio-player-right { /* Añadidos los nuevos reproductores */
+        background: rgba(15, 40, 15, 0.9); /* Fondo más oscuro y verdoso */
+        border-color: #88b888; /* Borde verde musgo */
+        box-shadow: 0 0 15px #558855; /* Sombra verde oscuro */
+    }
+    .theme-enchantedforest .dock a, .theme-enchantedforest .controls h2, .theme-enchantedforest .player-card h2,
+    .theme-enchantedforest .modal-content h2, .theme-enchantedforest .config-section h3, .theme-enchantedforest .info-column h3,
+    .theme-enchantedforest #paymentInfo h3, .theme-enchantedforest #paymentInfo span, .theme-enchantedforest .controls .audio-controls-group label,
+    .theme-enchantedforest .audio-player-left .song-title, .theme-enchantedforest .audio-player-right .song-title { /* Añadidos los nuevos reproductores */
+        color: #a0d0a0; /* Verde claro para texto */
+        text-shadow: 0 0 6px #77aa77; /* Sombra verde suave */
+    }
+    .theme-enchantedforest input {
+        border-color: #669966; /* Borde de input verde */
+        background: #102510; /* Fondo de input oscuro */
+        color: #e0ffe0; /* Texto de input claro */
+    }
+    .theme-enchantedforest input:focus {
+        border-color: #a0d0a0; /* Borde de input enfocado */
+        background: #153015; /* Fondo de input enfocado */
+        color: #ffffff;
+        box-shadow: 0 0 10px #a0d0a0;
+    }
+    .theme-enchantedforest button {
+        border-color: #669966;
+        background: #337733; /* Botón verde */
+        color: white;
+    }
+    .theme-enchantedforest button:hover {
+        background-color: #449944;
+        box-shadow: 0 0 15px #a0d0a0;
+    }
+    .theme-enchantedforest .color-buttons button.red { background-color: #cc0000; border-color: #ff0000; color: white; }
+    .theme-enchantedforest .color-buttons button.red:hover { background-color: #990000; box-shadow: 0 0 8px #ff0000; }
+    .theme-enchantedforest .color-buttons button.black { background-color: #333; border-color: #666; color: white; }
+    .theme-enchantedforest .color-buttons button.black:hover { background-color: #000; box-shadow: 0 0 8px #666; }
+    .theme-enchantedforest .color-buttons button.green { background-color: #008000; border-color: #00ff00; color: white; }
+    .theme-enchantedforest .color-buttons button.green:hover { background-color: #005500; box-shadow: 0 0 8px #00ff00; }
+    .theme-enchantedforest .select-player-button { background-color: #007bff; border-color: #007bff; color: white; }
+    .theme-enchantedforest .select-player-button:hover { background-color: #0056b3; box-shadow: 0 0 8px #007bff; }
+    .theme-enchantedforest .led-bar { background: linear-gradient(90deg, #a0d0a0, #669966); box-shadow: 0 0 8px #a0d0a0; }
+    .theme-enchantedforest #eliminatedPlayerModal .modal-content { border-color: #ff0000; box-shadow: 0 0 60px rgba(255, 0, 0, 0.9); background: linear-gradient(145deg, rgba(50, 0, 0, 0.98), rgba(20, 0, 0, 0.98)); }
+    .theme-enchantedforest #eliminatedPlayerModal .modal-content h2 { color: #ff0000; text-shadow: 0 0 20px #ff0000, 0 0 30px #ff0000; }
+    .theme-enchantedforest #adminLoginModal .modal-content { border-color: #a0d0a0; box-shadow: 0 0 24px rgba(160, 208, 160, 0.7); background: linear-gradient(145deg, rgba(15, 40, 15, 0.95), rgba(10, 20, 10, 0.95)); }
+    .theme-enchantedforest #adminLoginModal .modal-content h2 { color: #a0d0a0; text-shadow: 0 0 8px #77aa77; }
+    .theme-enchantedforest #adminLoginModal .modal-content input { border: 1px solid #669966; background: #102510; color: #e0ffe0; }
+    .theme-enchantedforest #adminLoginModal .modal-content input:focus { border-color: #a0d0a0; box-shadow: 0 0 12px rgba(160, 208, 160, 0.5); }
+    .theme-enchantedforest #adminLoginModal .modal-buttons button.accept { background-color: #337733; border-color: #a0d0a0; }
+    .theme-enchantedforest #adminLoginModal .modal-buttons button.accept:hover { background-color: #449944; box-shadow: 0 0 16px #a0d0a0; }
+    .theme-enchantedforest #adminLoginModal .modal-buttons button.cancel { background-color: #cc0000; border-color: #ff0000; }
+    .theme-enchantedforest #adminLoginModal .modal-buttons button.cancel:hover { background-color: #990000; box-shadow: 0 0 16px #ff0000; }
+    .theme-enchantedforest #themeModal .theme-options button.theme-enchantedforest-btn { background-color: #337733; border-color: #a0d0a0; color: white; }
+    .theme-enchantedforest #themeModal .theme-options button.theme-enchantedforest-btn:hover { background-color: #449944; box-shadow: 0 0 8px #a0d0a0; }
+    .theme-enchantedforest .modal-content button {
+        background-color: #337733;
+        border: 2px solid #669966;
+        color: white;
+    }
+    .theme-enchantedforest .modal-content button:hover {
+        background-color: #449944;
+        box-shadow: 0 0 14px #a0d0a0;
+    }
+    .theme-enchantedforest #infoModal .info-column li button, .theme-enchantedforest #playerSelectModal .player-list-container .info-column li button {
+        background-color: #cc0000;
+        border: 1px solid #ff0000;
+        color: white;
+    }
+    .theme-enchantedforest #infoModal .info-column li button:hover, .theme-enchantedforest #playerSelectModal .player-list-container .info-column li button:hover {
+        background-color: #990000;
+        box-shadow: 0 0 4px #ff0000;
+    }
+    .theme-enchantedforest #playerSelectModal .player-list-container li button {
+        background-color: #337733;
+        border: 1px solid #669966;
+        color: white;
+    }
+    .theme-enchantedforest #playerSelectModal .player-list-container li button:hover {
+        background-color: #449944;
+        box-shadow: 0 0 6px #a0d0a0;
+    }
+    .theme-enchantedforest .controls .audio-controls-group button,
+    .theme-enchantedforest .audio-player-left .audio-controls-group button,
+    .theme-enchantedforest .audio-player-right .audio-controls-group button { /* Añadidos los nuevos reproductores */
+        background: #225522;
+        border: 1px solid #669966;
+        color: white;
+    }
+    .theme-enchantedforest .controls .audio-controls-group button:hover,
+    .theme-enchantedforest .audio-player-left .audio-controls-group button:hover,
+    .theme-enchantedforest .audio-player-right .audio-controls-group button:hover { /* Añadidos los nuevos reproductores */
+        background-color: #337733;
+        color: #fff;
+    }
+
+    /* Tema Volcán */
+    body.theme-volcano {
+        background-color: #330000;
+        background-image:
+            radial-gradient(circle at 50% 50%, rgba(255, 100, 0, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%),
+            linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.5) 100%),
+            linear-gradient(135deg, #660000 0%, #220000 50%, #660000 100%);
+        color: #ff4500;
+    }
+    .theme-volcano .dock, .theme-volcano .controls, .theme-volcano .audio-panel,
+    .theme-volcano #paymentInfo, .theme-volcano .player-card,
+    .theme-volcano #configModal .modal-content, .theme-volcano #gameSettingsModal .modal-content,
+    .theme-volcano #infoModal .modal-content, .theme-volcano #playerSelectModal .modal-content,
+    .theme-volcano #adminLoginModal .modal-content, .theme-volcano #eliminatedPlayerModal .modal-content,
+    .theme-volcano .config-section, .theme-volcano .info-column, .theme-volcano #playerSelectModal .player-list-container,
+    .theme-volcano .audio-player-left, .theme-volcano .audio-player-right { /* Añadidos los nuevos reproductores */
+        background: rgba(50, 0, 0, 0.9);
+        border-color: #ff4500;
+        box-shadow: 0 0 15px #ff4500;
+    }
+    .theme-volcano .dock a, .theme-volcano .controls h2, .theme-volcano .player-card h2,
+    .theme-volcano .modal-content h2, .theme-volcano .config-section h3, .theme-volcano .info-column h3,
+    .theme-volcano #paymentInfo h3, .theme-volcano #paymentInfo span, .theme-volcano .controls .audio-controls-group label,
+    .theme-volcano .audio-player-left .song-title, .theme-volcano .audio-player-right .song-title { /* Añadidos los nuevos reproductores */
+        color: #ff4500;
+        text-shadow: 0 0 8px #ff4500;
+    }
+    .theme-volcano input {
+        border-color: #cc3300;
+        background: #440000;
+        color: #ffddcc;
+    }
+    .theme-volcano input:focus {
+        border-color: #ff4500;
+        background: #660000;
+        color: #ffffff;
+        box-shadow: 0 0 10px #ff4500;
+    }
+    .theme-volcano button {
+        border-color: #cc3300;
+        background: #cc3300;
+        color: white;
+    }
+    .theme-volcano button:hover {
+        background-color: #ff4500;
+        box-shadow: 0 0 15px #ff4500;
+    }
+    .theme-volcano .color-buttons button.red { background-color: #cc0000; border-color: #ff0000; color: white; }
+    .theme-volcano .color-buttons button.red:hover { background-color: #990000; box-shadow: 0 0 8px #ff0000; }
+    .theme-volcano .color-buttons button.black { background-color: #333; border-color: #666; color: white; }
+    .theme-volcano .color-buttons button.black:hover { background-color: #000; box-shadow: 0 0 8px #666; }
+    .theme-volcano .color-buttons button.green { background-color: #008000; border-color: #00ff00; color: white; }
+    .theme-volcano .color-buttons button.green:hover { background-color: #005500; box-shadow: 0 0 8px #00ff00; }
+    .theme-volcano .select-player-button { background-color: #007bff; border-color: #007bff; color: white; }
+    .theme-volcano .select-player-button:hover { background-color: #0056b3; box-shadow: 0 0 8px #007bff; }
+    .theme-volcano .led-bar { background: linear-gradient(90deg, #ff4500, #cc3300); box-shadow: 0 0 8px #ff4500; }
+    .theme-volcano #eliminatedPlayerModal .modal-content { border-color: #ff0000; box-shadow: 0 0 60px rgba(255, 0, 0, 0.9); background: linear-gradient(145deg, rgba(50, 0, 0, 0.98), rgba(20, 0, 0, 0.98)); }
+    .theme-volcano #eliminatedPlayerModal .modal-content h2 { color: #ff0000; text-shadow: 0 0 20px #ff0000, 0 0 30px #ff0000; }
+    .theme-volcano #adminLoginModal .modal-content { border-color: #ff4500; box-shadow: 0 0 24px rgba(255, 69, 0, 0.7); background: linear-gradient(145deg, rgba(50, 0, 0, 0.95), rgba(20, 0, 0, 0.95)); }
+    .theme-volcano #adminLoginModal .modal-content h2 { color: #ff4500; text-shadow: 0 0 8px #ff4500; }
+    .theme-volcano #adminLoginModal .modal-content input { border: 1px solid #cc3300; background: #440000; color: #ffddcc; }
+    .theme-volcano #adminLoginModal .modal-content input:focus { border-color: #ff4500; box-shadow: 0 0 12px rgba(255, 69, 0, 0.5); }
+    .theme-volcano #adminLoginModal .modal-buttons button.accept { background-color: #cc3300; border-color: #ff4500; }
+    .theme-volcano #adminLoginModal .modal-buttons button.accept:hover { background-color: #ff4500; box-shadow: 0 0 16px #ff4500; }
+    .theme-volcano #adminLoginModal .modal-buttons button.cancel { background-color: #cc0000; border-color: #ff0000; }
+    .theme-volcano #adminLoginModal .modal-buttons button.cancel:hover { background-color: #990000; box-shadow: 0 0 16px #ff0000; }
+    .theme-volcano #themeModal .theme-options button.theme-volcano-btn { background-color: #cc3300; border-color: #ff4500; color: white; }
+    .theme-volcano #themeModal .theme-options button.theme-volcano-btn:hover { background-color: #ff4500; box-shadow: 0 0 8px #ff4500; }
+    .theme-volcano .modal-content button {
+        background-color: #cc3300;
+        border: 2px solid #ff4500;
+        color: white;
+    }
+    .theme-volcano .modal-content button:hover {
+        background-color: #ff4500;
+        box-shadow: 0 0 14px #ff4500;
+    }
+    .theme-volcano #infoModal .info-column li button, .theme-volcano #playerSelectModal .player-list-container .info-column li button {
+        background-color: #cc0000;
+        border: 1px solid #ff0000;
+        color: white;
+    }
+    .theme-volcano #infoModal .info-column li button:hover, .theme-volcano #playerSelectModal .player-list-container .info-column li button:hover {
+        background-color: #990000;
+        box-shadow: 0 0 4px #ff0000;
+    }
+    .theme-volcano #playerSelectModal .player-list-container li button {
+        background-color: #cc3300;
+        border: 1px solid #ff4500;
+        color: white;
+    }
+    .theme-volcano #playerSelectModal .player-list-container li button:hover {
+        background-color: #ff4500;
+        box-shadow: 0 0 6px #ff4500;
+    }
+    .theme-volcano .controls .audio-controls-group button,
+    .theme-volcano .audio-player-left .audio-controls-group button,
+    .theme-volcano .audio-player-right .audio-controls-group button { /* Añadidos los nuevos reproductores */
+        background: #882200;
+        border: 1px solid #cc3300;
+        color: white;
+    }
+    .theme-volcano .controls .audio-controls-group button:hover,
+    .theme-volcano .audio-player-left .audio-controls-group button:hover,
+    .theme-volcano .audio-player-right .audio-controls-group button:hover { /* Añadidos los nuevos reproductores */
+        background-color: #cc3300;
+        color: #fff;
+    }
+
+
+    /* Estilos para el Modal de Temas */
+    #themeModal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0; top: 0;
+        width: 100%; height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.8);
+        justify-content: center;
+        align-items: center;
+    }
+    #themeModal .modal-content {
+        max-width: 400px;
+        padding: 24px;
+        border: 2px solid #0f0;
+        border-radius: 12px;
+        box-shadow: 0 0 20px #0f0;
+        background: rgba(0, 0, 0, 0.9);
+    }
+    #themeModal .modal-content h2 {
+        color: #0f0;
+        text-shadow: 0 0 6px #00ff55;
+        margin-bottom: 20px;
+    }
+    #themeModal .theme-options {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    #themeModal .theme-options button {
+        padding: 10px;
+        font-size: 1rem;
+        border-radius: 6px;
+        border: 2px solid;
+        cursor: pointer;
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    #themeModal .close-button {
+        margin-top: 20px;
+        background-color: #cc0000;
+        border-color: #ff0000;
+    }
+    #themeModal .close-button:hover {
+        background-color: #990000;
+        box-shadow: 0 0 8px #ff0000;
+    }
+
+
+    /* Estilos para el Dock de Navegación */
+    .dock {
+      /* Eliminamos grid-area: dock; ya que ahora está dentro de float-top-container */
+      background: rgba(0, 0, 0, 0.7);
+      padding: 8px 16px;
+      border-radius: 8px; /* Bordes redondeados en todas las esquinas para que flote */
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      box-shadow: 0 4px 12px rgba(0, 255, 0, 0.3);
+      /* margin-bottom: 8px; */ /* Eliminado, el gap del contenedor lo manejará */
+      z-index: 10;
+      min-height: 60px;
+      align-items: center;
+      flex-grow: 1; /* Permitir que el dock crezca para ocupar espacio */
+      margin: 0 16px; /* Margen horizontal para separarlo de los reproductores */
+    }
+    .dock a {
+      color: #0f0;
+      text-decoration: none;
+      font-size: 0.96rem;
+      font-weight: bold;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    .dock a:hover {
+      background-color: #00cc44;
+      color: #fff;
+      box-shadow: 0 0 8px #0f0;
+    }
+
+    /* NUEVOS ESTILOS PARA LOS REPRODUCTORES DE MÚSICA EN LAS ESQUINAS */
+    .audio-player-left, .audio-player-right {
+        background: rgba(25, 25, 25, 0.9); /* Fondo oscuro similar a Spotify */
+        border-radius: 10px;
+        padding: 10px 15px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between; /* Distribuye el título y los controles */
+        gap: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        z-index: 5; /* Por debajo del dock */
+        min-width: 180px; /* Ancho mínimo para que no se colapse */
+        /* max-width: 350px; */ /* Eliminado para permitir que se expanda */
+        height: 60px; /* Altura fija */
+        /* margin-top: 8px; */ /* Eliminado, el padding del contenedor lo manejará */
+        flex-wrap: nowrap; /* Evita que los elementos se envuelvan */
+        flex-grow: 1; /* Permitir que los reproductores crezcan para ocupar espacio */
+    }
+
+    .audio-player-left {
+        /* grid-area: audio-left; */ /* Eliminado */
+        /* justify-self: start; */ /* Eliminado */
+        /* margin-left: 8px; */ /* Eliminado */
+    }
+
+    .audio-player-right {
+        /* grid-area: audio-right; */ /* Eliminado */
+        /* justify-self: end; */ /* Eliminado */
+        /* margin-right: 8px; */ /* Eliminado */
+    }
+
+    .audio-player-left .song-title, .audio-player-right .song-title {
+        font-size: 0.9rem;
+        font-weight: bold;
+        color: #1DB954; /* Color verde de Spotify */
+        white-space: nowrap; /* Evita el salto de línea */
+        overflow: hidden;
+        text-overflow: ellipsis; /* Añade puntos suspensivos si el texto es muy largo */
+        flex-shrink: 0; /* Evita que el título se encoja */
+        max-width: 120px; /* Limita el ancho del título para dejar espacio a los controles */
+        text-align: left;
+        text-shadow: none; /* Eliminar sombra de texto por defecto */
+    }
+
+    .audio-controls-container { /* Nuevo contenedor para los controles de audio */
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0; /* Evita que los controles se encojan */
+    }
+
+    .audio-player-left .audio-controls-container button, .audio-player-right .audio-controls-container button {
+        background: #1DB954; /* Color verde de Spotify */
+        border: none;
+        border-radius: 50%; /* Botones redondos */
+        width: 35px; /* Más grandes */
+        height: 35px; /* Más grandes */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        font-size: 1.1rem; /* Iconos más grandes */
+        padding: 0;
+        transition: background-color 0.2s ease, transform 0.1s ease;
+        cursor: pointer;
+    }
+
+    .audio-player-left .audio-controls-container button:hover, .audio-player-right .audio-controls-container button:hover {
+        background-color: #168F3F; /* Tono más oscuro al pasar el ratón */
+        box-shadow: 0 0 8px rgba(29, 185, 84, 0.6);
+        transform: scale(1.05);
+    }
+
+    .audio-player-left .audio-controls-container input[type="range"], .audio-player-right .audio-controls-container input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100px; /* Ancho más generoso para el slider */
+        height: 6px; /* Más alto */
+        background: #535353; /* Color de la barra del slider */
+        outline: none;
+        opacity: 0.8;
+        transition: opacity 0.2s;
+        border: none; /* Eliminar borde */
+        border-radius: 3px;
+        padding: 0;
+        margin: 0;
+    }
+
+    .audio-player-left .audio-controls-container input[type="range"]:hover, .audio-player-right .audio-controls-container input[type="range"]:hover {
+        opacity: 1;
+    }
+
+    .audio-player-left .audio-controls-container input[type="range"]::-webkit-slider-thumb, .audio-player-right .audio-controls-container input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 16px; /* Pulgar más grande */
+        height: 16px; /* Pulgar más grande */
+        border-radius: 50%;
+        background: #1DB954; /* Color del "pulgar" del slider */
+        cursor: pointer;
+        box-shadow: 0 0 5px rgba(29, 185, 84, 0.8);
+        margin-top: -5px; /* Ajuste vertical para centrar el pulgar */
+    }
+
+    .audio-player-left .audio-controls-container input[type="range"]::-moz-range-thumb, .audio-player-right .audio-controls-container input[type="range"]::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #1DB954;
+        cursor: pointer;
+        box-shadow: 0 0 5px rgba(29, 185, 84, 0.8);
+    }
+
+    /* Estilos para el Canvas de la Ruleta */
+    .wheel-frame {
+      grid-area: ruleta;
+      padding: 14px;
+      border-radius: 999px;
+      background:
+        radial-gradient(circle at 50% 40%, #ffe8d0, #cfa07a 35%, #6f4a2b 70%),
+        linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.2));
+      box-shadow: 0 11px 32px rgba(0,0,0,0.6), inset 0 6px 19px rgba(255,255,255,0.03);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: auto;
+      max-width: 100%;
+      max-height: 100%;
+    }
+    canvas#ruletaCanvas {
+      background: transparent;
+      display:block;
+      max-width: 560px;
+      max-height: 560px;
+      width: 100%;
+      height: auto;
+      border-radius:50%;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    }
+
+    /* Estilos Comunes para Paneles Laterales y Controles */
+    .controls {
+      background: rgba(0, 0, 0, 0.6);
+      box-shadow: 0 0 12px #005500;
+      font-size: 0.8rem;
+      padding: 8px;
+      border-radius: 8px;
+      transition: transform 0.5s ease-in-out;
+    }
+
+    /* Estilos para el Panel de Apuestas */
+    .controls {
+      grid-area: apuestas;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+      padding: 12px;
+      width: auto;
+      height: auto;
+    }
+
+    /* Clase para ocultar el panel de apuestas */
+    .controls.hide-apuestas {
+        transform: translateX(100%);
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    /* Estilos para Títulos de Sección (Apuestas) */
+    .controls h2 {
+      margin-top: 0;
+      color: #0f0;
+      text-align: center;
+      text-shadow: 0 0 4px #00ff55;
+      font-size: 1.04rem;
+    }
+
+    /* Estilos Comunes para Inputs y Botones */
+    input, button {
+      padding: 8px;
+      border-radius: 5px;
+      border: 2px solid #0f0; /* Default border, overridden by themes */
+      background: #0a0; /* Default background, overridden by themes */
+      color: #ddffdd; /* Default text color, overridden by themes */
+      font-size: 0.88rem;
+      font-weight: 600;
+      text-align: center;
+    }
+    input:focus {
+      outline: none;
+      border-color: #6f6;
+      background: #0f0;
+      color: #003300;
+      box-shadow: 0 0 8px #6f6;
+    }
+    button {
+      background-color: #00cc44; /* Default button background, overridden by themes */
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #00bb33; /* Default button hover, overridden by themes */
+      box-shadow: 0 0 12px #0f0;
+    }
+
+    /* Estilos para la Tabla de Pagos */
+    #paymentInfo {
+        background: #002200;
+        padding: 8px;
+        border-radius: 6px;
+        box-shadow: inset 0 0 8px #0a0;
+        margin-bottom: 10px;
+        font-size: 0.76rem;
+        color: #ddffdd;
+        text-align: left;
+    }
+    #paymentInfo h3 {
+        margin-top: 0;
+        margin-bottom: 4px;
+        color: #0f0;
+        text-align: center;
+        text-shadow: none;
+        font-size: 0.96rem;
+    }
+    #paymentInfo p {
+        margin: 0;
+        line-height: 1.2;
+    }
+    #paymentInfo span {
+        font-weight: bold;
+        color: #0f0;
+    }
+    #paymentInfo .red-text { color: red; }
+    #paymentInfo .black-text { color: #ccc; }
+    #paymentInfo .green-text { color: green; }
+    #paymentInfo .white-text { color: white; }
+
+    /* Ajustes Específicos para la Sección de Apuestas */
+    .controls input, .controls button {
+        margin-bottom: 6px;
+    }
+    .controls input:last-of-type, .controls button:last-of-type {
+        margin-bottom: 0;
+    }
+
+    /* Contenedor para los botones de apostar y girar */
+    .bet-spin-buttons {
+        display: flex;
+        gap: 8px;
+        margin-top: 16px;
+    }
+    .bet-spin-buttons button {
+        flex: 1;
+        padding: 8px;
+        font-size: 0.8rem;
+    }
+
+    /* Estilos para Modales (Configuración y Fin de Juego) */
+    #configModal, #endGameModal, #infoModal, #playerSelectModal, #adminLoginModal, #eliminatedPlayerModal, #gameSettingsModal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0; top: 0;
+        width: 100%; height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.8);
+        justify-content: center;
+        align-items: center;
+    }
+    #endGameModal {
+        display: none;
+    }
+
+    .modal-content {
+        background: rgba(0, 0, 0, 0.9);
+        padding: 20px;
+        border: 2px solid #0f0;
+        border-radius: 12px;
+        width: 80%;
+        max-width: 360px;
+        box-shadow: 0 0 20px #0f0;
+        text-align: center;
+        color: white;
+    }
+    /* Estilos para hacer los modales de configuración más grandes */
+    #configModal .modal-content, #gameSettingsModal .modal-content {
+        max-width: 90%; /* Aumentado para más espacio horizontal */
+        padding: 30px;
+    }
+
+    .modal-content h2 {
+        color: #0f0;
+        text-shadow: 0 0 6px #00ff55;
+        margin-top: 0;
+        font-size: 1.6rem;
+    }
+    .modal-content p {
+        font-size: 0.88rem;
+        margin-bottom: 10px;
+    }
+    .modal-content input[type="number"], .modal-content input[type="text"], .modal-content input[type="password"] {
+        width: calc(100% - 16px);
+        margin-bottom: 10px;
+        padding: 10px;
+        font-size: 0.88rem;
+    }
+    .modal-content .checkbox-group {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 10px;
+        gap: 8px;
+    }
+    .modal-content .checkbox-group input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        margin: 0;
+        accent-color: #0f0;
+    }
+    .modal-content .checkbox-group label {
+        font-size: 0.88rem;
+        color: #ddffdd;
+    }
+
+    /* Estilos para los grupos de multiplicadores */
+    .multiplier-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 15px;
+        border: 1px solid rgba(0, 255, 0, 0.3);
+        border-radius: 8px;
+        padding: 10px;
+        background: rgba(0, 0, 0, 0.3);
+    }
+    .multiplier-group h3 {
+        color: #0f0;
+        margin: 0 0 8px 0;
+        font-size: 1rem;
+        text-align: center;
+    }
+    .multiplier-group p {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0;
+    }
+    .multiplier-group p label {
+        flex-basis: 60%;
+        text-align: left;
+        font-size: 0.8rem;
+    }
+    .multiplier-group p input {
+        flex-basis: 35%;
+        width: auto;
+        margin-bottom: 0;
+        font-size: 0.8rem;
+        padding: 6px;
+    }
+
+    /* NUEVOS ESTILOS PARA LOS MODALES DE CONFIGURACIÓN */
+    .config-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr; /* Tres columnas para más espacio horizontal */
+        gap: 20px; /* Espacio entre columnas */
+        margin-top: 20px;
+    }
+    /* Ajuste para pantallas más pequeñas */
+    @media (max-width: 900px) {
+        .config-grid {
+            grid-template-columns: 1fr 1fr; /* Dos columnas en pantallas medianas */
+        }
+    }
+    @media (max-width: 600px) {
+        .config-grid {
+            grid-template-columns: 1fr; /* Una columna en pantallas pequeñas */
+        }
+    }
+
+
+    .config-section {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 15px;
+        border: 1px solid rgba(0, 255, 0, 0.3);
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.3);
+    }
+
+    .config-section h3 {
+        color: #0f0;
+        margin-top: 0;
+        margin-bottom: 10px;
+        text-align: center;
+        font-size: 1.1rem;
+    }
+
+    .config-section p {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0;
+    }
+
+    .config-section label {
+        flex-basis: 60%;
+        text-align: left;
+        font-size: 0.9rem;
+    }
+
+    .config-section input[type="number"] {
+        flex-basis: 35%;
+        width: auto;
+        margin-bottom: 0;
+        font-size: 0.9rem;
+        padding: 8px;
+    }
+
+    .config-info-text {
+        font-size: 0.85rem;
+        color: #ccc;
+        margin-top: 15px;
+        margin-bottom: 20px;
+        text-align: center;
+        font-style: italic;
+    }
+    .config-section .info-text-small {
+        font-size: 0.75rem;
+        color: #aaa;
+        margin-top: -5px;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+
+
+    /* Botones de acción en los modales de configuración */
+    #configModal .modal-content > button,
+    #gameSettingsModal .modal-content > button {
+        margin-top: 20px;
+        width: auto; /* Permitir que el botón se ajuste al contenido si es necesario */
+        padding: 12px 25px;
+        font-size: 1.1rem;
+    }
+    #gameSettingsModal .modal-buttons {
+        display: flex;
+        justify-content: space-around;
+        gap: 15px;
+        margin-top: 20px;
+    }
+    #gameSettingsModal .modal-buttons button {
+        flex: 1;
+    }
+
+
+    /* Estilos para el Modal de Información */
+    #infoModal .modal-content, #playerSelectModal .modal-content {
+        max-width: 72%;
+        height: 72%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+    }
+
+    #infoModal .modal-content h2, #playerSelectModal .modal-content h2 {
+        margin-bottom: 20px;
+    }
+
+    #infoModal .info-columns, #playerSelectModal .player-list-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+        width: 100%;
+        flex-grow: 1;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    #infoModal .info-column, #playerSelectModal .player-list-container .info-column {
+        background: rgba(0, 50, 0, 0.8);
+        border: 1px solid #0f0;
+        border-radius: 8px;
+        padding: 16px;
+        flex: 1;
+        min-width: 224px;
+        max-height: 100%;
+        overflow-y: auto;
+        box-shadow: 0 0 8px rgba(0, 255, 0, 0.5);
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Estilo específico para la columna de Rondas */
+    #infoModal .info-column.rondas-info {
+        min-width: 160px;
+        max-width: 200px;
+        flex-grow: 0;
+        order: 100;
+    }
+
+    #infoModal .info-column h3, #playerSelectModal .player-list-container .info-column h3 {
+        color: #0f0;
+        text-align: center;
+        margin-top: 0;
+        margin-bottom: 10px;
+        font-size: 1.12rem;
+        border-bottom: 1px solid rgba(0, 255, 0, 0.3);
+        padding-bottom: 6px;
+    }
+
+    #infoModal .info-column ul, #playerSelectModal .player-list-container .info-column ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        flex-grow: 1;
+    }
+
+    #infoModal .info-column li, #playerSelectModal .player-list-container .info-column li {
+        margin-bottom: 6px;
+        font-size: 0.84rem;
+        color: #ddffdd;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    #infoModal .info-column li strong, #playerSelectModal .player-list-container .info-column li strong {
+        color: #9ff7c9;
+    }
+
+    #infoModal .info-column .historial-item {
+        border-bottom: 1px dashed rgba(0, 255, 0, 0.1);
+        padding-bottom: 6px;
+        margin-bottom: 6px;
+    }
+    #infoModal .info-column .historial-item:last-child {
+        border-bottom: none;
+    }
+    #infoModal .info-column .historial-item em {
+        color: #aaa;
+    }
+    #infoModal .info-column .historial-item .historial-num {
+        font-weight: bold;
+        color: #fff;
+    }
+
+    /* Estilos para la nueva columna de historial de apuestas */
+    #infoModal .info-column.apuestas-historial {
+        min-width: 280px;
+        order: 99;
+    }
+    #infoModal .info-column.apuestas-historial ul li {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 4px 0;
+    }
+    #infoModal .info-column.apuestas-historial ul li span {
+        margin-bottom: 2px;
+        display: block;
+    }
+    #infoModal .info-column.apuestas-historial ul li .bet-details {
+        font-size: 0.72em;
+        color: #ccc;
+        display: block;
+    }
+
+    /* NUEVOS ESTILOS DEL REPRODUCTOR DE MÚSICA (antiguo audio-panel-container) */
+    /* Se ha eliminado el audio-panel-container y audio-panel original,
+       ya que los nuevos reproductores están integrados en el grid superior */
+
+    .player-card { /* Mantener estilos generales para player-card si se usa en otros modales */
+      background: #000;
+      border: 1px solid #0f0;
+      border-radius: 6px;
+      padding: 12px;
+      box-shadow: inset 0 0 12px rgba(0, 255, 0, 0.2);
+    }
+
+    .player-card h2 {
+      margin-top: 0;
+      margin-bottom: 11px;
+      font-size: 0.96rem;
+      color: #0f0;
+      text-shadow: 0 0 6px #0f0;
+    }
+
+    .controls .audio-controls-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .led-bar {
+      height: 3px;
+      border-radius: 3px;
+      background: linear-gradient(90deg, #0f0, #050);
+      margin-top: 10px;
+      box-shadow: 0 0 6px #0f0;
+      animation: pulse 2s infinite alternate;
+    }
+
+    @keyframes pulse {
+      from { opacity: 0.6; }
+      to { opacity: 1; }
+    }
+
+    /* Estilos para los botones de color */
+    .color-buttons {
+        display: flex;
+        justify-content: space-around;
+        margin-bottom: 8px;
+    }
+    .color-buttons button {
+        flex: 1;
+        margin: 0 4px;
+        padding: 8px;
+        font-size: 0.88rem;
+        font-weight: bold;
+        border: 2px solid;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .color-buttons button.red {
+        background-color: #cc0000;
+        border-color: #ff0000;
+        color: white;
+    }
+    .color-buttons button.red:hover {
+        background-color: #990000;
+        box-shadow: 0 0 8px #ff0000;
+    }
+    .color-buttons button.black {
+        background-color: #333;
+        border-color: #666;
+        color: white;
+    }
+    .color-buttons button.black:hover {
+        background-color: #000;
+        box-shadow: 0 0 8px #666;
+    }
+    .color-buttons button.green {
+        background-color: #008000;
+        border-color: #00ff00;
+        color: white;
+    }
+    .color-buttons button.green:hover {
+        background-color: #005500;
+        box-shadow: 0 0 8px #00ff00;
+    }
+
+    /* Estilo para el botón de seleccionar jugador */
+    .select-player-button {
+        background-color: #007bff;
+        border-color: #007bff;
+        color: white;
+        margin-left: 8px;
+        flex-shrink: 0;
+        width: auto;
+    }
+    .select-player-button:hover {
+        background-color: #0056b3;
+        box-shadow: 0 0 8px #007bff;
+    }
+
+    /* Estilos para el modal de selección de jugador */
+    #playerSelectModal .player-list-container {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 8px;
+        background: #002200;
+        border-radius: 6px;
+        box-shadow: inset 0 0 8px #0a0;
+        max-height: 80%;
+        overflow-y: auto;
+    }
+    #playerSelectModal .player-list-container ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    #playerSelectModal .player-list-container li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        border-bottom: 1px solid rgba(0, 255, 0, 0.2);
+        font-size: 0.88rem;
+    }
+    #playerSelectModal .player-list-container li:last-child {
+        border-bottom: none;
+    }
+
+    /* Estilos para el grupo de input de nombre y botón de seleccionar jugador */
+    .player-input-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+    .player-input-group input {
+        flex-grow: 1;
+        margin-bottom: 0;
+    }
+
+    /* Estilos para el modal de inicio de sesión de admin */
+    #adminLoginModal .modal-content {
+        max-width: 400px;
+        padding: 24px;
+        border: 2px solid #00ff00;
+        box-shadow: 0 0 24px rgba(0, 255, 0, 0.7);
+        background: linear-gradient(145deg, rgba(0, 0, 0, 0.95), rgba(20, 20, 20, 0.95));
+    }
+    #adminLoginModal .modal-content h2 {
+        font-size: 2rem;
+        color: #00ff00;
+        text-shadow: 0 0 8px #00ff00;
+        margin-bottom: 20px;
+    }
+    #adminLoginModal .modal-content input {
+        background: #1a1a1a;
+        border: 1px solid #00cc44;
+        color: #ddffdd;
+        font-size: 0.96rem;
+        padding: 12px;
+        margin-bottom: 12px;
+        box-shadow: inset 0 0 6px rgba(0, 255, 0, 0.2);
+    }
+    #adminLoginModal .modal-content input:focus {
+        border-color: #00ff00;
+        box-shadow: 0 0 12px rgba(0, 255, 0, 0.5);
+    }
+    #adminLoginModal .modal-buttons {
+        display: flex;
+        justify-content: space-around;
+        gap: 16px;
+        margin-top: 16px;
+    }
+
+    /* Estilos para el nuevo modal de jugador eliminado */
+    #eliminatedPlayerModal .modal-content {
+        max-width: 80%;
+        width: 600px;
+        padding: 50px;
+        border: 5px solid #ff0000;
+        border-radius: 20px;
+        box-shadow: 0 0 60px rgba(255, 0, 0, 0.9);
+        background: linear-gradient(145deg, rgba(50, 0, 0, 0.98), rgba(20, 0, 0, 0.98));
+    }
+    #eliminatedPlayerModal .modal-content h2 {
+        font-size: 5rem;
+        color: #ff0000;
+        text-shadow: 0 0 20px #ff0000, 0 0 30px #ff0000;
+        margin-bottom: 25px;
+        animation: pulseRed 1s infinite alternate;
+    }
+    #eliminatedPlayerModal .modal-content p {
+        font-size: 1.8rem;
+        color: #ffcccc;
+        margin-bottom: 40px;
+    }
+    @keyframes pulseRed {
+      from { opacity: 0.7; transform: scale(1); }
+      to { opacity: 1; transform: scale(1.05); }
+    }
+
+    /* Nuevos estilos para los botones de monto de apuesta */
+    .bet-amount-group {
+        margin-bottom: 10px;
+        padding: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        background: rgba(0, 0, 0, 0.2);
+    }
+    .bet-amount-group h3 {
+        margin-top: 0;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+        color: #ccc;
+        text-align: center;
+    }
+    .bet-amount-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        justify-content: center;
+    }
+    .bet-amount-buttons button {
+        flex: 1;
+        min-width: 60px;
+        padding: 6px;
+        font-size: 0.75rem;
+        margin-bottom: 0; /* Anular margin-bottom general */
+    }
+    .bet-amount-buttons.remove-buttons button {
+        background-color: #cc0000;
+        border-color: #ff0000;
+    }
+    .bet-amount-buttons.remove-buttons button:hover {
+        background-color: #990000;
+        box-shadow: 0 0 8px #ff0000;
+    }
+    /* Estilos para el input de dinero dentro del panel de apuestas */
+    #apuestasPanel #dinero {
+        margin-bottom: 10px; /* Espacio debajo del input de dinero */
+    }
+    /* Estilos para el input de apuesta dentro del panel de apuestas */
+    #apuestasPanel #apuesta {
+        margin-top: 10px; /* Espacio encima del input de apuesta */
+    }
+
+    /* Media Queries para responsividad */
+    @media (max-width: 1200px) {
+        body {
+            grid-template-columns: 1fr; /* Una sola columna */
+            grid-template-rows: auto 1fr 1fr; /* float-top-container, ruleta, apuestas */
+            grid-template-areas:
+                "float-top"
+                "ruleta"
+                "apuestas";
+            gap: 10px;
+        }
+        .float-top-container {
+            flex-direction: column; /* Apilar los elementos en pantallas pequeñas */
+            gap: 10px;
+            padding: 8px;
+        }
+        .dock {
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 8px;
+            justify-content: center;
+            min-height: unset; /* Eliminar altura mínima fija */
+            width: 100%; /* Ocupar todo el ancho disponible */
+            margin: 0; /* Eliminar márgenes laterales */
+        }
+        .audio-player-left, .audio-player-right {
+            width: 100%; /* Ocupar todo el ancho disponible */
+            max-width: none;
+            margin: 0;
+            justify-content: space-between;
+        }
+        .wheel-frame {
+            margin-top: 10px;
+        }
+        .controls {
+            margin-top: 10px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .audio-player-left .song-title, .audio-player-right .song-title {
+            font-size: 0.8rem;
+            max-width: 80px; /* Reducir aún más el ancho del título */
+        }
+        .audio-player-left .audio-controls-container input[type="range"], .audio-player-right .audio-controls-container input[type="range"] {
+            width: 70px; /* Reducir ancho del slider */
+        }
+        .audio-player-left .audio-controls-container button, .audio-player-right .audio-controls-container button {
+            width: 30px;
+            height: 30px;
+            font-size: 1rem;
+        }
+        .dock a {
+            font-size: 0.8rem;
+            padding: 3px 6px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .audio-player-left, .audio-player-right {
+            padding: 8px 10px;
+            height: 50px;
+            gap: 5px;
+        }
+        .audio-player-left .song-title, .audio-player-right .song-title {
+            font-size: 0.7rem;
+            max-width: 60px;
+        }
+        .audio-player-left .audio-controls-container button, .audio-player-right .audio-controls-container button {
+            width: 25px;
+            height: 25px;
+            font-size: 0.9rem;
+        }
+        .audio-player-left .audio-controls-container input[type="range"], .audio-player-right .audio-controls-container input[type="range"] {
+            width: 50px;
+            height: 4px;
+        }
+        .audio-player-left .audio-controls-container input[type="range"]::-webkit-slider-thumb, .audio-player-right .audio-controls-container input[type="range"]::-webkit-slider-thumb {
+            width: 12px;
+            height: 12px;
+        }
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- Contenedor para los elementos flotantes (reproductores y dock) -->
+  <div class="float-top-container">
+    <!-- Reproductor de Música de Ambiente (Esquina Superior Izquierda) -->
+    <div class="audio-player-left">
+      <audio id="musicAudio" src="ambiente.mp3" loop></audio>
+      <span id="music-song-title" class="song-title">Música de Ambiente</span>
+      <div class="audio-controls-container">
+        <button id="musicPlay">▶</button>
+        <input type="range" id="musicVolume" min="0" max="1" step="0.01" value="0.5">
+        <button id="musicPause">⏸</button>
+      </div>
+    </div>
+
+    <!-- Dock de Navegación (Centro Superior) -->
+    <nav class="dock">
+      <a href="../index.html">Inicio</a>
+      <a href="#" onclick="downloadSummary()">Descargar Resumen</a>
+      <a href="#" onclick="showInfoModal()">Información</a>
+      <a href="#" onclick="showGameSettingsModal()">Configuración</a>
+      <a href="#" onclick="showThemeModal()">Tema</a>
+    </nav>
+
+    <!-- Reproductor de Sonido de Ruleta (Esquina Superior Derecha) -->
+    <div class="audio-player-right">
+      <audio id="spinAudio" src="sonido_ruleta.mp3"></audio>
+      <div class="audio-controls-container">
+        <button id="spinPause">⏸</button>
+        <input type="range" id="spinVolume" min="0" max="1" step="0.01" value="0.8">
+        <button id="spinPlay">▶</button>
+      </div>
+      <span id="spin-song-title" class="song-title">Sonido Ruleta</span>
+    </div>
+  </div>
+
+  <!-- Modal de Configuración Inicial -->
+  <div id="configModal">
+    <div class="modal-content">
+      <h2>Configuración Inicial de la Ruleta</h2>
+      <p class="config-info-text">
+        Establece los parámetros iniciales del juego. Estos valores se aplicarán al comenzar una nueva partida.
+      </p>
+      <div class="config-grid">
+        <div class="config-section">
+          <h3>Parámetros de Juego</h3>
+          <p><label for="initialMoney">Dinero inicial por jugador:</label> <input type="number" id="initialMoney" placeholder="Ej: 10000" value="10000" min="1" /></p>
+          <p><label for="minBet">Apuesta mínima:</label> <input type="number" id="minBet" placeholder="Ej: 1000" value="1000" min="1" /></p>
+          <p><label for="maxBet">Apuesta máxima:</label> <input type="number" id="maxBet" placeholder="Ej: 5000" value="5000" min="1" /></p>
+          <p class="info-text-small">Para hacer "all-in", establece la apuesta máxima en un número que supere el dinero de cualquier jugador.</p>
+          <p><label for="numRounds">Número de rondas:</label> <input type="number" id="numRounds" placeholder="Ej: 5" value="5" min="1" /></p>
+        </div>
+
+        <div class="config-section">
+          <h3>Multiplicadores de Pago</h3>
+          <p><label for="multiplierRedBlack">Rojo / Negro:</label> <input type="number" id="multiplierRedBlack" value="2" min="1" /></p>
+          <p><label for="multiplierGreen">Verde (0):</label> <input type="number" id="multiplierGreen" value="36" min="1" /></p>
+          <p><label for="multiplierExactNumber">Número Exacto:</label> <input type="number" id="multiplierExactNumber" value="36" min="1" /></p>
+        </div>
+
+        <div class="config-section">
+          <h3>Configuración de Animación y Sonido</h3>
+          <p><label for="spinDuration">Duración del giro (segundos):</label> <input type="number" id="spinDuration" placeholder="Ej: 8" value="8" min="1" /></p>
+          <p><label for="eliminatedMessageDuration">Duración mensaje "Eliminado" (segundos):</label> <input type="number" id="eliminatedMessageDuration" placeholder="Ej: 2" value="2" min="0" /></p>
+          <div class="checkbox-group">
+            <input type="checkbox" id="enableSounds" checked />
+            <label for="enableSounds">Activar sonidos al inicio</label>
+          </div>
+        </div>
+      </div>
+      <button onclick="applyInitialConfig()">Configurar Ruleta</button>
+    </div>
+  </div>
+
+  <!-- Nuevo Modal de Configuración de Juego (desde el dock) -->
+  <div id="gameSettingsModal">
+    <div class="modal-content">
+      <h2>Ajustes de Juego</h2>
+      <p class="config-info-text">
+        Modifica estos valores para ajustar la partida en curso. Si no deseas cambiar nada, simplemente cierra el modal.
+      </p>
+      <div class="config-grid">
+        <div class="config-section">
+          <h3>Parámetros de la Ronda</h3>
+          <p><label for="gameSettingsMinBet">Apuesta mínima:</label> <input type="number" id="gameSettingsMinBet" placeholder="Ej: 1000" min="1" /></p>
+          <p><label for="gameSettingsMaxBet">Apuesta máxima:</label> <input type="number" id="gameSettingsMaxBet" placeholder="Ej: 5000" min="1" /></p>
+          <p class="info-text-small">Para hacer "all-in", establece la apuesta máxima en un número que supere el dinero de cualquier jugador.</p>
+        </div>
+
+        <div class="config-section">
+          <h3>Multiplicadores de Pago</h3>
+          <p><label for="gameSettingsMultiplierRedBlack">Rojo / Negro:</label> <input type="number" id="gameSettingsMultiplierRedBlack" min="1" /></p>
+          <p><label for="gameSettingsMultiplierGreen">Verde (0):</label> <input type="number" id="gameSettingsMultiplierGreen" min="1" /></p>
+          <p><label for="gameSettingsMultiplierExactNumber">Número Exacto:</label> <input type="number" id="gameSettingsMultiplierExactNumber" min="1" /></p>
+        </div>
+
+        <div class="config-section">
+          <h3>Configuración de Animación y Sonido</h3>
+          <p><label for="gameSettingsSpinDuration">Duración del giro (segundos):</label> <input type="number" id="gameSettingsSpinDuration" placeholder="Ej: 8" min="1" /></p>
+          <p><label for="gameSettingsEliminatedMessageDuration">Duración mensaje "Eliminado" (segundos):</label> <input type="number" id="gameSettingsEliminatedMessageDuration" placeholder="Ej: 2" min="0" /></p>
+          <div class="checkbox-group">
+            <input type="checkbox" id="gameSettingsEnableSounds" />
+            <label for="gameSettingsEnableSounds">Activar sonidos</label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-buttons">
+        <button class="accept" onclick="applyGameSettings()">Aplicar Ajustes</button>
+        <button class="cancel" onclick="closeGameSettingsModal()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Fin de Juego -->
+  <div id="endGameModal">
+    <div class="modal-content">
+      <h2>¡Fin de la Partida!</h2>
+      <p id="endGameMessage">Has completado todas las rondas.</p>
+      <button onclick="resetGame()">Empezar de Nuevo</button>
+      <button onclick="continueGame()">Seguir Jugando</button>
+      <button onclick="downloadSummary()">Descargar Resumen</button>
+      <button onclick="window.location.href = '../index.html';">Salir</button>
+    </div>
+  </div>
+
+  <!-- Modal de Información -->
+  <div id="infoModal">
+    <div class="modal-content">
+      <h2>Información de la Partida</h2>
+      <div class="info-columns">
+        <div class="info-column">
+          <h3>Jugadores</h3>
+          <ul id="infoJugadoresList"></ul>
+        </div>
+        <div class="info-column">
+          <h3>Historial General</h3>
+          <ul id="infoHistorialResultados"></ul>
+        </div>
+        <!-- Nuevo panel para jugadores en la ronda actual -->
+        <div class="info-column">
+          <h3>Jugadores en esta ronda</h3>
+          <ul id="infoListaJugadoresEnRonda">
+              <!-- Aquí se listarán los jugadores que han apostado -->
+          </ul>
+        </div>
+        <!-- Nueva columna para el historial de apuestas -->
+        <div class="info-column apuestas-historial">
+            <h3>Historial de Apuestas por Ronda</h3>
+            <ul id="infoHistorialApuestas"></ul>
+        </div>
+        <div class="info-column rondas-info">
+          <h3>Rondas</h3>
+          <p>Ronda Actual: <strong id="infoCurrentRound">0</strong></p>
+          <p>Rondas Totales: <strong id="infoTotalRounds">0</strong></p>
+          <p>Rondas Restantes: <strong id="infoRemainingRounds">0</strong></p>
+        </div>
+      </div>
+      <button class="close-button" onclick="closeInfoModal()">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- Modal de Selección de Jugador -->
+  <div id="playerSelectModal">
+    <div class="modal-content">
+      <h2>Seleccionar Jugador</h2>
+      <div class="player-list-container">
+        <ul id="playerSelectionList">
+          <!-- Los jugadores se cargarán aquí dinámicamente -->
+        </ul>
+      </div>
+      <button class="close-button" onclick="closePlayerSelectModal()">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- Modal de Inicio de Sesión de Admin -->
+  <div id="adminLoginModal">
+    <div class="modal-content">
+      <h2>Acceso de Administrador</h2>
+      <input type="text" id="adminUsername" placeholder="Usuario" />
+      <input type="password" id="adminPassword" placeholder="Contraseña" />
+      <div class="modal-buttons">
+        <button class="accept" onclick="checkAdminLogin()">Aceptar</button>
+        <button class="cancel" onclick="closeAdminLoginModal()">Volver</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nuevo Modal de Jugador Eliminado -->
+  <div id="eliminatedPlayerModal">
+    <div class="modal-content">
+      <h2 id="eliminatedPlayerName"></h2>
+      <p>¡HA SIDO ELIMINADO DEL JUEGO!</p>
+      <button class="close-button" onclick="closeEliminatedPlayerModal()">Entendido</button>
+    </div>
+  </div>
+
+  <!-- Nuevo Modal de Selección de Tema -->
+  <div id="themeModal">
+    <div class="modal-content">
+      <h2>Seleccionar Tema</h2>
+      <div class="theme-options">
+        <button class="theme-classic-btn" onclick="applyTheme('classic')">Clásico (Verde)</button>
+        <button class="theme-dark-btn" onclick="applyTheme('dark')">Oscuro</button>
+        <button class="theme-neonblue-btn" onclick="applyTheme('neonblue')">Azul Neón</button>
+        <button class="theme-royalgold-btn" onclick="applyTheme('royalgold')">Oro Real</button>
+        <button class="theme-cyberpunk-btn" onclick="applyTheme('cyberpunk')">Ciberpunk</button>
+        <button class="theme-enchantedforest-btn" onclick="applyTheme('enchantedforest')">Bosque Encantado</button>
+        <button class="theme-volcano-btn" onclick="applyTheme('volcano')">Volcán</button>
+      </div>
+      <button class="close-button" onclick="closeThemeModal()">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- 🎡 RULETA (Centro) - HTML DE RULETA2 -->
+  <div class="wheel-frame" aria-hidden="true">
+    <canvas id="ruletaCanvas" width="620" height="620"></canvas>
+  </div>
+
+  <!-- 💸 APUESTAS (Columna Derecha) -->
+  <div class="controls" id="apuestasPanel">
+    <h2>Apuestas</h2>
+
+    <div id="paymentInfo">
+      <h3>Tabla de Pagos</h3>
+      <p>
+        <span class="red-text">Rojo</span> o <span class="black-text">Negro</span>: <span id="displayMultiplierRedBlack">2x</span><br>
+        <span class="green-text">Verde (0)</span>: <span id="displayMultiplierGreen">36x</span><br>
+        <span class="white-text">Número Exacto</span>: <span id="displayMultiplierExactNumber">36x</span>
+      </p>
+    </div>
+
+    <div class="player-input-group">
+        <input type="text" id="nombre" placeholder="Tu nombre" />
+        <button class="select-player-button" onclick="showPlayerSelectModal()">Seleccionar Jugador</button>
+    </div>
+
+    <input type="number" id="dinero" placeholder="Cantidad a apostar" />
+
+    <div class="bet-amount-group">
+        <h3>Añadir Monto</h3>
+        <div class="bet-amount-buttons">
+            <button onclick="addBetAmount('min')">Min</button>
+            <button onclick="addBetAmount(0.1)">+10%</button>
+            <button onclick="addBetAmount(0.5)">+50%</button>
+            <button onclick="addBetAmount('allin')">Max</button>
+        </div>
+    </div>
+
+    <div class="bet-amount-group">
+        <h3>Quitar Monto</h3>
+        <div class="bet-amount-buttons remove-buttons">
+            <button onclick="removeBetAmount(0.1)">-10%</button>
+            <button onclick="removeBetAmount(0.5)">-50%</button>
+            <button onclick="removeBetAmount('clear')">Clear</button>
+        </div>
+    </div>
+
+    <input type="text" id="apuesta" placeholder="rojo, negro, verde o número" />
+
+    <div class="color-buttons">
+        <button class="red" onclick="selectBetType('rojo')">Rojo</button>
+        <button class="black" onclick="selectBetType('negro')">Negro</button>
+        <button class="green" onclick="selectBetType('verde')">Verde</button>
+    </div>
+
+    <div class="bet-spin-buttons">
+        <button onclick="apostar()">Agregar Apuesta</button>
+        <button onclick="girarRuleta()">Girar Ruleta</button>
+    </div>
+
+  </div>
+
+  <!-- El antiguo audio-panel-container se ha eliminado ya que los reproductores están en el dock -->
+
+  <script>
+    const canvas = document.getElementById("ruletaCanvas");
+    const ctx = canvas.getContext("2d");
+    const inputNombre = document.getElementById("nombre");
+    const inputApuesta = document.getElementById("apuesta");
+    const inputDinero = document.getElementById("dinero");
+    const apuestasPanel = document.getElementById("apuestasPanel");
+
+    // Elementos del modal de configuración inicial
+    const configModal = document.getElementById("configModal");
+    const initialMoneyInput = document.getElementById("initialMoney");
+    const minBetInput = document.getElementById("minBet");
+    const maxBetInput = document.getElementById("maxBet"); // Nuevo input
+    const numRoundsInput = document.getElementById("numRounds");
+    const eliminatedMessageDurationInput = document.getElementById("eliminatedMessageDuration");
+    const spinDurationInput = document.getElementById("spinDuration");
+    const enableSoundsCheckbox = document.getElementById("enableSounds");
+    const multiplierRedBlackInput = document.getElementById("multiplierRedBlack");
+    const multiplierGreenInput = document.getElementById("multiplierGreen");
+    const multiplierExactNumberInput = document.getElementById("multiplierExactNumber");
+
+    // Elementos del nuevo modal de configuración de juego (desde el dock)
+    const gameSettingsModal = document.getElementById("gameSettingsModal");
+    const gameSettingsMinBetInput = document.getElementById("gameSettingsMinBet");
+    const gameSettingsMaxBetInput = document.getElementById("gameSettingsMaxBet"); // Nuevo input
+    const gameSettingsEliminatedMessageDurationInput = document.getElementById("gameSettingsEliminatedMessageDuration");
+    const gameSettingsSpinDurationInput = document.getElementById("gameSettingsSpinDuration");
+    const gameSettingsEnableSoundsCheckbox = document.getElementById("gameSettingsEnableSounds");
+    const gameSettingsMultiplierRedBlackInput = document.getElementById("gameSettingsMultiplierRedBlack");
+    const gameSettingsMultiplierGreenInput = document.getElementById("gameSettingsMultiplierGreen");
+    const gameSettingsMultiplierExactNumberInput = document.getElementById("gameSettingsMultiplierExactNumber");
+
+    // Elementos del modal de fin de juego
+    const endGameModal = document.getElementById("endGameModal");
+    const endGameMessage = document.getElementById("endGameMessage");
+
+    // Elementos del modal de información
+    const infoModal = document.getElementById("infoModal");
+    const infoJugadoresList = document.getElementById("infoJugadoresList");
+    const infoCurrentRound = document.getElementById("infoCurrentRound");
+    const infoTotalRounds = document.getElementById("infoTotalRounds");
+    const infoRemainingRounds = document.getElementById("infoRemainingRounds");
+    const infoHistorialResultados = document.getElementById("infoHistorialResultados"); // Ahora "Historial General"
+    const infoListaJugadoresEnRonda = document.getElementById("infoListaJugadoresEnRonda");
+    const infoHistorialApuestas = document.getElementById("infoHistorialApuestas");
+
+    // Elementos del modal de selección de jugador
+    const playerSelectModal = document.getElementById("playerSelectModal");
+    const playerSelectionList = document.getElementById("playerSelectionList");
+
+    // Elementos del modal de inicio de sesión de admin
+    const adminLoginModal = document.getElementById("adminLoginModal");
+    const adminUsernameInput = document.getElementById("adminUsername");
+    const adminPasswordInput = document.getElementById("adminPassword");
+
+    // Elementos del nuevo modal de jugador eliminado
+    const eliminatedPlayerModal = document.getElementById("eliminatedPlayerModal");
+    const eliminatedPlayerName = document.getElementById("eliminatedPlayerName");
+
+    // Elementos del nuevo modal de selección de tema
+    const themeModal = document.getElementById("themeModal");
+
+    // Referencias a los elementos de audio y sus controles
+    const musicAudio = document.getElementById("musicAudio");
+    const spinAudio = document.getElementById("spinAudio");
+
+    const musicPlayButton = document.getElementById("musicPlay");
+    const musicPauseButton = document.getElementById("musicPause");
+    const musicVolumeSlider = document.getElementById("musicVolume");
+    const musicSongTitle = document.getElementById("music-song-title"); // Nuevo
+
+    const spinPlayButton = document.getElementById("spinPlay");
+    const spinPauseButton = document.getElementById("spinPause");
+    const spinVolumeSlider = document.getElementById("spinVolume");
+    const spinSongTitle = document.getElementById("spin-song-title"); // Nuevo
+
+    // Elementos para mostrar los multiplicadores en la tabla de pagos
+    const displayMultiplierRedBlack = document.getElementById("displayMultiplierRedBlack");
+    const displayMultiplierGreen = document.getElementById("displayMultiplierGreen");
+    const displayMultiplierExactNumber = document.getElementById("displayMultiplierExactNumber");
+
+
+    // Event Listeners para los botones de audio
+    musicPlayButton.addEventListener("click", () => {
+      musicAudio.volume = parseFloat(musicVolumeSlider.value);
+      musicAudio.play().catch(err => console.log("Autoplay bloqueado:", err));
+    });
+    musicPauseButton.addEventListener("click", () => musicAudio.pause());
+    musicVolumeSlider.addEventListener("input", (e) => {
+      musicAudio.volume = parseFloat(e.target.value);
+    });
+
+    spinPlayButton.addEventListener("click", () => {
+      spinAudio.volume = parseFloat(spinVolumeSlider.value);
+      spinAudio.currentTime = 0; // Reinicia el sonido cada vez que se reproduce
+      spinAudio.play().catch(err => console.log("Autoplay bloqueado:", err));
+    });
+    spinPauseButton.addEventListener("click", () => spinAudio.pause());
+    spinVolumeSlider.addEventListener("input", (e) => {
+      spinAudio.volume = parseFloat(e.target.value);
+    });
+
+    /* --- ESTADO DE LA RULETA --- */
+    // Orden de los números en una ruleta europea real (alternando rojo/negro, 0 verde)
+    const ordenRuleta = [
+      0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5,
+      24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26
+    ];
+
+    // Números rojos en una ruleta europea
+    const redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
+
+    const numeros = ordenRuleta.map(n => {
+      const color = n === 0 ? 'green' : (redNumbers.includes(n) ? 'red' : 'black');
+      return { num: n, color };
+    });
+
+    let dineroJugador = {};
+    let apuestas = [], yaApostaron = new Set();
+    let retiredPlayers = new Set(); // Nuevo Set para jugadores retirados
+
+    // Variables de animación de la ruleta
+    let currentAngle = 0;
+    let bolaAngle = 0;
+    let bolaRadialDistance = 0; // Variable para la distancia radial de la bola
+    let animando = false;
+
+    // Ajustar radios de la ruleta para el nuevo tamaño (620px)
+    // Estos valores se mantienen proporcionales al canvas de 620x620
+    const outerBallTrackRadius = (canvas.width / 2) - 24; // Radio exterior de la pista de la bola
+    const innerBallTrackRadius = 70 + 30; // Radio interior de la pista de la bola
+    const finalBallSettleRadius = (canvas.width / 2) - 55; // Posición final de la bola
+
+    // Variables de control de rondas y historial
+    let initialPlayerMoney = 10000;
+    let minimumBet = 1000;
+    let maximumBet = 5000; // Nueva variable para la apuesta máxima
+    let totalRounds = 5;
+    let currentRound = 0;
+    let gameConfigured = false;
+    let gameHistory = [];
+    let configChangeHistory = []; // Historial de cambios de configuración
+    let gameStartTime = null;
+    let enableSounds = true; // Variable para controlar si los sonidos están activos
+    let eliminatedMessageDuration = 2; // Duración por defecto del mensaje de eliminado (2 segundos)
+    let spinDuration = 8; // Duración por defecto del giro de la ruleta (8 segundos)
+
+    // Nuevas variables para los multiplicadores
+    let multiplierRedBlack = 2;
+    let multiplierGreen = 36;
+    let multiplierExactNumber = 36;
+
+    // Cola para mensajes de jugadores eliminados
+    let eliminatedPlayersQueue = [];
+    let isShowingEliminatedMessage = false;
+    let eliminatedMessageTimeout;
+
+    /* --- RUTINAS DE DIBUJO --- */
+    function drawRuleta(angle = 0) {
+      const w = canvas.width, h = canvas.height;
+      ctx.clearRect(0,0,w,h);
+      const cx = w/2, cy = h/2;
+      const radius = Math.min(w,h)/2 - 24;
+      const slice = (2*Math.PI) / numeros.length;
+
+      for (let i=0;i<numeros.length;i++) {
+        const start = angle + i*slice;
+        const end = start + slice;
+        ctx.beginPath();
+        ctx.moveTo(cx,cy);
+        ctx.arc(cx,cy,radius,start,end);
+        ctx.closePath();
+        ctx.fillStyle = numeros[i].color === 'green' ? '#37d08a' : (numeros[i].color === 'red' ? '#d43b3b' : '#1b1b1b');
+        ctx.fill();
+        ctx.strokeStyle = '#463419';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // número
+        ctx.save();
+        ctx.translate(cx,cy);
+        ctx.rotate(start + slice/2);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 18px Arial';
+        ctx.textAlign = 'right';
+        ctx.shadowColor = 'rgba(0,0,0,0.6)';
+        ctx.shadowBlur = 6;
+        ctx.fillText(String(numeros[i].num), radius - 18, 6);
+        ctx.restore();
+      }
+
+      // círculo central
+      ctx.beginPath();
+      ctx.arc(cx,cy,70,0,2*Math.PI);
+      const g = ctx.createRadialGradient(cx-10,cy-10,8,cx,cy,70);
+      g.addColorStop(0,'#0b3c1f'); g.addColorStop(1,'#05120a');
+      ctx.fillStyle = g;
+      ctx.fill();
+      ctx.strokeStyle = '#2f8a5a';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // bola
+      const bx = cx + Math.cos(bolaAngle) * bolaRadialDistance;
+      const by = cy + Math.sin(bolaAngle) * bolaRadialDistance;
+      drawBall(bx,by);
+    }
+
+    function drawBall(x,y) {
+      ctx.beginPath();
+      ctx.arc(x,y,10,0,2*Math.PI);
+      const g = ctx.createRadialGradient(x-3,y-3,1,x,y,10);
+      g.addColorStop(0,'#fff'); g.addColorStop(1,'#cfcfcf');
+      ctx.fillStyle = g;
+      ctx.fill();
+      ctx.strokeStyle = '#888';
+      ctx.stroke();
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = '#fff';
+    }
+
+    function actualizarJugadoresEnRonda() {
+        infoListaJugadoresEnRonda.innerHTML = ""; // Usar el elemento en el modal de información
+        if (yaApostaron.size === 0) {
+            infoListaJugadoresEnRonda.innerHTML = "<li>Nadie ha apostado aún.</li>";
+            return;
+        }
+        yaApostaron.forEach(nombreJugador => {
+            const li = document.createElement("li");
+            const apuestaJugador = apuestas.find(a => a.nombre === nombreJugador);
+            if (apuestaJugador) {
+                li.innerHTML = `
+                    <span>${nombreJugador} (${apuestaJugador.apuesta.toUpperCase()} $${apuestaJugador.monto})</span>
+                    <button onclick="cancelarApuesta('${nombreJugador}')">Cancelar</button>
+                `;
+                infoListaJugadoresEnRonda.appendChild(li);
+            }
+        });
+    }
+
+    function apostar() {
+      if (!gameConfigured) {
+          alert("Por favor, configura el juego primero.");
+          return;
+      }
+      if (animando) {
+          alert("No puedes apostar mientras la ruleta está girando.");
+          return;
+      }
+
+      const nombre = inputNombre.value.trim();
+      let monto = parseInt(inputDinero.value);
+      const validNumbers = numeros.map(n=>String(n.num));
+      const validos = ['rojo','negro','verde', ...validNumbers];
+      const apuesta = inputApuesta.value.trim().toLowerCase();
+
+      if (!nombre) {
+          alert("Por favor, introduce tu nombre o selecciona un jugador.");
+          return;
+      }
+
+      // Si el jugador no existe, inicializar su dinero
+      if (!dineroJugador[nombre]) {
+          dineroJugador[nombre] = initialPlayerMoney;
+      }
+
+      // **NUEVA VERIFICACIÓN: Jugador eliminado o con 0 dinero**
+      if (retiredPlayers.has(nombre) || (dineroJugador[nombre] !== undefined && dineroJugador[nombre] <= 0)) {
+          addEliminatedPlayerToQueue(nombre);
+          return;
+      }
+
+      if (!apuesta || isNaN(monto) || !validos.includes(apuesta)) {
+        return alert("Datos inválidos. Asegúrate de rellenar todos los campos y que la apuesta sea válida (rojo, negro, verde o un número).");
+      }
+      if (monto < minimumBet) {
+        return alert(`La apuesta mínima es de $${minimumBet} monedas.`);
+      }
+      if (monto > maximumBet) { // Nueva validación de apuesta máxima
+        return alert(`La apuesta máxima es de $${maximumBet} monedas.`);
+      }
+
+      if (yaApostaron.has(nombre)) {
+          return alert("Ya apostaste en esta ronda. Solo se permite una apuesta por jugador por ronda.");
+      }
+      if (dineroJugador[nombre] < monto) {
+          return alert("Dinero insuficiente.");
+      }
+
+      dineroJugador[nombre] -= monto;
+      apuestas.push({ nombre, apuesta, monto });
+      yaApostaron.add(nombre);
+      
+      // Limpiar los campos después de una apuesta exitosa
+      inputNombre.value = ""; // <--- CORRECCIÓN AQUÍ
+      inputDinero.value = "";
+      inputApuesta.value = ""; 
+      
+      // No es necesario un alert aquí, la información se actualizará en el modal
+      actualizarJugadoresEnRonda();
+    }
+
+    function cancelarApuesta(nombreJugador) {
+        if (animando) {
+            alert("No puedes cancelar apuestas mientras la ruleta está girando.");
+            return;
+        }
+        // Buscar la apuesta en la lista de apuestas
+        const index = apuestas.findIndex(a => a.nombre === nombreJugador);
+        if (index > -1) {
+            const apuestaCancelada = apuestas[index];
+            dineroJugador[nombreJugador] += apuestaCancelada.monto;
+            apuestas.splice(index, 1); // Eliminar la apuesta del array
+            yaApostaron.delete(nombreJugador); // Eliminar del Set de jugadores que ya apostaron
+
+            alert(`Apuesta de ${nombreJugador} cancelada. Se le devolvieron $${apuestaCancelada.monto}.`);
+            // No es necesario un alert aquí, la información se actualizará en el modal
+            actualizarJugadoresEnRonda();
+        } else {
+            alert("Este jugador no tiene una apuesta activa para cancelar.");
+        }
+    }
+
+    function removePlayer(playerName) {
+        if (confirm(`¿Estás seguro de que quieres eliminar a ${playerName} del juego? Su dinero actual ($${dineroJugador[playerName]}) se perderá.`)) {
+            // Registrar el retiro del jugador
+            retiredPlayers.add(playerName);
+            gameHistory.push({
+                round: currentRound + 1,
+                event: 'player_retired',
+                playerName: playerName,
+                moneyAtRetirement: dineroJugador[playerName]
+            });
+
+            // Eliminar al jugador de las apuestas activas si las tiene
+            if (yaApostaron.has(playerName)) {
+                const apuestaCancelada = apuestas.find(a => a.nombre === playerName);
+                if (apuestaCancelada) {
+                    // No se devuelve el dinero, se considera perdido al retirarse
+                    apuestas = apuestas.filter(a => a.nombre !== playerName);
+                    yaApostaron.delete(playerName);
+                }
+            }
+
+            // Eliminar al jugador de la lista de dineroJugador
+            delete dineroJugador[playerName];
+
+            // Añadir a la cola de mensajes de eliminado
+            addEliminatedPlayerToQueue(playerName);
+
+            updateInfoModalContent(); // Actualizar la lista de jugadores en el modal de información
+            actualizarJugadoresEnRonda(); // Por si estaba en la lista de jugadores en ronda
+        }
+    }
+
+    /* --- GIRAR RULETA y cálculo de ganador --- */
+    function girarRuleta(isTestSpin = false) { // Añadido parámetro para giros de prueba
+      if (!gameConfigured && !isTestSpin) { alert('Configura la partida primero.'); return; }
+      if (animando) return;
+      if (apuestas.length===0 && !isTestSpin) { alert('No hay apuestas.'); return; }
+
+      // Ocultar el panel de apuestas al iniciar el giro
+      toggleApuestasPanel(true);
+
+      const roundObj = {
+        round: currentRound + 1,
+        initialPlayerBalances: {...dineroJugador},
+        bets: JSON.parse(JSON.stringify(apuestas)), // Guardar las apuestas de esta ronda
+        result: null,
+        winners: [],
+        finalPlayerBalances: null,
+        retiredPlayersInRound: [...retiredPlayers], // Registrar jugadores retirados en esta ronda
+        isTest: isTestSpin // Marcar si es un giro de prueba
+      };
+      gameHistory.push(roundObj);
+
+      if (enableSounds) { // Solo reproducir si los sonidos están activados
+        spinAudio.volume = parseFloat(spinVolumeSlider.value || 0.8);
+        spinAudio.play().catch(()=>{ /* ignore */ });
+      }
+
+
+      const minVueltasRuleta = 5;
+      const minVueltasBola = 10;
+
+      const randomAddVueltasRuleta = Math.random() * 5;
+      const randomAddVueltasBola = Math.random() * 8;
+
+      const totalVueltasRuleta = minVueltasRuleta + randomAddVueltasRuleta;
+      const totalVueltasBola = minVueltasBola + randomAddVueltasBola;
+
+      const finalRotationRuleta = currentAngle + (totalVueltasRuleta * 2 * Math.PI);
+      const finalRotationBola = bolaAngle + (totalVueltasBola * 2 * Math.PI);
+
+      const duracionAnimacion = spinDuration * 1000; // Usar la duración configurada (en milisegundos)
+
+      const initialAngleRuleta = currentAngle;
+      const initialAngleBola = bolaAngle;
+      const initialRadialDistanceBola = outerBallTrackRadius;
+
+      animando = true;
+      let start = null;
+
+      const easeOutCubic = x => 1 - Math.pow(1 - x, 3);
+      const easeInQuad = x => x * x;
+
+      function animar(ts) {
+        if (!start) start = ts;
+        const t = ts - start;
+        const prog = Math.min(t / duracionAnimacion, 1);
+
+        const easedProg = easeOutCubic(prog);
+
+        currentAngle = initialAngleRuleta + (finalRotationRuleta - initialAngleRuleta) * easedProg;
+        bolaAngle = initialAngleBola + (finalRotationBola - initialAngleBola) * easedProg;
+
+        bolaRadialDistance = initialRadialDistanceBola + (finalBallSettleRadius - initialRadialDistanceBola) * easeInQuad(prog);
+
+        const oscillationAmplitude = 10 * (1 - prog);
+        const oscillationFrequency = 20;
+        bolaRadialDistance += Math.sin(prog * Math.PI * oscillationFrequency) * oscillationAmplitude;
+
+        bolaRadialDistance = Math.max(bolaRadialDistance, innerBallTrackRadius);
+
+        drawRuleta(currentAngle);
+
+        if (prog < 1) {
+          requestAnimationFrame(animar);
+        } else {
+          animando = false;
+          if (enableSounds) { // Solo pausar si los sonidos están activados
+            spinAudio.pause();
+            spinAudio.currentTime = 0;
+          }
+
+
+          currentAngle = currentAngle % (2 * Math.PI);
+          bolaAngle = bolaAngle % (2 * Math.PI);
+          bolaRadialDistance = finalBallSettleRadius;
+
+          drawRuleta(currentAngle);
+
+          const slice = (2 * Math.PI) / numeros.length;
+          let winnerIndex = -1;
+
+          // Calcular el ángulo relativo de la bola respecto a la ruleta
+          let finalRelativeAngle = (bolaAngle - currentAngle);
+          // Normalizar el ángulo para que esté entre 0 y 2*PI
+          finalRelativeAngle = finalRelativeAngle % (2 * Math.PI);
+          if (finalRelativeAngle < 0) {
+              finalRelativeAngle += (2 * Math.PI);
+          }
+
+          // Determinar el índice del número ganador
+          winnerIndex = Math.floor(finalRelativeAngle / slice);
+
+          // Asegurarse de que el índice esté dentro de los límites del array de números
+          if (winnerIndex < 0 || winnerIndex >= numeros.length) {
+              winnerIndex = 0; // Fallback, aunque no debería ocurrir con la normalización
+          }
+
+          const winner = numeros[winnerIndex];
+          procesarResultado(winner, isTestSpin); // Pasar isTestSpin a procesarResultado
+
+          // Mostrar el panel de apuestas al finalizar el giro
+          toggleApuestasPanel(false);
+        }
+      }
+      requestAnimationFrame(animar);
+    }
+
+    function procesarResultado(winner, isTestSpin = false) { // Añadido parámetro
+      // Obtener el color del número ganador directamente del objeto 'winner'
+      const colorEsp = winner.color === 'red' ? 'rojo' : (winner.color === 'black' ? 'negro' : 'verde');
+      let hubo = false;
+      let winnersRound = [];
+
+      if (!isTestSpin) { // Solo procesar apuestas si no es un giro de prueba
+        apuestas.forEach(a=>{
+          let premio = 0;
+
+          // 1. Apuesta a número exacto
+          if (a.apuesta === String(winner.num)) {
+            premio = a.monto * multiplierExactNumber; // Usar multiplicador configurable
+          }
+          // 2. Apuesta a color (rojo/negro) - SOLO si el número ganador NO es 0
+          else if (winner.num !== 0) {
+              if ((a.apuesta === 'rojo' && winner.color === 'red') ||
+                  (a.apuesta === 'negro' && winner.color === 'black')) {
+                  premio = a.monto * multiplierRedBlack; // Usar multiplicador configurable
+              }
+          }
+          // 3. Apuesta a verde (solo si el número ganador es 0)
+          else if (winner.num === 0 && a.apuesta === 'verde') {
+              premio = a.monto * multiplierGreen; // Usar multiplicador configurable
+          }
+
+          if (premio > 0) {
+            dineroJugador[a.nombre] = (dineroJugador[a.nombre] || 0) + premio;
+            winnersRound.push({ name: a.nombre, winnings: premio });
+            hubo = true;
+          }
+        });
+      }
+
+      const last = gameHistory[gameHistory.length - 1];
+      if (last) {
+        last.result = { num: winner.num, color: colorEsp }; // Usar colorEsp aquí
+        last.winners = winnersRound;
+        last.finalPlayerBalances = { ...dineroJugador };
+      }
+
+      if (!isTestSpin) { // Limpiar apuestas solo si no es un giro de prueba
+        apuestas = [];
+        yaApostaron.clear();
+        currentRound++;
+      }
+
+      // Después de procesar el resultado, verificar si algún jugador se quedó sin dinero
+      if (!isTestSpin) {
+          for (const playerName in dineroJugador) {
+              if (dineroJugador[playerName] <= 0 && !retiredPlayers.has(playerName)) {
+                  retiredPlayers.add(playerName);
+                  gameHistory.push({
+                      round: currentRound,
+                      event: 'player_eliminated_no_money',
+                      playerName: playerName,
+                      moneyAtElimination: 0
+                  });
+                  addEliminatedPlayerToQueue(playerName);
+              }
+          }
+      }
+
+      // No es necesario un alert aquí, la información se actualizará en el modal
+      actualizarJugadoresEnRonda();
+      updateInfoModalContent(); // Actualizar el modal de información después de cada giro
+
+      if (currentRound >= totalRounds && !isTestSpin) {
+        setTimeout(()=> {
+          showEndGameModal();
+        }, 600);
+      }
+    }
+
+    function showConfigModal() {
+        // Cargar los valores actuales en el modal antes de mostrarlo
+        initialMoneyInput.value = initialPlayerMoney;
+        minBetInput.value = minimumBet;
+        maxBetInput.value = maximumBet; // Cargar apuesta máxima
+        numRoundsInput.value = totalRounds;
+        eliminatedMessageDurationInput.value = eliminatedMessageDuration;
+        spinDurationInput.value = spinDuration;
+        enableSoundsCheckbox.checked = enableSounds;
+        multiplierRedBlackInput.value = multiplierRedBlack;
+        multiplierGreenInput.value = multiplierGreen;
+        multiplierExactNumberInput.value = multiplierExactNumber;
+
+        configModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function applyInitialConfig() {
+        const newInitialMoney = parseInt(initialMoneyInput.value);
+        const newMinBet = parseInt(minBetInput.value);
+        const newMaxBet = parseInt(maxBetInput.value); // Obtener nueva apuesta máxima
+        const newNumRounds = parseInt(numRoundsInput.value);
+        const newEliminatedMessageDuration = parseInt(eliminatedMessageDurationInput.value);
+        const newSpinDuration = parseInt(spinDurationInput.value);
+        const newEnableSounds = enableSoundsCheckbox.checked;
+        const newMultiplierRedBlack = parseInt(multiplierRedBlackInput.value);
+        const newMultiplierGreen = parseInt(multiplierGreenInput.value);
+        const newMultiplierExactNumber = parseInt(multiplierExactNumberInput.value);
+
+
+        if (isNaN(newInitialMoney) || newInitialMoney <= 0) {
+            alert("Por favor, introduce una cantidad válida para el dinero inicial (mayor que 0).");
+            return;
+        }
+        if (isNaN(newMinBet) || newMinBet <= 0) {
+            alert("Por favor, introduce una cantidad válida para la apuesta mínima (mayor que 0).");
+            return;
+        }
+        if (isNaN(newMaxBet) || newMaxBet <= 0) { // Validar apuesta máxima
+            alert("Por favor, introduce una cantidad válida para la apuesta máxima (mayor que 0).");
+            return;
+        }
+        if (newMinBet > newMaxBet) {
+            alert("La apuesta mínima no puede ser mayor que la apuesta máxima.");
+            return;
+        }
+        if (isNaN(newNumRounds) || newNumRounds <= 0) {
+            alert("Por favor, introduce un número válido de rondas (mayor que 0).");
+            return;
+        }
+        if (isNaN(newEliminatedMessageDuration) || newEliminatedMessageDuration < 0) {
+            alert("Por favor, introduce una duración válida para el mensaje de eliminado (0 o mayor).");
+            return;
+        }
+        if (isNaN(newSpinDuration) || newSpinDuration <= 0) {
+            alert("Por favor, introduce una duración válida para el giro (mayor que 0).");
+            return;
+        }
+        if (isNaN(newMultiplierRedBlack) || newMultiplierRedBlack <= 0 ||
+            isNaN(newMultiplierGreen) || newMultiplierGreen <= 0 ||
+            isNaN(newMultiplierExactNumber) || newMultiplierExactNumber <= 0) {
+            alert("Por favor, introduce multiplicadores válidos (mayores que 0).");
+            return;
+        }
+
+        // Registrar cambios de configuración
+        const changes = {};
+        if (initialPlayerMoney !== newInitialMoney) changes.initialPlayerMoney = `${initialPlayerMoney} -> ${newInitialMoney}`;
+        if (minimumBet !== newMinBet) changes.minimumBet = `${minimumBet} -> ${newMinBet}`;
+        if (maximumBet !== newMaxBet) changes.maximumBet = `${maximumBet} -> ${newMaxBet}`;
+        if (totalRounds !== newNumRounds) changes.totalRounds = `${totalRounds} -> ${newNumRounds}`;
+        if (eliminatedMessageDuration !== newEliminatedMessageDuration) changes.eliminatedMessageDuration = `${eliminatedMessageDuration} -> ${newEliminatedMessageDuration}`;
+        if (spinDuration !== newSpinDuration) changes.spinDuration = `${spinDuration} -> ${newSpinDuration}`;
+        if (enableSounds !== newEnableSounds) changes.enableSounds = `${enableSounds} -> ${newEnableSounds}`;
+        if (multiplierRedBlack !== newMultiplierRedBlack) changes.multiplierRedBlack = `${multiplierRedBlack} -> ${newMultiplierRedBlack}`;
+        if (multiplierGreen !== newMultiplierGreen) changes.multiplierGreen = `${multiplierGreen} -> ${newMultiplierGreen}`;
+        if (multiplierExactNumber !== newMultiplierExactNumber) changes.multiplierExactNumber = `${multiplierExactNumber} -> ${newMultiplierExactNumber}`;
+
+        if (Object.keys(changes).length > 0) {
+            configChangeHistory.push({
+                round: currentRound + 1,
+                timestamp: new Date().toLocaleString(),
+                changes: changes
+            });
+        }
+
+        initialPlayerMoney = newInitialMoney;
+        minimumBet = newMinBet;
+        maximumBet = newMaxBet; // Asignar nueva apuesta máxima
+        totalRounds = newNumRounds;
+        eliminatedMessageDuration = newEliminatedMessageDuration;
+        spinDuration = newSpinDuration;
+        enableSounds = newEnableSounds;
+        multiplierRedBlack = newMultiplierRedBlack;
+        multiplierGreen = newMultiplierGreen;
+        multiplierExactNumber = newMultiplierExactNumber;
+
+        currentRound = 0;
+        gameHistory = [];
+        dineroJugador = {};
+        retiredPlayers.clear();
+        gameStartTime = new Date();
+        eliminatedPlayersQueue = [];
+        isShowingEliminatedMessage = false;
+
+        gameConfigured = true;
+
+        configModal.style.display = 'none';
+        document.body.style.overflow = '';
+
+        currentAngle = 0;
+        bolaAngle = 0;
+        bolaRadialDistance = outerBallTrackRadius;
+
+        drawRuleta();
+        actualizarJugadoresEnRonda();
+        updatePaymentInfoDisplay(); // Actualizar la tabla de pagos
+
+        if (enableSounds) {
+            musicAudio.volume = parseFloat(musicVolumeSlider.value);
+            musicAudio.play().catch(err => console.log("Autoplay de música ambiente bloqueado:", err));
+            spinAudio.volume = parseFloat(spinVolumeSlider.value);
+            spinAudio.pause();
+        } else {
+            musicAudio.pause();
+            spinAudio.pause();
+        }
+    }
+
+    // Funciones para el nuevo modal de configuración de juego (desde el dock)
+    function showGameSettingsModal() {
+        // Cargar los valores actuales en el modal antes de mostrarlo
+        gameSettingsMinBetInput.value = minimumBet;
+        gameSettingsMaxBetInput.value = maximumBet; // Cargar apuesta máxima
+        gameSettingsEliminatedMessageDurationInput.value = eliminatedMessageDuration;
+        gameSettingsSpinDurationInput.value = spinDuration;
+        gameSettingsEnableSoundsCheckbox.checked = enableSounds;
+        gameSettingsMultiplierRedBlackInput.value = multiplierRedBlack;
+        gameSettingsMultiplierGreenInput.value = multiplierGreen;
+        gameSettingsMultiplierExactNumberInput.value = multiplierExactNumber;
+
+        gameSettingsModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeGameSettingsModal() {
+        gameSettingsModal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    function applyGameSettings() {
+        const newMinBet = parseInt(gameSettingsMinBetInput.value);
+        const newMaxBet = parseInt(gameSettingsMaxBetInput.value); // Obtener nueva apuesta máxima
+        const newEliminatedMessageDuration = parseInt(gameSettingsEliminatedMessageDurationInput.value);
+        const newSpinDuration = parseInt(gameSettingsSpinDurationInput.value);
+        const newEnableSounds = gameSettingsEnableSoundsCheckbox.checked;
+        const newMultiplierRedBlack = parseInt(gameSettingsMultiplierRedBlackInput.value);
+        const newMultiplierGreen = parseInt(gameSettingsMultiplierGreenInput.value);
+        const newMultiplierExactNumber = parseInt(gameSettingsMultiplierExactNumberInput.value);
+
+        if (isNaN(newMinBet) || newMinBet <= 0) {
+            alert("Por favor, introduce una cantidad válida para la apuesta mínima (mayor que 0).");
+            return;
+        }
+        if (isNaN(newMaxBet) || newMaxBet <= 0) { // Validar apuesta máxima
+            alert("Por favor, introduce una cantidad válida para la apuesta máxima (mayor que 0).");
+            return;
+        }
+        if (newMinBet > newMaxBet) {
+            alert("La apuesta mínima no puede ser mayor que la apuesta máxima.");
+            return;
+        }
+        if (isNaN(newEliminatedMessageDuration) || newEliminatedMessageDuration < 0) {
+            alert("Por favor, introduce una duración válida para el mensaje de eliminado (0 o mayor).");
+            return;
+        }
+        if (isNaN(newSpinDuration) || newSpinDuration <= 0) {
+            alert("Por favor, introduce una duración válida para el giro (mayor que 0).");
+            return;
+        }
+        if (isNaN(newMultiplierRedBlack) || newMultiplierRedBlack <= 0 ||
+            isNaN(newMultiplierGreen) || newMultiplierGreen <= 0 ||
+            isNaN(newMultiplierExactNumber) || newMultiplierExactNumber <= 0) {
+            alert("Por favor, introduce multiplicadores válidos (mayores que 0).");
+            return;
+        }
+
+        // Registrar cambios de configuración
+        const changes = {};
+        if (minimumBet !== newMinBet) changes.minimumBet = `${minimumBet} -> ${newMinBet}`;
+        if (maximumBet !== newMaxBet) changes.maximumBet = `${maximumBet} -> ${newMaxBet}`;
+        if (eliminatedMessageDuration !== newEliminatedMessageDuration) changes.eliminatedMessageDuration = `${eliminatedMessageDuration} -> ${newEliminatedMessageDuration}`;
+        if (spinDuration !== newSpinDuration) changes.spinDuration = `${spinDuration} -> ${newSpinDuration}`;
+        if (enableSounds !== newEnableSounds) changes.enableSounds = `${enableSounds} -> ${newEnableSounds}`;
+        if (multiplierRedBlack !== newMultiplierRedBlack) changes.multiplierRedBlack = `${multiplierRedBlack} -> ${newMultiplierRedBlack}`;
+        if (multiplierGreen !== newMultiplierGreen) changes.multiplierGreen = `${multiplierGreen} -> ${newMultiplierGreen}`;
+        if (multiplierExactNumber !== newMultiplierExactNumber) changes.multiplierExactNumber = `${multiplierExactNumber} -> ${newMultiplierExactNumber}`;
+
+        if (Object.keys(changes).length > 0) {
+            configChangeHistory.push({
+                round: currentRound + 1,
+                timestamp: new Date().toLocaleString(),
+                changes: changes
+            });
+        }
+
+        minimumBet = newMinBet;
+        maximumBet = newMaxBet; // Asignar nueva apuesta máxima
+        eliminatedMessageDuration = newEliminatedMessageDuration;
+        spinDuration = newSpinDuration;
+        enableSounds = newEnableSounds;
+        multiplierRedBlack = newMultiplierRedBlack;
+        multiplierGreen = newMultiplierGreen;
+        multiplierExactNumber = newMultiplierExactNumber;
+
+        // Aplicar cambios de sonido inmediatamente
+        if (enableSounds) {
+            musicAudio.volume = parseFloat(musicVolumeSlider.value);
+            musicAudio.play().catch(err => console.log("Autoplay de música ambiente bloqueado:", err));
+            spinAudio.volume = parseFloat(spinVolumeSlider.value);
+        } else {
+            musicAudio.pause();
+            spinAudio.pause();
+        }
+
+        updatePaymentInfoDisplay(); // Actualizar la tabla de pagos
+        alert("Ajustes de juego aplicados correctamente.");
+        closeGameSettingsModal();
+    }
+
+    // Función para actualizar la visualización de los multiplicadores en la tabla de pagos
+    function updatePaymentInfoDisplay() {
+        displayMultiplierRedBlack.textContent = `${multiplierRedBlack}x`;
+        displayMultiplierGreen.textContent = `${multiplierGreen}x`;
+        displayMultiplierExactNumber.textContent = `${multiplierExactNumber}x`;
+    }
+
+
+    function showEndGameModal() {
+        endGameMessage.textContent = `¡Has completado las ${totalRounds} rondas!`;
+        endGameModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function resetGame() {
+        endGameModal.style.display = 'none';
+        document.body.style.overflow = '';
+        showConfigModal();
+    }
+
+    function continueGame() {
+        endGameModal.style.display = 'none';
+        document.body.style.overflow = '';
+        totalRounds += 5;
+        alert(`¡Has decidido seguir jugando! Se han añadido 5 rondas más. Total de rondas: ${totalRounds}`);
+    }
+
+    function downloadSummary() {
+        const endTime = new Date();
+        let summaryContent = `
+================================================================================
+                        RESUMEN DE PARTIDA DE RULETA CASINO
+================================================================================
+
+--------------------------------------------------------------------------------
+INFORMACIÓN GENERAL DE LA PARTIDA
+--------------------------------------------------------------------------------
+Fecha de Inicio: ${gameStartTime ? gameStartTime.toLocaleString('es-ES', { dateStyle: 'full', timeStyle: 'medium' }) : 'N/A'}
+Fecha de Fin:    ${endTime.toLocaleString('es-ES', { dateStyle: 'full', timeStyle: 'medium' })}
+Duración Total:  ${gameStartTime ? formatDuration(endTime - gameStartTime) : 'N/A'}
+
+Configuración Final de la Partida:
+  Dinero Inicial por Jugador: $${initialPlayerMoney}
+  Apuesta Mínima:             $${minimumBet}
+  Apuesta Máxima:             $${maximumBet}
+  Rondas Configuradas:        ${totalRounds}
+  Rondas Jugadas Completadas: ${currentRound}
+  Duración del Giro:          ${spinDuration} segundos
+  Multiplicadores de Pago:
+    Rojo/Negro: ${multiplierRedBlack}x
+    Verde (0): ${multiplierGreen}x
+    Número Exacto: ${multiplierExactNumber}x
+
+--------------------------------------------------------------------------------
+HISTORIAL DE CAMBIOS DE CONFIGURACIÓN
+--------------------------------------------------------------------------------
+`;
+        if (configChangeHistory.length === 0) {
+            summaryContent += "No se realizaron cambios de configuración durante la partida.\n";
+        } else {
+            configChangeHistory.forEach(change => {
+                summaryContent += `\n--- Ronda ${change.round} (${change.timestamp}) ---\n`;
+                for (const key in change.changes) {
+                    if (change.changes[key]) {
+                        // Formatear el nombre de la clave para que sea más legible
+                        const formattedKey = key
+                            .replace(/([A-Z])/g, ' $1') // Añadir espacio antes de mayúsculas
+                            .toLowerCase() // Convertir a minúsculas
+                            .replace('initial player', 'dinero inicial por')
+                            .replace('minimum bet', 'apuesta mínima')
+                            .replace('maximum bet', 'apuesta máxima')
+                            .replace('total rounds', 'rondas totales')
+                            .replace('eliminated message duration', 'duración mensaje "eliminado"')
+                            .replace('spin duration', 'duración del giro')
+                            .replace('enable sounds', 'activar sonidos')
+                            .replace('multiplier red black', 'multiplicador rojo/negro')
+                            .replace('multiplier green', 'multiplicador verde (0)')
+                            .replace('multiplier exact number', 'multiplicador número exacto');
+                        summaryContent += `  - ${formattedKey}: ${change.changes[key]}\n`;
+                    }
+                }
+            });
+        }
+
+        summaryContent += `
+--------------------------------------------------------------------------------
+SALDOS FINALES Y RESULTADOS NETOS DE JUGADORES
+--------------------------------------------------------------------------------
+`;
+
+        const allPlayers = new Set([...Object.keys(dineroJugador), ...Array.from(retiredPlayers)]);
+        const playerNetResults = {};
+        let overallWinner = { name: 'N/A', money: -Infinity };
+        let overallLoser = { name: 'N/A', money: Infinity };
+        let totalMoneyInPlay = 0;
+        let totalMoneyWonByPlayers = 0;
+        let totalMoneyLostByPlayers = 0;
+
+        if (allPlayers.size === 0) {
+            summaryContent += "No hubo jugadores registrados en esta partida.\n";
+        } else {
+            summaryContent += "Jugadores Activos al Final:\n";
+            if (Object.keys(dineroJugador).length === 0) {
+                summaryContent += "  Ninguno.\n";
+            } else {
+                for (const player in dineroJugador) {
+                    const netChange = dineroJugador[player] - initialPlayerMoney;
+                    playerNetResults[player] = netChange;
+                    totalMoneyInPlay += dineroJugador[player];
+
+                    if (dineroJugador[player] > overallWinner.money) {
+                        overallWinner = { name: player, money: dineroJugador[player] };
+                    }
+                    if (dineroJugador[player] < overallLoser.money) {
+                        overallLoser = { name: player, money: dineroJugador[player] };
+                    }
+
+                    summaryContent += `  - ${player}: Saldo Final $${dineroJugador[player]} (Neto: ${netChange >= 0 ? '+' : ''}$${netChange})\n`;
+                    if (netChange > 0) totalMoneyWonByPlayers += netChange;
+                    else totalMoneyLostByPlayers += Math.abs(netChange);
+                }
+            }
+
+            summaryContent += "\nJugadores Retirados Durante la Partida:\n";
+            if (retiredPlayers.size === 0) {
+                summaryContent += "  Ninguno.\n";
+            } else {
+                retiredPlayers.forEach(player => {
+                    const retirementEvent = gameHistory.find(entry => entry.event === 'player_retired' && entry.playerName === player);
+                    const moneyAtRetirement = retirementEvent ? retirementEvent.moneyAtRetirement : 'Desconocido';
+                    const roundRetired = retirementEvent ? retirementEvent.round : 'Desconocida';
+                    summaryContent += `  - ${player}: Se retiró en Ronda ${roundRetired} con $${moneyAtRetirement}.\n`;
+                    // Considerar el dinero inicial como perdido si se retiró con menos
+                    if (retirementEvent && moneyAtRetirement < initialPlayerMoney) {
+                        totalMoneyLostByPlayers += (initialPlayerMoney - moneyAtRetirement);
+                    }
+                });
+            }
+
+            summaryContent += "\nAnálisis de Ganancias/Pérdidas Netas:\n";
+            if (Object.keys(dineroJugador).length > 0) {
+                summaryContent += `  Mayor Ganador (Activo): ${overallWinner.name} con $${overallWinner.money} (Ganancia neta: ${playerNetResults[overallWinner.name] >= 0 ? '+' : ''}$${playerNetResults[overallWinner.name]})\n`;
+                summaryContent += `  Mayor Perdedor (Activo): ${overallLoser.name} con $${overallLoser.money} (Pérdida neta: ${playerNetResults[overallLoser.name] >= 0 ? '+' : ''}$${playerNetResults[overallLoser.name]})\n`;
+            }
+            summaryContent += `  Total Ganado por Jugadores Activos: $${totalMoneyWonByPlayers}\n`;
+            summaryContent += `  Total Perdido por Jugadores Activos: $${totalMoneyLostByPlayers}\n`;
+            summaryContent += `  Balance General de la Casa: ${totalMoneyLostByPlayers - totalMoneyWonByPlayers >= 0 ? '+' : ''}$${totalMoneyLostByPlayers - totalMoneyWonByPlayers}\n`;
+        }
+
+
+        summaryContent += `
+--------------------------------------------------------------------------------
+HISTORIAL DETALLADO DE RONDAS
+--------------------------------------------------------------------------------
+`;
+        if (gameHistory.length === 0) {
+            summaryContent += "No se jugó ninguna ronda.\n";
+        } else {
+            gameHistory.forEach(round => {
+                if (round.event === 'player_retired') {
+                    summaryContent += `\n--- Ronda ${round.round} - Evento: Retiro de Jugador ---\n`;
+                    summaryContent += `  Jugador: ${round.playerName}\n`;
+                    summaryContent += `  Dinero al Retirarse: $${round.moneyAtRetirement}.\n`;
+                } else if (round.event === 'player_eliminated_no_money') {
+                    summaryContent += `\n--- Ronda ${round.round} - Evento: Jugador Eliminado por Falta de Dinero ---\n`;
+                    summaryContent += `  Jugador: ${round.playerName}\n`;
+                    summaryContent += `  Dinero al Ser Eliminado: $${round.moneyAtElimination}.\n`;
+                }
+                else {
+                    summaryContent += `\n--- Ronda ${round.round} ${round.isTest ? '(GIRO DE PRUEBA)' : ''} ---\n`;
+                    summaryContent += `  Saldos Iniciales de Jugadores:\n`;
+                    for (const player in round.initialPlayerBalances) {
+                        summaryContent += `    - ${player}: $${round.initialPlayerBalances[player]}\n`;
+                    }
+                    summaryContent += `  Apuestas Realizadas:\n`;
+                    if (round.bets.length === 0) {
+                        summaryContent += `    Ninguna.\n`;
+                    } else {
+                        round.bets.forEach(bet => {
+                            summaryContent += `    - ${bet.nombre} apostó $${bet.monto} a ${bet.apuesta.toUpperCase()}\n`;
+                        });
+                    }
+                    summaryContent += `  Resultado del Giro: ${round.result ? `${round.result.num} (${round.result.color.toUpperCase()})` : 'N/A'}\n`;
+                    summaryContent += `  Ganadores de la Ronda:\n`;
+                    if (round.winners.length === 0) {
+                        summaryContent += `    No hubo ganadores en esta ronda.\n`;
+                    } else {
+                        round.winners.forEach(winner => {
+                            summaryContent += `    - ${winner.name} ganó $${winner.winnings}\n`;
+                        });
+                    }
+                    summaryContent += `  Saldos Finales de Jugadores en la Ronda:\n`;
+                    for (const player in round.finalPlayerBalances) {
+                        summaryContent += `    - ${player}: $${round.finalPlayerBalances[player]}\n`;
+                    }
+                }
+            });
+        }
+
+        summaryContent += `
+================================================================================
+                            FIN DEL RESUMEN
+================================================================================
+`;
+
+        const formattedDate = gameStartTime ? gameStartTime.toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '-') : 'FechaDesconocida';
+        const formattedTime = gameStartTime ? gameStartTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/:/g, '-') : 'HoraDesconocida';
+        const fileName = `Ruleta Casino - Resumen ${formattedDate} ${formattedTime}.txt`;
+
+        const blob = new Blob([summaryContent], { type: 'text/plain;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        alert("Resumen de la partida descargado.");
+    }
+
+    // Función auxiliar para formatear la duración
+    function formatDuration(ms) {
+        const seconds = Math.floor(ms / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+
+        let result = [];
+        if (days > 0) result.push(`${days} día${days > 1 ? 's' : ''}`);
+        if (hours % 24 > 0) result.push(`${hours % 24} hora${hours % 24 > 1 ? 's' : ''}`);
+        if (minutes % 60 > 0) result.push(`${minutes % 60} minuto${minutes % 60 > 1 ? 's' : ''}`);
+        if (seconds % 60 > 0 || result.length === 0) result.push(`${seconds % 60} segundo${seconds % 60 > 1 ? 's' : ''}`);
+
+        return result.join(', ');
+    }
+
+
+    // Funciones para el modal de información
+    function showInfoModal() {
+        updateInfoModalContent();
+        infoModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden'; // Evita el scroll del body
+    }
+
+    function closeInfoModal() {
+        infoModal.style.display = 'none';
+        document.body.style.overflow = ''; // Restaura el scroll del body
+    }
+
+    function updateInfoModalContent() {
+        // Actualizar Jugadores
+        infoJugadoresList.innerHTML = "";
+        if (Object.keys(dineroJugador).length === 0 && retiredPlayers.size === 0) {
+            infoJugadoresList.innerHTML = "<li>No hay jugadores activos.</li>";
+        } else {
+            // Mostrar jugadores activos
+            for (const playerName in dineroJugador) {
+                if (!retiredPlayers.has(playerName)) { // Solo mostrar jugadores no retirados
+                    const li = document.createElement("li");
+                    li.innerHTML = `
+                        <span>${playerName}: <strong>$${dineroJugador[playerName]}</strong></span>
+                        <button onclick="removePlayer('${playerName}')">Eliminar</button>
+                    `;
+                    infoJugadoresList.appendChild(li);
+                }
+            }
+            // Mostrar jugadores retirados
+            retiredPlayers.forEach(playerName => {
+                const li = document.createElement("li");
+                li.style.color = 'red'; // Estilo para indicar que está retirado
+                li.innerHTML = `
+                    <span>${playerName}: <strong>ELIMINADO</strong></span>
+                `;
+                infoJugadoresList.appendChild(li);
+            });
+        }
+
+        // Actualizar Rondas
+        infoCurrentRound.textContent = currentRound;
+        infoTotalRounds.textContent = totalRounds;
+        infoRemainingRounds.textContent = Math.max(totalRounds - currentRound, 0);
+
+        // REPROGRAMACIÓN DEL HISTORIAL GENERAL (antes HISTORIAL DE RESULTADOS)
+        infoHistorialResultados.innerHTML = "";
+        if (gameHistory.length === 0) {
+            infoHistorialResultados.innerHTML = "<li>No se ha jugado ninguna ronda.</li>";
+        } else {
+            // Iterar sobre el historial de juego en orden inverso para mostrar lo más reciente primero
+            for (let i = gameHistory.length - 1; i >= 0; i--) {
+                const round = gameHistory[i];
+                const li = document.createElement("li");
+                li.classList.add("historial-item");
+
+                if (round.event === 'player_retired') {
+                    li.innerHTML = `
+                        <strong>Ronda ${round.round}:</strong>
+                        <em>${round.playerName} se retiró.</em>
+                    `;
+                } else if (round.event === 'player_eliminated_no_money') {
+                    li.innerHTML = `
+                        <strong>Ronda ${round.round}:</strong>
+                        <em>${round.playerName} fue eliminado por falta de dinero.</em>
+                    `;
+                }
+                else {
+                    const resultNum = round.result ? round.result.num : 'N/A';
+                    const resultColor = round.result ? round.result.color : 'N/A';
+
+                    let colorClass = '';
+                    let colorText = '';
+
+                    if (resultColor === 'rojo') {
+                        colorClass = 'red-text';
+                        colorText = 'ROJO';
+                    } else if (resultColor === 'negro') {
+                        colorClass = 'black-text';
+                        colorText = 'NEGRO';
+                    } else if (resultColor === 'verde') {
+                        colorClass = 'green-text';
+                        colorText = 'VERDE';
+                    } else {
+                        colorClass = 'white-text';
+                        colorText = 'N/A';
+                    }
+
+                    const testSpinLabel = round.isTest ? '(E)' : '';
+
+                    // Simplificado para mostrar solo el resultado y si hubo ganadores
+                    const winnersSummary = round.winners.length > 0 ? `(${round.winners.length} ganadores)` : '';
+
+                    li.innerHTML = `
+                        <strong>Ronda ${round.round}${testSpinLabel}:</strong> ${resultNum} <span class="${colorClass}">${colorText}</span> ${winnersSummary}
+                    `;
+                }
+                infoHistorialResultados.appendChild(li);
+            }
+        }
+
+        // Actualizar Jugadores en esta ronda (en el modal de información)
+        actualizarJugadoresEnRonda();
+
+        // Actualizar Historial de Apuestas por Ronda (VERTICAL)
+        infoHistorialApuestas.innerHTML = "";
+        if (gameHistory.length === 0) {
+            infoHistorialApuestas.innerHTML = "<li>No se han registrado apuestas.</li>";
+        } else {
+            // Iterar sobre el historial de juego en orden inverso para mostrar lo más reciente primero
+            for (let i = gameHistory.length - 1; i >= 0; i--) {
+                const round = gameHistory[i];
+                // Solo mostrar rondas que no son de prueba y tienen apuestas
+                if (!round.isTest && round.bets && round.bets.length > 0) {
+                    const li = document.createElement("li");
+                    li.innerHTML = `<strong>Ronda ${round.round}:</strong>`;
+                    round.bets.forEach(bet => {
+                        const betDetail = document.createElement("div"); // Usar div para asegurar bloque
+                        betDetail.classList.add("bet-details");
+                        betDetail.innerHTML = `&nbsp;&nbsp;${bet.nombre} apostó $${bet.monto} a ${bet.apuesta.toUpperCase()}`;
+                        li.appendChild(betDetail);
+                    });
+                    infoHistorialApuestas.appendChild(li); // Añadir al final para que el bucle inverso lo ponga en orden correcto
+                }
+            }
+        }
+    }
+
+    // Funciones para el modal de selección de jugador
+    function showPlayerSelectModal() {
+        playerSelectionList.innerHTML = "";
+        const activePlayers = Object.keys(dineroJugador).filter(name => !retiredPlayers.has(name) && dineroJugador[name] > 0);
+
+        if (activePlayers.length === 0) {
+            playerSelectionList.innerHTML = "<li>No hay jugadores activos disponibles para seleccionar.</li>";
+        } else {
+            activePlayers.forEach(playerName => {
+                const li = document.createElement("li");
+                li.innerHTML = `
+                    <span>${playerName}: <strong>$${dineroJugador[playerName]}</strong></span>
+                    <button onclick="selectPlayer('${playerName}')">Seleccionar</button>
+                `;
+                playerSelectionList.appendChild(li);
+            });
+        }
+        playerSelectModal.style.display = 'flex';
+        document.body.style.overflow = '';
+    }
+
+    function closePlayerSelectModal() {
+        playerSelectModal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    function selectPlayer(playerName) {
+        inputNombre.value = playerName;
+        inputDinero.value = minimumBet; // Cantidad por defecto
+        closePlayerSelectModal();
+    }
+
+    function selectBetType(type) {
+        inputApuesta.value = type;
+    }
+
+    // NUEVA FUNCIONALIDAD: Giro de prueba de la ruleta y login de admin
+    canvas.addEventListener('click', function(event) {
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
+        const distance = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+
+        // Detectar clic en el centro de la ruleta (aproximadamente el círculo central)
+        if (distance < 70) { // 70 es el radio del círculo central
+            showAdminLoginModal();
+        }
+    });
+
+    function showAdminLoginModal() {
+        adminLoginModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        adminUsernameInput.value = ''; // Limpiar campos
+        adminPasswordInput.value = '';
+        adminUsernameInput.focus(); // Poner el foco en el campo de usuario
+    }
+
+    function closeAdminLoginModal() {
+        adminLoginModal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    function checkAdminLogin() {
+        const username = adminUsernameInput.value;
+        const password = adminPasswordInput.value;
+
+        if (username === "admin" && password === "1234") {
+            closeAdminLoginModal();
+            girarRuleta(true); // Llamar a girarRuleta con isTestSpin = true
+        } else {
+            alert("Credenciales incorrectas. No se puede iniciar el giro de prueba.");
+            adminPasswordInput.value = ''; // Limpiar solo la contraseña
+            adminUsernameInput.focus(); // Volver a poner el foco en el usuario
+        }
+    }
+
+    // Funciones para el nuevo modal de jugador eliminado (con cola y temporizador)
+    function addEliminatedPlayerToQueue(playerName) {
+        if (eliminatedMessageDuration === 0) { // Si la duración es 0, no mostrar el modal
+            return;
+        }
+        eliminatedPlayersQueue.push(playerName);
+        processEliminatedPlayerQueue();
+    }
+
+    function processEliminatedPlayerQueue() {
+        if (isShowingEliminatedMessage || eliminatedPlayersQueue.length === 0) {
+            return;
+        }
+
+        isShowingEliminatedMessage = true;
+        const playerName = eliminatedPlayersQueue.shift(); // Obtener el primer jugador de la cola
+        eliminatedPlayerName.textContent = playerName.toUpperCase();
+        eliminatedPlayerModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+
+        // Configurar el cierre automático
+        eliminatedMessageTimeout = setTimeout(() => {
+            closeEliminatedPlayerModal();
+        }, eliminatedMessageDuration * 1000); // Convertir segundos a milisistemas
+    }
+
+    function closeEliminatedPlayerModal() {
+        clearTimeout(eliminatedMessageTimeout); // Limpiar cualquier temporizador pendiente
+        eliminatedPlayerModal.style.display = 'none';
+        document.body.style.overflow = '';
+        isShowingEliminatedMessage = false;
+        processEliminatedPlayerQueue(); // Procesar el siguiente jugador en la cola
+    }
+
+    // Función para ocultar/mostrar el panel de apuestas
+    function toggleApuestasPanel(hide) {
+        if (hide) {
+            apuestasPanel.classList.add('hide-apuestas');
+        } else {
+            apuestasPanel.classList.remove('hide-apuestas');
+        }
+    }
+
+    // --- Funciones para el modal de Tema ---
+    function showThemeModal() {
+        themeModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeThemeModal() {
+        themeModal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    function applyTheme(themeName) {
+        document.body.className = ''; // Eliminar todas las clases de tema existentes
+        document.body.classList.add(`theme-${themeName}`);
+        localStorage.setItem('rouletteTheme', themeName); // Guardar el tema en localStorage
+        closeThemeModal();
+    }
+
+    // Función para inicializar el audio al cargar la página
+    function initializeAudio() {
+        // Intentar reproducir la música de ambiente si enableSounds es true
+        if (enableSounds) {
+            musicAudio.volume = parseFloat(musicVolumeSlider.value);
+            musicAudio.play().catch(err => console.log("Autoplay de música ambiente bloqueado:", err));
+            // El sonido de la ruleta no se reproduce automáticamente, solo se ajusta el volumen
+            spinAudio.volume = parseFloat(spinVolumeSlider.value);
+            spinAudio.pause(); // Asegurarse de que no se reproduzca hasta que se gire la ruleta
+        } else {
+            musicAudio.pause();
+            spinAudio.pause();
+        }
+    }
+
+    // --- Nuevas funciones para los botones de monto de apuesta ---
+    function addBetAmount(amountType) {
+        const playerName = inputNombre.value.trim();
+        if (!playerName) {
+            alert("Por favor, selecciona un jugador primero.");
+            return;
+        }
+        if (!dineroJugador[playerName]) {
+            dineroJugador[playerName] = initialPlayerMoney; // Inicializar dinero si el jugador es nuevo
+        }
+
+        let currentBet = parseInt(inputDinero.value) || 0;
+        let playerMoney = dineroJugador[playerName];
+        let newAmount = currentBet;
+
+        if (amountType === 'min') {
+            newAmount = minimumBet;
+        } else if (amountType === 'allin') {
+            newAmount = playerMoney;
+        } else if (typeof amountType === 'number') { // Porcentaje
+            newAmount += Math.round(playerMoney * amountType);
+        }
+
+        // Asegurarse de que no exceda el dinero del jugador ni la apuesta máxima
+        newAmount = Math.min(newAmount, playerMoney);
+        newAmount = Math.min(newAmount, maximumBet);
+        newAmount = Math.max(newAmount, 0); // No permitir montos negativos
+
+        inputDinero.value = newAmount;
+    }
+
+    function removeBetAmount(amountType) {
+        const playerName = inputNombre.value.trim();
+        if (!playerName) {
+            alert("Por favor, selecciona un jugador primero.");
+            return;
+        }
+        if (!dineroJugador[playerName]) {
+            dineroJugador[playerName] = initialPlayerMoney; // Inicializar dinero si el jugador es nuevo
+        }
+
+        let currentBet = parseInt(inputDinero.value) || 0;
+        let newAmount = currentBet;
+
+        if (amountType === 'clear') {
+            newAmount = 0;
+        } else if (typeof amountType === 'number') { // Porcentaje
+            newAmount -= Math.round(currentBet * amountType); // Quitar porcentaje de la apuesta actual
+        }
+
+        newAmount = Math.max(newAmount, 0); // No permitir montos negativos
+        inputDinero.value = newAmount;
+    }
+
+
+    // Modificar window.onload para que solo muestre el modal de configuración y luego inicialice el audio
+    window.onload = () => {
+        // Cargar el tema guardado al inicio
+        const savedTheme = localStorage.getItem('rouletteTheme');
+        if (savedTheme) {
+            applyTheme(savedTheme);
+        } else {
+            applyTheme('classic'); // Aplicar el tema clásico por defecto si no hay uno guardado
+        }
+
+        showConfigModal();
+        drawRuleta(); // Dibujar la ruleta al inicio
+        updatePaymentInfoDisplay(); // Asegurarse de que los multiplicadores se muestren correctamente al cargar
+        // La inicialización de audio se moverá a applyInitialConfig para respetar el checkbox
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Casino - Selector de versión</title>
+  <style>
+    body {
+      background: linear-gradient(135deg, #1e1e1e, #3c3c3c);
+      color: #fff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      text-align: center;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.7);
+    }
+
+    h1 {
+      margin-bottom: 30px;
+      color: gold;
+      font-size: 2em;
+    }
+
+    button {
+      display: inline-block;
+      margin: 15px;
+      padding: 15px 30px;
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #fff;
+      background: linear-gradient(135deg, #ff0000, #aa0000);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.3s;
+    }
+
+    button:hover {
+      transform: scale(1.1);
+      background: linear-gradient(135deg, #ff4d4d, #cc0000);
+    }
+
+    .btn-v2medio {
+      background: linear-gradient(135deg, #008000, #004d00);
+    }
+
+    .btn-v2medio:hover {
+      background: linear-gradient(135deg, #00cc00, #006600);
+    }
+
+    .btn-v2izquierda {
+      background: linear-gradient(135deg, #119111, #115e11);
+    }
+
+    .btn-v2izquierda:hover {
+      background: linear-gradient(135deg, #11dd11, #117711);
+    }
+
+    .texto-rojo {
+      margin-top: 30px;
+      color: red;
+      font-weight: bold;
+      font-size: 1.1em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Elige versión del Casino</h1>
+    <button onclick="entrarV1()">Versión V1</button>
+    <button class="btn-v2medio" onclick="entrarV2medio()">Versión V2 (Nueva medio)</button>
+    <button class="btn-v2izquierda" onclick="entrarV2izquierda()">Versión V2 (Nueva izquierda)</button>
+
+    <!-- Texto en rojo debajo -->
+    <p class="texto-rojo">
+      En todas las versiones v2 hay un fallo: si un jugador apuesta <b>yy</b> y se vuelve a escribir su nombre, 
+      recibe el dinero de la apuesta de forma incorrecta. <br>
+      ⚠️ Ten cuidado. La v1 tiene menos funciones y no se sabe qué fallos hay.
+    </p>
+  </div>
+
+  <script>
+    function entrarV1() {
+      window.location.href = "casinov1.html";
+    }
+
+    function entrarV2medio() {
+      window.location.href = "casinov2medio.html";
+    }
+
+    function entrarV2izquierda() {
+      window.location.href = "casinov2izquierda.html";
+    }
+  </script>
+</body>
+</html>
