@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Casino - Selector de versión</title>
+  <style>
+    body {
+      background: linear-gradient(135deg, #1e1e1e, #3c3c3c);
+      color: #fff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      text-align: center;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.7);
+    }
+
+    h1 {
+      margin-bottom: 30px;
+      color: gold;
+      font-size: 2em;
+    }
+
+    button {
+      display: inline-block;
+      margin: 15px;
+      padding: 15px 30px;
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #fff;
+      background: linear-gradient(135deg, #ff0000, #aa0000);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.3s;
+    }
+
+    button:hover {
+      transform: scale(1.1);
+      background: linear-gradient(135deg, #ff4d4d, #cc0000);
+    }
+
+    .btn-v2 {
+      background: linear-gradient(135deg, #008000, #004d00);
+    }
+
+    .btn-v2:hover {
+      background: linear-gradient(135deg, #00cc00, #006600);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Elige versión del Casino</h1>
+    <button onclick="entrarV1()">Versión V1</button>
+    <button class="btn-v2" onclick="entrarV2()">Versión V2 (Nueva)</button>
+  </div>
+
+  <script>
+    function entrarV1() {
+      window.location.href = "casinov1.html";
+    }
+
+    function entrarV2() {
+      window.location.href = "casinov2.html";
+    }
+  </script>
+</body>
+</html>
