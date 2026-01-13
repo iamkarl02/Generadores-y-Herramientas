@@ -59,15 +59,16 @@
             padding: 10px;
             background: white;
             border: 1px solid #ccc;
+        }
+        
+        .top-buttons {
             display: flex;
-            flex-wrap: wrap;
             gap: 10px;
-            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
         }
         
         .variables-container {
-            max-height: 400px;
-            overflow-y: auto;
             border: 1px solid #ccc;
             background: white;
             margin-bottom: 10px;
@@ -201,23 +202,6 @@
             min-width: 280px;
         }
         
-        .export-buttons {
-            display: flex;
-            gap: 10px;
-            margin: 10px 0;
-            flex-wrap: wrap;
-        }
-        
-        textarea {
-            width: 100%;
-            height: 80px;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-            font-family: monospace;
-            font-size: 12px;
-        }
-        
         .status-badge {
             padding: 2px 6px;
             background: #6c757d;
@@ -241,11 +225,11 @@
             font-size: 11px;
         }
         
-        .navigation-controls {
+        .page-controls {
             display: flex;
             gap: 10px;
             align-items: center;
-            margin-left: auto;
+            margin-top: 10px;
         }
         
         .page-info {
@@ -258,21 +242,67 @@
             font-size: 12px;
         }
         
+        .nav-btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .config-text {
+            color: #666;
+            font-size: 11px;
+            margin-left: 5px;
+        }
+        
+        .leather-color-section {
+            margin-top: 5px;
+            padding: 5px;
+            background: #f8f9fa;
+            border: 1px dashed #ddd;
+            border-radius: 3px;
+        }
+        
+        .color-preview-box {
+            width: 25px;
+            height: 25px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            margin-left: 5px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin: 5px 0;
+        }
+        
+        .creeper-options {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e8f4fd;
+            border: 1px solid #b8daff;
+            border-radius: 3px;
+        }
+        
+        .mob-type-options {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-top: 5px;
+        }
+        
+        .mob-option-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
         @media (max-width: 600px) {
             body {
                 padding: 5px;
                 font-size: 12px;
-            }
-            
-            .controls {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            .navigation-controls {
-                margin-left: 0;
-                width: 100%;
-                justify-content: center;
             }
             
             label {
@@ -310,16 +340,16 @@
     <div class="container">
         <h1>Editor de Mobs</h1>
         
+        <div class="top-buttons">
+            <button id="export-config">Exportar Config</button>
+            <button id="import-config">Importar Config</button>
+            <button id="download-config">Descargar</button>
+        </div>
+        
         <div class="controls">
-            <div>
+            <div class="row">
                 <button id="add-variable">Añadir Variable</button>
                 <span id="variable-count">Variables: 1/100</span>
-            </div>
-            
-            <div class="navigation-controls">
-                <button id="prev-page" class="nav-btn">◀ Anterior</button>
-                <span class="page-info" id="page-info">Página 1 de 1</span>
-                <button id="next-page" class="nav-btn">Siguiente ▶</button>
             </div>
         </div>
         
@@ -327,17 +357,10 @@
             <!-- Las variables se generarán aquí dinámicamente -->
         </div>
         
-        <div class="section">
-            <h3>Exportar/Importar Configuración</h3>
-            <div class="export-buttons">
-                <button id="export-config">Exportar Config.xyz</button>
-                <button id="import-config">Importar Config.xyz</button>
-            </div>
-            <textarea id="config-json" placeholder="Contenido del archivo .xyz aparecerá aquí..."></textarea>
-            <div style="margin-top: 10px;">
-                <button id="download-config">Descargar Config.xyz</button>
-                <button id="load-from-text">Cargar desde Texto</button>
-            </div>
+        <div class="page-controls">
+            <button id="prev-page" class="nav-btn">Anterior</button>
+            <span class="page-info" id="page-info">Página 1 de 1</span>
+            <button id="next-page" class="nav-btn">Siguiente</button>
         </div>
     </div>
 
@@ -355,6 +378,32 @@
         let nextVariableId = 1;
         let currentPage = 1;
         const itemsPerPage = 5;
+        let updateTimeout = null;
+
+        // Función para convertir decimal a hexadecimal
+        function decimalToHex(decimal) {
+            // Si ya es hexadecimal, devolverlo
+            if (typeof decimal === 'string' && decimal.startsWith('#')) {
+                return decimal;
+            }
+            
+            // Convertir decimal a hexadecimal
+            const num = parseInt(decimal);
+            if (isNaN(num)) return '#A06540';
+            
+            // Asegurar que esté en el rango correcto
+            const clamped = Math.max(0, Math.min(16777215, num));
+            const hex = clamped.toString(16).toUpperCase().padStart(6, '0');
+            return '#' + hex;
+        }
+
+        // Función para convertir hexadecimal a decimal
+        function hexToDecimal(hex) {
+            if (!hex.startsWith('#')) return 21951; // Valor por defecto
+            
+            const hexNum = hex.substring(1);
+            return parseInt(hexNum, 16);
+        }
 
         // Clase para manejar cada variable
         class Variable {
@@ -370,11 +419,19 @@
                 this.replace = 'no';
                 this.mobCustom = 'no';
                 this.mobNothing = 'no';
+                
+                // Opciones especiales para creeper
+                this.creeperOptions = {
+                    explosionDamage: 3,
+                    explosionTime: 1.5,
+                    powered: false
+                };
+                
                 this.items = {
-                    helmet: { name: '', enchantments: [] },
-                    chestplate: { name: '', enchantments: [] },
-                    leggings: { name: '', enchantments: [] },
-                    boots: { name: '', enchantments: [] },
+                    helmet: { name: '', enchantments: [], leatherColor: 21951 }, // Decimal por defecto
+                    chestplate: { name: '', enchantments: [], leatherColor: 21951 },
+                    leggings: { name: '', enchantments: [], leatherColor: 21951 },
+                    boots: { name: '', enchantments: [], leatherColor: 21951 },
                     mainhand: { name: '', enchantments: [] },
                     offhand: { name: '', enchantments: [] }
                 };
@@ -389,11 +446,12 @@
                     nameMode: 'junto',
                     nameLetters: [],
                     nameColor: '#FF0000',
+                    mobType: 'custom', // 'custom' o 'none'
                     items: {
-                        helmet: { name: '', enchantments: [] },
-                        chestplate: { name: '', enchantments: [] },
-                        leggings: { name: '', enchantments: [] },
-                        boots: { name: '', enchantments: [] },
+                        helmet: { name: '', enchantments: [], leatherColor: 21951 },
+                        chestplate: { name: '', enchantments: [], leatherColor: 21951 },
+                        leggings: { name: '', enchantments: [], leatherColor: 21951 },
+                        boots: { name: '', enchantments: [], leatherColor: 21951 },
                         mainhand: { name: '', enchantments: [] },
                         offhand: { name: '', enchantments: [] }
                     },
@@ -401,8 +459,22 @@
                 };
             }
             
-            getReplaceStatus() {
-                return this.replace === 'si' ? 'Sí' : 'No';
+            // Comprobar si un item es de cuero
+            isLeatherItem(itemName) {
+                return itemName && (
+                    itemName.toLowerCase().includes('leather_') || 
+                    itemName.toLowerCase().includes('cuero') ||
+                    itemName.toLowerCase().includes('leather ') ||
+                    itemName.toLowerCase() === 'leather_helmet' ||
+                    itemName.toLowerCase() === 'leather_chestplate' ||
+                    itemName.toLowerCase() === 'leather_leggings' ||
+                    itemName.toLowerCase() === 'leather_boots'
+                );
+            }
+            
+            // Comprobar si es un creeper
+            isCreeper() {
+                return this.typeMob.toLowerCase().includes('creeper');
             }
             
             getConfigString() {
@@ -413,18 +485,32 @@
                 config += `Mob Custom: ${this.mobCustom}\n`;
                 config += `Mob Sin Nada: ${this.mobNothing}\n`;
                 
+                // Opciones especiales para creeper
+                if (this.isCreeper()) {
+                    config += `\n--- Opciones Creeper ---\n`;
+                    config += `Daño explosión: ${this.creeperOptions.explosionDamage}\n`;
+                    config += `Tiempo explosión: ${this.creeperOptions.explosionTime}\n`;
+                    config += `Eléctrico: ${this.creeperOptions.powered ? 'Sí' : 'No'}\n`;
+                }
+                
                 if (this.replace === 'no') {
                     config += `\n--- Mob Principal ---\n`;
                     config += `Nombre: ${this.mobName}\n`;
                     config += `Modo nombre: ${this.nameMode}\n`;
                     if (this.nameMode === 'junto') {
                         config += `Color: ${this.nameColor}\n`;
+                    } else if (this.nameMode === 'separado') {
+                        config += `Letras: ${this.nameLetters.map(l => `${l.letter}(${l.color})`).join(' ')}\n`;
                     }
                     
                     config += `\n--- Items ---\n`;
                     for (const [itemKey, item] of Object.entries(this.items)) {
                         if (item.name) {
                             config += `${itemKey}: ${item.name}\n`;
+                            if (item.leatherColor && this.isLeatherItem(item.name)) {
+                                config += `  Color cuero (decimal): ${item.leatherColor}\n`;
+                                config += `  Color cuero (hex): ${decimalToHex(item.leatherColor)}\n`;
+                            }
                             if (item.enchantments.length > 0) {
                                 item.enchantments.forEach(enc => {
                                     config += `  Encantamiento: ${enc.name} (Nivel ${enc.level})\n`;
@@ -453,29 +539,41 @@
             }
             
             getMobConfigString(mobData, label) {
-                let config = `Nombre: ${mobData.mobName}\n`;
-                config += `Modo nombre: ${mobData.nameMode}\n`;
-                if (mobData.nameMode === 'junto') {
-                    config += `Color: ${mobData.nameColor}\n`;
-                }
+                let config = `Tipo: ${mobData.mobType}\n`;
                 
-                config += `\nItems ${label}:\n`;
-                for (const [itemKey, item] of Object.entries(mobData.items)) {
-                    if (item.name) {
-                        config += `  ${itemKey}: ${item.name}\n`;
-                        if (item.enchantments.length > 0) {
-                            item.enchantments.forEach(enc => {
-                                config += `    Encantamiento: ${enc.name} (Nivel ${enc.level})\n`;
-                            });
+                if (mobData.mobType === 'custom') {
+                    config += `Nombre: ${mobData.mobName}\n`;
+                    config += `Modo nombre: ${mobData.nameMode}\n`;
+                    if (mobData.nameMode === 'junto') {
+                        config += `Color: ${mobData.nameColor}\n`;
+                    } else if (mobData.nameMode === 'separado') {
+                        config += `Letras: ${mobData.nameLetters.map(l => `${l.letter}(${l.color})`).join(' ')}\n`;
+                    }
+                    
+                    config += `\nItems ${label}:\n`;
+                    for (const [itemKey, item] of Object.entries(mobData.items)) {
+                        if (item.name) {
+                            config += `  ${itemKey}: ${item.name}\n`;
+                            if (item.leatherColor && this.isLeatherItem(item.name)) {
+                                config += `    Color cuero (decimal): ${item.leatherColor}\n`;
+                                config += `    Color cuero (hex): ${decimalToHex(item.leatherColor)}\n`;
+                            }
+                            if (item.enchantments.length > 0) {
+                                item.enchantments.forEach(enc => {
+                                    config += `    Encantamiento: ${enc.name} (Nivel ${enc.level})\n`;
+                                });
+                            }
                         }
                     }
-                }
-                
-                if (mobData.effects.length > 0) {
-                    config += `\nEfectos ${label}:\n`;
-                    mobData.effects.forEach(effect => {
-                        config += `  ${effect.name}: Duración ${effect.duration}, Amplificador ${effect.amplifier}\n`;
-                    });
+                    
+                    if (mobData.effects.length > 0) {
+                        config += `\nEfectos ${label}:\n`;
+                        mobData.effects.forEach(effect => {
+                            config += `  ${effect.name}: Duración ${effect.duration}, Amplificador ${effect.amplifier}\n`;
+                        });
+                    }
+                } else {
+                    config += `Sin contenido personalizado\n`;
                 }
                 
                 return config;
@@ -495,6 +593,7 @@
             const variable = new Variable(nextVariableId++);
             variables.push(variable);
             updateVariableCount();
+            updateNavigation();
             renderVariables();
         }
 
@@ -524,6 +623,11 @@
             document.getElementById('page-info').textContent = `Página ${currentPage} de ${totalPages}`;
             document.getElementById('prev-page').disabled = currentPage === 1;
             document.getElementById('next-page').disabled = currentPage === totalPages || totalPages === 0;
+            
+            if (getCurrentPageVariables().length === 0 && currentPage > 1) {
+                currentPage--;
+                updateNavigation();
+            }
         }
 
         // Obtener variables para la página actual
@@ -546,7 +650,7 @@
             });
             
             if (pageVariables.length === 0) {
-                container.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">No hay variables en esta página</div>';
+                container.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">No hay variables</div>';
             }
         }
 
@@ -557,14 +661,23 @@
             div.className = 'variable';
             div.id = `variable-${variable.id}`;
             
-            const replaceStatus = variable.getReplaceStatus();
-            const statusClass = variable.replace === 'si' ? 'yes' : 'no';
+            let configText = '';
+            if (variable.replace === 'si') {
+                if (variable.mobCustom === 'si') {
+                    configText = 'Mob Arriba y Mob Abajo';
+                } else if (variable.mobNothing === 'si') {
+                    configText = 'Sin contenido';
+                }
+            } else {
+                configText = 'Nombre normal';
+            }
             
             div.innerHTML = `
                 <div class="variable-header" onclick="toggleVariable(${variable.id})">
                     <div>
                         <strong>Variable ${globalIndex + 1}</strong>
-                        <span class="status-badge ${statusClass}">Reemplazar: ${replaceStatus}</span>
+                        <span class="status-badge ${variable.replace === 'si' ? 'yes' : 'no'}">Reemplazar: ${variable.replace === 'si' ? 'Sí' : 'No'}</span>
+                        <span class="config-text">${configText}</span>
                     </div>
                     <div>
                         <button class="delete-variable-btn" onclick="event.stopPropagation(); removeVariable(${variable.id})">Eliminar</button>
@@ -589,30 +702,57 @@
                     <div class="row">
                         <label>Tipo Mob:</label>
                         <input type="text" value="${variable.typeMob}" 
-                               onchange="updateVariable(${variable.id}, 'typeMob', this.value)" 
-                               oninput="syncGlobalValue('typeMob', this.value)">
+                               onchange="queueUpdate(${variable.id}, 'typeMob', this.value)" 
+                               oninput="queueSyncGlobal('typeMob', this.value)">
                     </div>
                     <div class="row">
                         <label>Nombre archivo:</label>
                         <input type="text" value="${variable.fileName}" 
-                               onchange="updateVariable(${variable.id}, 'fileName', this.value)"
-                               oninput="syncGlobalValue('fileName', this.value)">
+                               onchange="queueUpdate(${variable.id}, 'fileName', this.value)"
+                               oninput="queueSyncGlobal('fileName', this.value)">
                     </div>
                 </div>
-                
+            `;
+            
+            // Opciones especiales para creeper
+            if (variable.isCreeper()) {
+                content += `
+                    <div class="creeper-options">
+                        <h4>Opciones de Creeper</h4>
+                        <div class="row">
+                            <label>Daño explosión:</label>
+                            <input type="number" value="${variable.creeperOptions.explosionDamage}" min="0" max="100"
+                                   onchange="queueUpdateCreeperOption(${variable.id}, 'explosionDamage', this.value)">
+                        </div>
+                        <div class="row">
+                            <label>Tiempo explosión:</label>
+                            <input type="number" value="${variable.creeperOptions.explosionTime}" min="0.1" max="10" step="0.1"
+                                   onchange="queueUpdateCreeperOption(${variable.id}, 'explosionTime', this.value)">
+                        </div>
+                        <div class="checkbox-option">
+                            <input type="checkbox" id="powered-${variable.id}" 
+                                   ${variable.creeperOptions.powered ? 'checked' : ''}
+                                   onchange="queueUpdateCreeperOption(${variable.id}, 'powered', this.checked)">
+                            <label for="powered-${variable.id}">Eléctrico (powered)</label>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            content += `
                 <div class="section">
                     <h4>Reemplazar</h4>
                     <div class="radio-group">
                         <div class="radio-option">
                             <input type="radio" name="replace-${variable.id}" 
                                    value="no" ${variable.replace === 'no' ? 'checked' : ''}
-                                   onchange="updateVariable(${variable.id}, 'replace', this.value); renderVariables()">
+                                   onchange="queueUpdate(${variable.id}, 'replace', this.value); delayedRender()">
                             <label>No</label>
                         </div>
                         <div class="radio-option">
                             <input type="radio" name="replace-${variable.id}" 
                                    value="si" ${variable.replace === 'si' ? 'checked' : ''}
-                                   onchange="updateVariable(${variable.id}, 'replace', this.value); renderVariables()">
+                                   onchange="queueUpdate(${variable.id}, 'replace', this.value); delayedRender()">
                             <label>Sí</label>
                         </div>
                     </div>
@@ -628,30 +768,13 @@
                                 <div class="radio-option">
                                     <input type="radio" name="mob-custom-${variable.id}" 
                                            value="no" ${variable.mobCustom === 'no' ? 'checked' : ''}
-                                           onchange="updateVariable(${variable.id}, 'mobCustom', this.value); updateVariable(${variable.id}, 'mobNothing', 'si'); renderVariables()">
+                                           onchange="queueUpdate(${variable.id}, 'mobCustom', this.value); queueUpdate(${variable.id}, 'mobNothing', 'si'); delayedRender()">
                                     <label>No</label>
                                 </div>
                                 <div class="radio-option">
                                     <input type="radio" name="mob-custom-${variable.id}" 
                                            value="si" ${variable.mobCustom === 'si' ? 'checked' : ''}
-                                           onchange="updateVariable(${variable.id}, 'mobCustom', this.value); updateVariable(${variable.id}, 'mobNothing', 'no'); renderVariables()">
-                                    <label>Sí</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <label>Mob sin nada:</label>
-                            <div class="radio-group">
-                                <div class="radio-option">
-                                    <input type="radio" name="mob-nothing-${variable.id}" 
-                                           value="no" ${variable.mobNothing === 'no' ? 'checked' : ''}
-                                           onchange="updateVariable(${variable.id}, 'mobNothing', this.value); updateVariable(${variable.id}, 'mobCustom', 'si'); renderVariables()">
-                                    <label>No</label>
-                                </div>
-                                <div class="radio-option">
-                                    <input type="radio" name="mob-nothing-${variable.id}" 
-                                           value="si" ${variable.mobNothing === 'si' ? 'checked' : ''}
-                                           onchange="updateVariable(${variable.id}, 'mobNothing', this.value); updateVariable(${variable.id}, 'mobCustom', 'no'); renderVariables()">
+                                           onchange="queueUpdate(${variable.id}, 'mobCustom', this.value); queueUpdate(${variable.id}, 'mobNothing', 'no'); delayedRender()">
                                     <label>Sí</label>
                                 </div>
                             </div>
@@ -671,15 +794,17 @@
                     <div class="mob-sections">
                         <div class="mob-section">
                             <h4>Mob Arriba</h4>
-                            ${createMobNameSection(variable, 'top')}
-                            ${createItemsSection(variable, 'top')}
-                            ${createEffectsSection(variable, 'top')}
+                            ${createMobTypeOptions(variable, 'top')}
+                            ${variable.mobTop.mobType === 'custom' ? createMobNameSection(variable, 'top') : ''}
+                            ${variable.mobTop.mobType === 'custom' ? createItemsSection(variable, 'top') : ''}
+                            ${variable.mobTop.mobType === 'custom' ? createEffectsSection(variable, 'top') : ''}
                         </div>
                         <div class="mob-section">
                             <h4>Mob Abajo</h4>
-                            ${createMobNameSection(variable, 'bottom')}
-                            ${createItemsSection(variable, 'bottom')}
-                            ${createEffectsSection(variable, 'bottom')}
+                            ${createMobTypeOptions(variable, 'bottom')}
+                            ${variable.mobBottom.mobType === 'custom' ? createMobNameSection(variable, 'bottom') : ''}
+                            ${variable.mobBottom.mobType === 'custom' ? createItemsSection(variable, 'bottom') : ''}
+                            ${variable.mobBottom.mobType === 'custom' ? createEffectsSection(variable, 'bottom') : ''}
                         </div>
                     </div>
                 `;
@@ -694,6 +819,28 @@
             }
             
             return content;
+        }
+
+        // Crear opciones de tipo para mob arriba/abajo
+        function createMobTypeOptions(variable, type) {
+            const mobData = type === 'top' ? variable.mobTop : variable.mobBottom;
+            
+            return `
+                <div class="mob-type-options">
+                    <div class="mob-option-row">
+                        <input type="radio" name="mob-type-${type}-${variable.id}" 
+                               value="custom" ${mobData.mobType === 'custom' ? 'checked' : ''}
+                               onchange="queueUpdateMobData(${variable.id}, '${type}', 'mobType', this.value); delayedRender()">
+                        <label>Custom (con nombre, items y efectos)</label>
+                    </div>
+                    <div class="mob-option-row">
+                        <input type="radio" name="mob-type-${type}-${variable.id}" 
+                               value="none" ${mobData.mobType === 'none' ? 'checked' : ''}
+                               onchange="queueUpdateMobData(${variable.id}, '${type}', 'mobType', this.value); delayedRender()">
+                        <label>Sin nada</label>
+                    </div>
+                </div>
+            `;
         }
 
         // Crear sección de nombre del mob
@@ -711,7 +858,7 @@
                         letter: letter,
                         color: '#FF0000'
                     }));
-                    updateMobData(variable.id, type, 'nameLetters', letters);
+                    queueUpdateMobData(variable.id, type, 'nameLetters', letters);
                 }
                 
                 lettersHtml = '<div class="letter-container">';
@@ -720,9 +867,9 @@
                         <div style="display: flex; flex-direction: column; align-items: center;">
                             <div class="letter-box" style="background-color: ${letterObj.color};">${letterObj.letter}</div>
                             <input type="text" value="${letterObj.letter}" maxlength="1" style="width: 30px; padding: 2px;"
-                                   onchange="updateLetter(${variable.id}, '${type}', ${index}, 'letter', this.value)">
+                                   onchange="queueUpdateLetter(${variable.id}, '${type}', ${index}, 'letter', this.value)">
                             <input type="color" value="${letterObj.color}" style="width: 30px; height: 20px; padding: 0;"
-                                   onchange="updateLetter(${variable.id}, '${type}', ${index}, 'color', this.value)">
+                                   onchange="queueUpdateLetter(${variable.id}, '${type}', ${index}, 'color', this.value)">
                         </div>
                     `;
                 });
@@ -733,14 +880,14 @@
                 <div class="row">
                     <label>Color:</label>
                     <input type="color" value="${mobData.nameColor}" 
-                           onchange="updateMobData(${variable.id}, '${type}', 'nameColor', this.value)">
+                           onchange="queueUpdateMobData(${variable.id}, '${type}', 'nameColor', this.value)">
                     <input type="text" value="${mobData.nameColor}" style="width: 80px;"
-                           onchange="updateMobData(${variable.id}, '${type}', 'nameColor', this.value)">
+                           onchange="queueUpdateMobData(${variable.id}, '${type}', 'nameColor', this.value)">
                 </div>
                 <div class="color-picker">
                     ${predefinedColors.map(color => `
                         <div class="color-option" style="background-color: ${color};" 
-                             onclick="updateMobData(${variable.id}, '${type}', 'nameColor', '${color}')"></div>
+                             onclick="queueUpdateMobData(${variable.id}, '${type}', 'nameColor', '${color}')"></div>
                     `).join('')}
                 </div>
             ` : '';
@@ -751,7 +898,7 @@
                     <div class="row">
                         <label>Nombre:</label>
                         <input type="text" value="${mobData.mobName}" 
-                               onchange="updateMobData(${variable.id}, '${type}', 'mobName', this.value)">
+                               onchange="queueUpdateMobData(${variable.id}, '${type}', 'mobName', this.value)">
                     </div>
                     <div class="row">
                         <label>Modo:</label>
@@ -759,13 +906,13 @@
                             <div class="radio-option">
                                 <input type="radio" name="name-mode-${type}-${variable.id}" 
                                        value="separado" ${mobData.nameMode === 'separado' ? 'checked' : ''}
-                                       onchange="updateMobData(${variable.id}, '${type}', 'nameMode', this.value); renderVariables()">
+                                       onchange="queueUpdateMobData(${variable.id}, '${type}', 'nameMode', this.value); delayedRender()">
                                 <label>Separado</label>
                             </div>
                             <div class="radio-option">
                                 <input type="radio" name="name-mode-${type}-${variable.id}" 
                                        value="junto" ${mobData.nameMode === 'junto' ? 'checked' : ''}
-                                       onchange="updateMobData(${variable.id}, '${type}', 'nameMode', this.value); renderVariables()">
+                                       onchange="queueUpdateMobData(${variable.id}, '${type}', 'nameMode', this.value); delayedRender()">
                                 <label>Junto</label>
                             </div>
                         </div>
@@ -793,29 +940,69 @@
             
             itemTypes.forEach(itemType => {
                 const item = mobData.items[itemType.key];
+                const isLeather = variable.isLeatherItem(item.name);
+                const leatherColorHex = decimalToHex(item.leatherColor || 21951);
+                
                 html += `
                     <div class="item-section">
                         <div class="row">
                             <label>${itemType.label}:</label>
                             <input type="text" value="${item.name}" 
-                                   onchange="updateItem(${variable.id}, '${type}', '${itemType.key}', 'name', this.value)">
+                                   onchange="queueUpdateItem(${variable.id}, '${type}', '${itemType.key}', 'name', this.value)">
                         </div>
+                        ${isLeather ? createLeatherColorSection(variable, type, itemType.key, item) : ''}
                         ${item.enchantments.map((enchant, index) => `
                             <div class="enchantment">
                                 <input type="text" value="${enchant.name}" placeholder="Encantamiento"
-                                       onchange="updateEnchantment(${variable.id}, '${type}', '${itemType.key}', ${index}, 'name', this.value)">
+                                       onchange="queueUpdateEnchantment(${variable.id}, '${type}', '${itemType.key}', ${index}, 'name', this.value)">
                                 <input type="number" value="${enchant.level}" min="1" max="255" placeholder="Nivel"
-                                       onchange="updateEnchantment(${variable.id}, '${type}', '${itemType.key}', ${index}, 'level', this.value)">
-                                <button class="delete" onclick="removeEnchantment(${variable.id}, '${type}', '${itemType.key}', ${index})">Eliminar</button>
+                                       onchange="queueUpdateEnchantment(${variable.id}, '${type}', '${itemType.key}', ${index}, 'level', this.value)">
+                                <button class="delete" onclick="queueRemoveEnchantment(${variable.id}, '${type}', '${itemType.key}', ${index})">Eliminar</button>
                             </div>
                         `).join('')}
-                        <button class="add" onclick="addEnchantment(${variable.id}, '${type}', '${itemType.key}')">+ Encantamiento</button>
+                        <button class="add" onclick="queueAddEnchantment(${variable.id}, '${type}', '${itemType.key}')">+ Encantamiento</button>
                     </div>
                 `;
             });
             
             html += '</div>';
             return html;
+        }
+
+        // Crear sección de color para items de cuero
+        function createLeatherColorSection(variable, type, itemType, item) {
+            const itemData = type === 'top' ? variable.mobTop.items[itemType] :
+                           type === 'bottom' ? variable.mobBottom.items[itemType] :
+                           variable.items[itemType];
+            
+            const decimalValue = itemData.leatherColor || 21951;
+            const hexValue = decimalToHex(decimalValue);
+            
+            return `
+                <div class="leather-color-section">
+                    <div class="row">
+                        <label>Color cuero (decimal):</label>
+                        <input type="number" value="${decimalValue}" min="0" max="16777215"
+                               onchange="queueUpdateLeatherColor(${variable.id}, '${type}', '${itemType}', 'leatherColor', parseInt(this.value))">
+                    </div>
+                    <div class="row">
+                        <label>Color cuero (hex):</label>
+                        <input type="text" value="${hexValue}" style="width: 80px;"
+                               onchange="queueUpdateLeatherColor(${variable.id}, '${type}', '${itemType}', 'leatherColor', hexToDecimal(this.value))">
+                        <div class="color-preview-box" style="background-color: ${hexValue};"></div>
+                    </div>
+                    <div class="color-picker">
+                        ${predefinedColors.map(color => `
+                            <div class="color-option" style="background-color: ${color};" 
+                                 onclick="queueUpdateLeatherColor(${variable.id}, '${type}', '${itemType}', 'leatherColor', hexToDecimal('${color}'))"></div>
+                        `).join('')}
+                    </div>
+                    <div style="font-size: 11px; color: #666; margin-top: 5px;">
+                        Nota: Minecraft usa valores decimales (0-16777215).<br>
+                        Ejemplo: 21951 = #0055FF (azul), 16711680 = #FF0000 (rojo)
+                    </div>
+                </div>
+            `;
         }
 
         // Crear sección de efectos
@@ -829,43 +1016,63 @@
                     ${mobData.effects.map((effect, index) => `
                         <div class="effect">
                             <input type="text" value="${effect.name}" placeholder="Efecto"
-                                   onchange="updateEffect(${variable.id}, '${type}', ${index}, 'name', this.value)">
+                                   onchange="queueUpdateEffect(${variable.id}, '${type}', ${index}, 'name', this.value)">
                             <input type="text" value="${effect.duration}" placeholder="Duración"
-                                   onchange="updateEffect(${variable.id}, '${type}', ${index}, 'duration', this.value)">
+                                   onchange="queueUpdateEffect(${variable.id}, '${type}', ${index}, 'duration', this.value)">
                             <input type="number" value="${effect.amplifier}" min="0" max="255" placeholder="Amplificador"
-                                   onchange="updateEffect(${variable.id}, '${type}', ${index}, 'amplifier', this.value)">
-                            <button class="delete" onclick="removeEffect(${variable.id}, '${type}', ${index})">Eliminar</button>
+                                   onchange="queueUpdateEffect(${variable.id}, '${type}', ${index}, 'amplifier', this.value)">
+                            <button class="delete" onclick="queueRemoveEffect(${variable.id}, '${type}', ${index})">Eliminar</button>
                         </div>
                     `).join('')}
-                    <button class="add" onclick="addEffect(${variable.id}, '${type}')">+ Efecto</button>
+                    <button class="add" onclick="queueAddEffect(${variable.id}, '${type}')">+ Efecto</button>
                 </div>
             `;
         }
 
-        // Generar contenido del archivo .xyz
-        function generateXYZContent() {
-            let content = `=== CONFIGURACIÓN DE MOBS ===\n`;
-            content += `Fecha: ${new Date().toLocaleString()}\n`;
-            content += `Total variables: ${variables.length}\n`;
-            content += `================================\n\n`;
+        // Generar contenido del archivo .mcfunction
+        function generateMCFunctionContent() {
+            let fileName = 'mob_config';
+            if (variables.length > 0 && variables[0].fileName) {
+                fileName = variables[0].fileName;
+            }
+            
+            let content = `# ${fileName}.mcfunction\n`;
+            content += `# Generado automáticamente\n`;
+            content += `# Fecha: ${new Date().toLocaleString()}\n\n`;
             
             variables.forEach((variable, index) => {
+                content += `# Variable ${index + 1}\n`;
                 content += variable.getConfigString();
             });
             
             return content;
         }
 
-        // Funciones globales
-        window.updateVariable = function(variableId, field, value) {
+        // Actualizaciones en segundo plano
+        function queueUpdate(variableId, field, value) {
             const variable = variables.find(v => v.id === variableId);
             if (variable) {
                 variable[field] = value;
-                renderVariables();
             }
-        };
+            delayedRender();
+        }
 
-        window.updateMobData = function(variableId, type, field, value) {
+        function queueUpdateCreeperOption(variableId, field, value) {
+            const variable = variables.find(v => v.id === variableId);
+            if (variable) {
+                variable.creeperOptions[field] = value;
+            }
+            delayedRender();
+        }
+
+        function queueSyncGlobal(field, value) {
+            variables.forEach(variable => {
+                variable[field] = value;
+            });
+            delayedRender();
+        }
+
+        function queueUpdateMobData(variableId, type, field, value) {
             const variable = variables.find(v => v.id === variableId);
             if (!variable) return;
             
@@ -888,9 +1095,11 @@
                     }));
                 }
             }
-        };
+            
+            delayedRender();
+        }
 
-        window.updateLetter = function(variableId, type, index, field, value) {
+        function queueUpdateLetter(variableId, type, index, field, value) {
             const variable = variables.find(v => v.id === variableId);
             if (!variable) return;
             
@@ -904,11 +1113,11 @@
                     mobData.mobName = mobData.nameLetters.map(l => l.letter).join('');
                 }
                 
-                renderVariables();
+                delayedRender();
             }
-        };
+        }
 
-        window.updateItem = function(variableId, type, itemType, field, value) {
+        function queueUpdateItem(variableId, type, itemType, field, value) {
             const variable = variables.find(v => v.id === variableId);
             if (!variable) return;
             
@@ -916,9 +1125,29 @@
                           type === 'bottom' ? variable.mobBottom : variable;
             
             mobData.items[itemType][field] = value;
-        };
+            
+            if (field === 'name') {
+                const isLeather = variable.isLeatherItem(value);
+                if (isLeather && !mobData.items[itemType].leatherColor) {
+                    mobData.items[itemType].leatherColor = 21951;
+                }
+            }
+            
+            delayedRender();
+        }
 
-        window.addEnchantment = function(variableId, type, itemType) {
+        function queueUpdateLeatherColor(variableId, type, itemType, field, value) {
+            const variable = variables.find(v => v.id === variableId);
+            if (!variable) return;
+            
+            const mobData = type === 'top' ? variable.mobTop : 
+                          type === 'bottom' ? variable.mobBottom : variable;
+            
+            mobData.items[itemType][field] = value;
+            delayedRender();
+        }
+
+        function queueAddEnchantment(variableId, type, itemType) {
             const variable = variables.find(v => v.id === variableId);
             if (!variable) return;
             
@@ -930,10 +1159,10 @@
                 level: 1
             });
             
-            renderVariables();
-        };
+            delayedRender();
+        }
 
-        window.updateEnchantment = function(variableId, type, itemType, index, field, value) {
+        function queueUpdateEnchantment(variableId, type, itemType, index, field, value) {
             const variable = variables.find(v => v.id === variableId);
             if (!variable) return;
             
@@ -943,9 +1172,11 @@
             if (mobData.items[itemType].enchantments[index]) {
                 mobData.items[itemType].enchantments[index][field] = value;
             }
-        };
+            
+            delayedRender();
+        }
 
-        window.removeEnchantment = function(variableId, type, itemType, index) {
+        function queueRemoveEnchantment(variableId, type, itemType, index) {
             const variable = variables.find(v => v.id === variableId);
             if (!variable) return;
             
@@ -953,10 +1184,10 @@
                           type === 'bottom' ? variable.mobBottom : variable;
             
             mobData.items[itemType].enchantments.splice(index, 1);
-            renderVariables();
-        };
+            delayedRender();
+        }
 
-        window.addEffect = function(variableId, type) {
+        function queueAddEffect(variableId, type) {
             const variable = variables.find(v => v.id === variableId);
             if (!variable) return;
             
@@ -969,10 +1200,10 @@
                 amplifier: 1
             });
             
-            renderVariables();
-        };
+            delayedRender();
+        }
 
-        window.updateEffect = function(variableId, type, index, field, value) {
+        function queueUpdateEffect(variableId, type, index, field, value) {
             const variable = variables.find(v => v.id === variableId);
             if (!variable) return;
             
@@ -982,9 +1213,11 @@
             if (mobData.effects[index]) {
                 mobData.effects[index][field] = value;
             }
-        };
+            
+            delayedRender();
+        }
 
-        window.removeEffect = function(variableId, type, index) {
+        function queueRemoveEffect(variableId, type, index) {
             const variable = variables.find(v => v.id === variableId);
             if (!variable) return;
             
@@ -992,9 +1225,20 @@
                           type === 'bottom' ? variable.mobBottom : variable;
             
             mobData.effects.splice(index, 1);
-            renderVariables();
-        };
+            delayedRender();
+        }
 
+        function delayedRender() {
+            if (updateTimeout) {
+                clearTimeout(updateTimeout);
+            }
+            updateTimeout = setTimeout(() => {
+                renderVariables();
+                updateTimeout = null;
+            }, 300);
+        }
+
+        // Funciones globales
         window.toggleVariable = function(variableId) {
             const variable = variables.find(v => v.id === variableId);
             if (variable) {
@@ -1003,11 +1247,140 @@
             }
         };
 
-        window.syncGlobalValue = function(field, value) {
-            variables.forEach(variable => {
-                variable[field] = value;
+        window.decimalToHex = decimalToHex;
+        window.hexToDecimal = hexToDecimal;
+
+        // Importar configuración mejorada
+        function importConfiguration(config) {
+            if (!config.variables || !Array.isArray(config.variables)) {
+                throw new Error('Formato de configuración inválido');
+            }
+            
+            variables = [];
+            nextVariableId = 1;
+            
+            config.variables.forEach(varData => {
+                const variable = new Variable(nextVariableId++);
+                
+                Object.keys(varData).forEach(key => {
+                    if (key !== 'items' && key !== 'effects' && key !== 'mobTop' && key !== 'mobBottom' && 
+                        key !== 'nameLetters' && key !== 'creeperOptions') {
+                        variable[key] = varData[key];
+                    }
+                });
+                
+                // Importar opciones de creeper
+                if (varData.creeperOptions) {
+                    variable.creeperOptions = {
+                        explosionDamage: varData.creeperOptions.explosionDamage || 3,
+                        explosionTime: varData.creeperOptions.explosionTime || 1.5,
+                        powered: varData.creeperOptions.powered || false
+                    };
+                }
+                
+                // Importar items
+                if (varData.items) {
+                    Object.keys(varData.items).forEach(itemKey => {
+                        if (variable.items[itemKey]) {
+                            variable.items[itemKey].name = varData.items[itemKey].name || '';
+                            variable.items[itemKey].leatherColor = varData.items[itemKey].leatherColor || 21951;
+                            
+                            if (varData.items[itemKey].enchantments && Array.isArray(varData.items[itemKey].enchantments)) {
+                                variable.items[itemKey].enchantments = varData.items[itemKey].enchantments.map(enc => ({
+                                    name: enc.name || '',
+                                    level: enc.level || 1
+                                }));
+                            }
+                        }
+                    });
+                }
+                
+                // Importar efectos
+                if (varData.effects && Array.isArray(varData.effects)) {
+                    variable.effects = varData.effects.map(effect => ({
+                        name: effect.name || '',
+                        duration: effect.duration || 'infinite',
+                        amplifier: effect.amplifier || 1
+                    }));
+                }
+                
+                // Importar mobTop y mobBottom
+                if (varData.mobTop) {
+                    variable.mobTop = importMobData(varData.mobTop);
+                }
+                
+                if (varData.mobBottom) {
+                    variable.mobBottom = importMobData(varData.mobBottom);
+                }
+                
+                // Importar nameLetters
+                if (varData.nameLetters && Array.isArray(varData.nameLetters)) {
+                    variable.nameLetters = varData.nameLetters.map(letter => ({
+                        letter: letter.letter || '',
+                        color: letter.color || '#FF0000'
+                    }));
+                }
+                
+                variables.push(variable);
             });
-        };
+            
+            updateVariableCount();
+            currentPage = 1;
+            updateNavigation();
+            renderVariables();
+        }
+
+        function importMobData(mobData) {
+            const newMobData = {
+                mobName: mobData.mobName || 'Mob',
+                nameMode: mobData.nameMode || 'junto',
+                nameLetters: [],
+                nameColor: mobData.nameColor || '#FF0000',
+                mobType: mobData.mobType || 'custom',
+                items: {
+                    helmet: { name: '', enchantments: [], leatherColor: 21951 },
+                    chestplate: { name: '', enchantments: [], leatherColor: 21951 },
+                    leggings: { name: '', enchantments: [], leatherColor: 21951 },
+                    boots: { name: '', enchantments: [], leatherColor: 21951 },
+                    mainhand: { name: '', enchantments: [] },
+                    offhand: { name: '', enchantments: [] }
+                },
+                effects: []
+            };
+            
+            if (mobData.nameLetters && Array.isArray(mobData.nameLetters)) {
+                newMobData.nameLetters = mobData.nameLetters.map(letter => ({
+                    letter: letter.letter || '',
+                    color: letter.color || '#FF0000'
+                }));
+            }
+            
+            if (mobData.items) {
+                Object.keys(mobData.items).forEach(itemKey => {
+                    if (newMobData.items[itemKey]) {
+                        newMobData.items[itemKey].name = mobData.items[itemKey].name || '';
+                        newMobData.items[itemKey].leatherColor = mobData.items[itemKey].leatherColor || 21951;
+                        
+                        if (mobData.items[itemKey].enchantments && Array.isArray(mobData.items[itemKey].enchantments)) {
+                            newMobData.items[itemKey].enchantments = mobData.items[itemKey].enchantments.map(enc => ({
+                                name: enc.name || '',
+                                level: enc.level || 1
+                            }));
+                        }
+                    }
+                });
+            }
+            
+            if (mobData.effects && Array.isArray(mobData.effects)) {
+                newMobData.effects = mobData.effects.map(effect => ({
+                    name: effect.name || '',
+                    duration: effect.duration || 'infinite',
+                    amplifier: effect.amplifier || 1
+                }));
+            }
+            
+            return newMobData;
+        }
 
         // Event listeners
         document.getElementById('add-variable').addEventListener('click', addVariable);
@@ -1030,18 +1403,38 @@
         });
         
         document.getElementById('export-config').addEventListener('click', function() {
-            const xyzContent = generateXYZContent();
-            document.getElementById('config-json').value = xyzContent;
-        });
-
-        document.getElementById('download-config').addEventListener('click', function() {
-            const xyzContent = generateXYZContent();
-            const blob = new Blob([xyzContent], { type: 'text/plain' });
+            const config = {
+                variables: variables,
+                version: '3.0',
+                exportDate: new Date().toISOString()
+            };
+            
+            const jsonString = JSON.stringify(config, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'config.xyz';
+            a.download = 'mob_config.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        document.getElementById('download-config').addEventListener('click', function() {
+            const content = generateMCFunctionContent();
+            let fileName = 'config.mcfunction';
+            if (variables.length > 0 && variables[0].fileName) {
+                fileName = variables[0].fileName + '.mcfunction';
+            }
+            
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -1051,7 +1444,7 @@
         document.getElementById('import-config').addEventListener('click', function() {
             const fileInput = document.createElement('input');
             fileInput.type = 'file';
-            fileInput.accept = '.xyz';
+            fileInput.accept = '.json';
             
             fileInput.onchange = function(e) {
                 const file = e.target.files[0];
@@ -1059,38 +1452,18 @@
                 
                 const reader = new FileReader();
                 reader.onload = function(event) {
-                    const content = event.target.result;
-                    document.getElementById('config-json').value = content;
-                    alert('Archivo .xyz cargado. Usa "Cargar desde Texto" para importar la configuración.');
+                    try {
+                        const config = JSON.parse(event.target.result);
+                        importConfiguration(config);
+                        alert(`Configuración importada correctamente. ${variables.length} variables cargadas.`);
+                    } catch (e) {
+                        alert('Error al importar: El archivo debe ser un JSON válido exportado desde esta aplicación.');
+                    }
                 };
                 reader.readAsText(file);
             };
             
             fileInput.click();
-        });
-
-        document.getElementById('load-from-text').addEventListener('click', function() {
-            const jsonString = document.getElementById('config-json').value;
-            
-            // Intentar parsear como JSON primero
-            try {
-                const config = JSON.parse(jsonString);
-                
-                if (config.variables && Array.isArray(config.variables)) {
-                    variables = config.variables;
-                    nextVariableId = variables.length > 0 ? Math.max(...variables.map(v => v.id)) + 1 : 1;
-                    updateVariableCount();
-                    updateNavigation();
-                    renderVariables();
-                    alert('Configuración importada desde JSON!');
-                    return;
-                }
-            } catch (e) {
-                // No es JSON, podría ser formato .xyz
-            }
-            
-            // Si llegamos aquí, es formato .xyz o error
-            alert('El contenido no es un formato válido. Debe ser JSON de configuración.');
         });
 
         // Inicializar
